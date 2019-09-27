@@ -1,6 +1,4 @@
 # mltk-container specific
-notebooks/logs/
-app/model/data/
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
