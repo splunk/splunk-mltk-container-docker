@@ -18,7 +18,7 @@ else
 fi
 case $tag in
 	tf-cpu)
-		base="tensorflow/tensorflow:latest-py3"
+		base="tensorflow/tensorflow:2.0.0b1-py3"
 		;;
 	tf-gpu)
 		base="tensorflow/tensorflow:2.0.0b1-gpu-py3"
@@ -27,11 +27,11 @@ case $tag in
 		base="pytorch/pytorch:latest"
 		;;
 	nlp)
-		base="pytorch/pytorch:latest"
+		base="tensorflow/tensorflow:2.0.0b1-gpu-py3"
 		;;
 	*)
 		echo "Invalid container image tag: $tag, expected [tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
-    break
+    	break
 		;;
 esac
 if [ -z "$2" ]; then

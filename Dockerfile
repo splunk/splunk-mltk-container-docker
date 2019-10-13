@@ -9,9 +9,13 @@ RUN pip install pandas
 RUN pip install scipy
 RUN pip install scikit-learn
 RUN pip install jupyterlab
+RUN pip install shap
+RUN pip install lime
+RUN pip install matplotlib
+RUN pip install networkx
 
 # Install NLP libs
-RUN if [ ${TAG} = "nlp" ]; then pip install flair spacy nltk gensim networkx && python -m spacy download en_core_web_sm; fi
+RUN if [ ${TAG} = "nlp" ]; then pip install flair spacy nltk gensim && python -m spacy download en_core_web_sm; fi
 
 # Define working directory
 WORKDIR /srv
@@ -20,7 +24,6 @@ WORKDIR /srv
 COPY bootstrap.sh /root/
 
 # Copy flask app for serving
-# TODO Only use for building - later content is in volume
 COPY app ./app
 COPY notebooks ./notebooks
 
@@ -33,5 +36,5 @@ COPY config/jupyter_notebook_conversion.tpl /root/.jupyter/jupyter_notebook_conv
 EXPOSE 5000 8888 6006
 
 # Define bootstrap as entry point to start container
-# TODO define switch for dev / prod container (flask only)
+# TODO define switch for dev / prod (flask only)
 ENTRYPOINT ["/root/bootstrap.sh"]
