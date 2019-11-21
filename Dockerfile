@@ -3,16 +3,8 @@ FROM ${BASE_IMAGE}
 ARG TAG
 
 # Installing packages
-RUN pip install Flask
-RUN pip install h5py
-RUN pip install pandas
-RUN pip install scipy
-RUN pip install scikit-learn
-RUN pip install jupyterlab
-RUN pip install shap
-RUN pip install lime
-RUN pip install matplotlib
-RUN pip install networkx
+RUN conda install jupyterlab flask h5py
+RUN conda install -c rapidsai -c nvidia -c conda-forge  -c defaults rapids=0.10 python=3.6
 
 # Install NLP libs
 RUN if [ ${TAG} = "nlp" ]; then pip install flair spacy nltk gensim && python -m spacy download en_core_web_sm; fi
