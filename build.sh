@@ -30,7 +30,7 @@ case $tag in
 		base="tensorflow/tensorflow:2.0.0b1-gpu-py3"
 		;;
 	rapidsai)
-		base="continuumio/miniconda"
+		base="continuumio/miniconda3"
 		;;
 	*)
 		echo "Invalid container image tag: $tag, expected [tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
