@@ -3,8 +3,8 @@ FROM ${BASE_IMAGE}
 ARG TAG
 
 # Installing packages
-RUN conda install jupyterlab flask h5py
-RUN conda install -c rapidsai -c nvidia -c conda-forge  -c defaults rapids=0.10 python=3.6
+RUN conda install jupyterlab flask h5py tensorboard nb_conda 
+RUN conda install -c rapidsai -c nvidia -c conda-forge -c defaults rapids=0.10 python=3.6
 
 # Install NLP libs
 RUN if [ ${TAG} = "nlp" ]; then pip install flair spacy nltk gensim && python -m spacy download en_core_web_sm; fi
