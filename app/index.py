@@ -82,7 +82,7 @@ def set_fit():
         response["message"] += 'unable to convert raw data to pandas dataframe. Ended with exception: ' + str(e)
         return json.dumps(response)
     
-    # 3. check for mode = sample and if so early exit the fit
+    # 3. check for mode = stage and if so early exit the fit
     try:
         if "params" in app.Model["meta"]["options"]:
             params = app.Model["meta"]["options"]["params"]
