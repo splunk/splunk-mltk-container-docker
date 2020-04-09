@@ -17,6 +17,18 @@ else
   tag="$1"
 fi
 case $tag in
+	golden-image)
+		base="continuumio/anaconda3"
+		;;
+	rapidsai)
+		base="rapidsai/rapidsai:cuda10.0-base-ubuntu18.04"
+		;;
+	tf-latest-cpu)
+		base="continuumio/anaconda3"
+		;;
+	tf-cpu-test)
+		base="tensorflow/tensorflow:latest-py3"
+		;;
 	tf-cpu)
 		base="tensorflow/tensorflow:2.0.0b1-py3"
 		;;

@@ -14,7 +14,7 @@ def post_save(model, os_path, contents_manager):
     # defined modules path in /srv (hardcoded to prevent notebooks subfolder relative problems)
     py_path = "/srv/app/model/"
     # notebook config path in /srv (hardcoded to prevent notebooks subfolder relative problems)
-    nb_template = "/root/.jupyter/jupyter_notebook_conversion.tpl"
+    nb_template = "/dltk/.jupyter/jupyter_notebook_conversion.tpl"
     print("Config path: " + nb_template)
     print("Source path: " + os_path)
     print("Destination: " + py_path)

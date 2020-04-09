@@ -1,6 +1,6 @@
 # Deep Learning Toolkit for Splunk
 # This is a MLTK extension for containerized custom deep learning with TensorFlow 2.0, PyTorch
-# Author: Philipp Drieger, Staff Machine Learning Architect, 2018-2019
+# Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2020
 # -------------------------------------------------------------------------------
 import os
 import json
@@ -14,6 +14,7 @@ from flask import Flask, jsonify, request
 
 # -------------------------------------------------------------------------------
 # python entry point to run the flask app
+from waitress import serve
 app = Flask(__name__)
 
 # -------------------------------------------------------------------------------
@@ -27,7 +28,7 @@ app.NotebookDataPath = "/srv/notebooks/data/"
 # -------------------------------------------------------------------------------
 # helper function: clean param
 def get_clean_param(p):
-    return p.lstrip("\"").rstrip("\"").lower()
+    return p.lstrip("\"").rstrip("\"")
 
 
 # -------------------------------------------------------------------------------
@@ -282,4 +283,5 @@ def get_info():
 # -------------------------------------------------------------------------------
 # python entry point to run the flask app
 if __name__ == "__main__":
-    app.run()
+    serve(app, host="0.0.0.0", port=5000)
+    #app.run()

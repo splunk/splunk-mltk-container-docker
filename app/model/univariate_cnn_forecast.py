@@ -3,7 +3,7 @@
 
 
     
-# In[ ]:
+# In[1]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
@@ -24,7 +24,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[ ]:
+# In[3]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -42,7 +42,7 @@ def stage(name):
 
 
     
-# In[ ]:
+# In[5]:
 
 
 # initialize the model
@@ -80,7 +80,7 @@ def init(df,param):
 
 
     
-# In[ ]:
+# In[7]:
 
 
 # returns a fit info json object
@@ -152,7 +152,7 @@ def fit(model,df,param):
 
 
     
-# In[ ]:
+# In[9]:
 
 
 def apply(model,df,param):
@@ -171,22 +171,21 @@ def apply(model,df,param):
                 holdback = int(param['options']['params']['holdback'])
     
     # select training data
-    X = df[param['options']['split_by']].values.tolist()
-    
-    test_set = list(X[len(X)-holdback-model_batch_size:])
+    X = df[param['options']['split_by']].values
+
+    test_set = X[len(X)-holdback-model_batch_size:]
     predictions = list(X[:len(X)-holdback])
-    
     # generate forecast
     for i in range(0, holdback+future_steps):
         if i<holdback:
-            X_batch = np.asarray(test_set[i:i+model_batch_size]).reshape(1,model_batch_size,1)
+            X_batch = test_set[i:i+model_batch_size].reshape(1,model_batch_size,1)
             y_pred = model.predict(x = X_batch, verbose=1)
             predictions.append(list(y_pred[0]))
         else:
-            X_batch = np.asarray(test_set[i:i+model_batch_size]).reshape(1,model_batch_size,1)
+            X_batch = test_set[i:i+model_batch_size].reshape(1,model_batch_size,1)
             y_pred = model.predict(x = X_batch, verbose=1)
             predictions.append(list(y_pred[0]))
-            test_set.append(y_pred)
+            test_set = np.append(test_set, y_pred[0])
             
     # append predictions to time series to return a data frame
     return predictions
