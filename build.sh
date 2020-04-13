@@ -12,22 +12,13 @@ base="tensorflow/tensorflow:latest-py3"
 repo=""
 if [ -z "$1" ]; then
   echo "No build parameters set. Using default tag tf-cpu for building and running the container."
-  echo "You can use ./build.sh [tf-cpu|tf-gpu|pytorch|nlp] to build the container for different frameworks."
+  echo "You can use ./build.sh [golden-image|tf-cpu|tf-gpu|pytorch|nlp] to build the container for different frameworks."
 else
   tag="$1"
 fi
 case $tag in
 	golden-image)
 		base="continuumio/anaconda3"
-		;;
-	rapidsai)
-		base="rapidsai/rapidsai:cuda10.0-base-ubuntu18.04"
-		;;
-	tf-latest-cpu)
-		base="continuumio/anaconda3"
-		;;
-	tf-cpu-test)
-		base="tensorflow/tensorflow:latest-py3"
 		;;
 	tf-cpu)
 		base="tensorflow/tensorflow:2.0.0b1-py3"
@@ -42,7 +33,7 @@ case $tag in
 		base="tensorflow/tensorflow:2.0.0b1-gpu-py3"
 		;;
 	*)
-		echo "Invalid container image tag: $tag, expected [tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
+		echo "Invalid container image tag: $tag, expected [golden-image|tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
     	break
 		;;
 esac
@@ -58,3 +49,9 @@ docker stop "$repo"mltk-container-$tag
 docker rm "$repo"mltk-container-$tag
 docker rmi "$repo"mltk-container-$tag
 docker build --rm -t "$repo"mltk-container-$tag:latest --build-arg BASE_IMAGE=$base --build-arg TAG=$tag -f Dockerfile .
+if [ -z "$3" ]; then
+  version=""
+else
+  version="$3"
+  docker tag "$repo"mltk-container-$tag:latest "$repo"mltk-container-$tag:$version
+fi
