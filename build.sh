@@ -20,6 +20,9 @@ case $tag in
 	golden-image)
 		base="continuumio/anaconda3"
 		;;
+	golden-image-gpu)
+		base="nvidia/cuda:10.2-cudnn7-runtime-ubuntu16.04"
+		;;
 	tf-cpu)
 		base="tensorflow/tensorflow:2.0.0b1-py3"
 		;;

@@ -2,21 +2,36 @@ ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 ARG TAG
 
-RUN conda install -n base nb_conda waitress datashader tensorflow-gpu pytorch gensim dask-ml 
-RUN conda install -c conda-forge dask-xgboost spacy nodejs 
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH /opt/conda/bin:$PATH
+RUN apt-get update && apt-get install -y \
+	wget \
+	vim \
+	bzip2
 
-RUN conda install -c conda-forge dask-labextension
+RUN apt-get update --fix-missing && apt-get install -y wget bzip2 ca-certificates \
+    libglib2.0-0 libxext6 libsm6 libxrender1 \
+    git mercurial subversion
+
+RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh -O ~/anaconda.sh && \
+    /bin/bash ~/anaconda.sh -b -p /opt/conda && \
+    rm ~/anaconda.sh && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc
+
+RUN conda install -n base nb_conda waitress nodejs datashader tensorflow-gpu pytorch gensim dask-ml 
+
+RUN conda install -n base -c conda-forge dask-labextension
 RUN jupyter labextension install dask-labextension
-RUN jupyter serverextension enable --py --sys-prefix dask_labextension
+RUN jupyter serverextension enable --py --sys-prefix dask_labextension --user
 
-RUN conda install -c conda-forge fbprophet pomegranate shap lime 
+RUN pip install jupyter-tensorboard
+RUN jupyter labextension install jupyterlab_tensorboard
+RUN jupyter serverextension enable --py --sys-prefix jupyter_tensorboard
+RUN jupyter tensorboard enable --user 
 
-## experimental for jupyterlab extensions
-#RUN pip install jupyter-tensorboard
-#RUN jupyter labextension install jupyterlab_tensorboard
-#RUN jupyter serverextension enable jupyter_tensorboard --system
-#RUN jupyter tensorboard enable --system
-
+RUN conda install -n base -c conda-forge dask-xgboost spacy fbprophet pomegranate shap lime
 RUN python -m spacy download en_core_web_sm
 
 RUN mkdir /dltk
