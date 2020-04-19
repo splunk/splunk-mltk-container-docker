@@ -9,31 +9,33 @@ echo "__________________________________________________________________________
 echo "Splunk> MLTK Container for TensorFlow 2.0, PyTorch and Jupyterlab."
 tag="tf-cpu"
 base="tensorflow/tensorflow:latest-py3"
+dockerfile="Dockerfile"
 repo=""
 if [ -z "$1" ]; then
   echo "No build parameters set. Using default tag tf-cpu for building and running the container."
-  echo "You can use ./build.sh [golden-image|tf-cpu|tf-gpu|pytorch|nlp] to build the container for different frameworks."
+  echo "You can use ./build.sh [golden-image-gpu|tf-cpu|tf-gpu|pytorch|nlp] to build the container for different frameworks."
 else
   tag="$1"
 fi
 case $tag in
-	golden-image)
-		base="continuumio/anaconda3"
-		;;
 	golden-image-gpu)
 		base="nvidia/cuda:10.2-cudnn7-runtime-ubuntu16.04"
 		;;
 	tf-cpu)
 		base="tensorflow/tensorflow:2.0.0b1-py3"
+		dockerfile="Dockerfile.root.3.0"
 		;;
 	tf-gpu)
 		base="tensorflow/tensorflow:2.0.0b1-gpu-py3"
+		dockerfile="Dockerfile.root.3.0"
 		;;
 	pytorch)
 		base="pytorch/pytorch:latest"
+		dockerfile="Dockerfile.root.3.0"
 		;;
 	nlp)
 		base="tensorflow/tensorflow:2.0.0b1-gpu-py3"
+		dockerfile="Dockerfile.root.3.0"
 		;;
 	*)
 		echo "Invalid container image tag: $tag, expected [golden-image|tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
@@ -51,7 +53,7 @@ echo "Stop, remove and build container..."
 docker stop "$repo"mltk-container-$tag
 docker rm "$repo"mltk-container-$tag
 docker rmi "$repo"mltk-container-$tag
-docker build --rm -t "$repo"mltk-container-$tag:latest --build-arg BASE_IMAGE=$base --build-arg TAG=$tag -f Dockerfile .
+docker build --rm -t "$repo"mltk-container-$tag:latest --build-arg BASE_IMAGE=$base --build-arg TAG=$tag -f $dockerfile .
 if [ -z "$3" ]; then
   version=""
 else
