@@ -3,7 +3,7 @@
 
 
     
-# In[1]:
+# In[ ]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
@@ -22,7 +22,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[35]:
+# In[ ]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -40,7 +40,7 @@ def stage(name):
 
 
     
-# In[37]:
+# In[ ]:
 
 
 # initialize your model
@@ -59,7 +59,7 @@ def init(df,param):
 
 
     
-# In[45]:
+# In[ ]:
 
 
 # train your model
@@ -79,7 +79,7 @@ def fit(model,df,param):
 
 
     
-# In[47]:
+# In[ ]:
 
 
 # apply your model
@@ -87,7 +87,10 @@ def fit(model,df,param):
 def apply(model,df,param):
     #future = model.make_future_dataframe(periods=365)
     forecast = model.predict(df)
-    return forecast
+    changepoints = pd.DataFrame(model.changepoints)
+    changepoints['changepoint'] = 1
+    result = pd.concat([forecast, changepoints], axis=1)
+    return result
 
 
 
