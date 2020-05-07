@@ -21,7 +21,7 @@ RUN if [ ${TAG} = "nlp" ]; then pip install flair spacy nltk gensim && python -m
 WORKDIR /srv
 
 # Copy bootstrap entry point script
-COPY bootstrap.sh /root/
+COPY bootstrap_root.sh /root/
 
 # Copy flask app for serving
 COPY app ./app
@@ -37,4 +37,4 @@ EXPOSE 5000 8888 6006
 
 # Define bootstrap as entry point to start container
 # TODO define switch for dev / prod (flask only)
-ENTRYPOINT ["/root/bootstrap.sh"]
+ENTRYPOINT ["/root/bootstrap_root.sh"]
