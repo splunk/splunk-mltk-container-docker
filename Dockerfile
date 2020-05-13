@@ -58,6 +58,9 @@ RUN chgrp -R 0 /srv && \
 RUN chmod g+w /etc/passwd
 USER 1001
 
+# Install additional user libraries
+# RUN pip install ginza
+
 # Expose container port 5000 (MLTK Container Service) and 8888 (Notebook) and 6006 (Tensorboard)
 EXPOSE 5000 8888 6006
 

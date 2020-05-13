@@ -7,12 +7,12 @@ echo ' \ \_\ \ \_\ \_____\ \ \_\\\ \_\ \_\    \ \_____\ \_____\ \_\\\"\_\ \ \_\\
 echo '  \/_/  \/_/\/_____/  \/_/ \/_/\/_/     \/_____/\/_____/\/_/ \/_/  \/_/ \/_/\/_/\/_/\/_/ \/_/\/_____/\/_/ /_/ '
 echo "_____________________________________________________________________________________________________________"
 echo "Splunk> MLTK Container for TensorFlow 2.0, PyTorch and Jupyterlab."
-tag="tf-cpu"
-base="tensorflow/tensorflow:latest-py3"
+tag="golden-image-gpu"
+base="nvidia/cuda:10.2-cudnn7-runtime-ubuntu16.04"
 dockerfile="Dockerfile"
-repo=""
+repo="phdrieger/"
 if [ -z "$1" ]; then
-  echo "No build parameters set. Using default tag tf-cpu for building and running the container."
+  echo "No build parameters set. Using default tag golden-image-gpu for building and running the container."
   echo "You can use ./build.sh [golden-image-gpu|tf-cpu|tf-gpu|pytorch|nlp] to build the container for different frameworks."
 else
   tag="$1"
@@ -38,7 +38,7 @@ case $tag in
 		dockerfile="Dockerfile.root.3.0"
 		;;
 	*)
-		echo "Invalid container image tag: $tag, expected [golden-image|tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
+		echo "Invalid container image tag: $tag, expected [golden-image-gpu|tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
     	break
 		;;
 esac

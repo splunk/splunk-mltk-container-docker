@@ -15,5 +15,3 @@ cp -R -n /dltk/notebooks /srv
 export HOME=/dltk
 
 jupyter lab --port=8888 --ip=0.0.0.0 --no-browser & tensorboard --bind_all --logdir /srv/notebooks/logs/ & flask run -h 0.0.0.0
-# option for integrated jupyter tensorboard in future
-# jupyter lab --port=8888 --ip=0.0.0.0 --no-browser & jupyter tensorboard enable --user & flask run -h 0.0.0.0
