@@ -5,12 +5,13 @@
 import os
 import json
 import time
+import http
 import numpy as np
 import pandas as pd
 from datetime import datetime
 from importlib import import_module, reload
 from flask import send_from_directory
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 
 # -------------------------------------------------------------------------------
 # python entry point to run the flask app
@@ -279,6 +280,67 @@ def get_summary():
 @app.route('/', methods=['GET'])
 def get_info():
     return get_summary()
+
+code_module_path ="/srv/notebooks/algo.ipynb"
+code_version_path ="/srv/notebooks/algo.ipynb.version"
+
+@app.route('/notebook', methods=['GET', 'PUT'])
+def notebook_code():
+    if request.method == 'PUT':
+        #raise Exception("headers: %s"%request.__dict__)
+        version = request.headers['X-Notebook-Version']
+        code = request.data.decode()
+        with open(code_module_path, "w") as f:
+            f.write(code)
+        with open(code_version_path, "w") as f:
+            f.write(version)
+        return json.dumps({})
+    if request.method == 'GET':
+        try:
+            with open(code_module_path, 'r') as f:
+                code = f.read()
+        except FileNotFoundError:
+            code = None
+        try:
+            with open(code_version_path, 'r') as f:
+                version = f.read()
+        except FileNotFoundError:
+            version = 0
+        if code is None:
+            return '', http.HTTPStatus.NOT_FOUND
+        response = Response(code)
+        response.headers['X-Notebook-Version'] = "%s" % version
+        return response
+
+deployment_module_path ="/srv/app/model/algo.py"
+deployment_version_path ="/srv/app/model/algo.py.version"
+
+@app.route('/code', methods=['GET', 'PUT'])
+def deployment_code():
+    if request.method == 'PUT':
+        version = request.headers['X-Code-Version']
+        code = request.data.decode()
+        with open(deployment_module_path, "w") as f:
+            f.write(code)
+        with open(deployment_version_path, "w") as f:
+            f.write(version)
+        return json.dumps({})
+    if request.method == 'GET':
+        try:
+            with open(deployment_module_path, 'r') as f:
+                code = f.read()
+        except FileNotFoundError:
+            code = None
+        try:
+            with open(deployment_version_path, 'r') as f:
+                version = f.read()
+        except FileNotFoundError:
+            version = 0
+        if code is None:
+            return '', http.HTTPStatus.NOT_FOUND
+        response = Response(code)
+        response.headers['X-Code-Version'] = "%s" % version
+        return response
 
 # -------------------------------------------------------------------------------
 # python entry point to run the flask app
