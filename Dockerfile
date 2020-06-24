@@ -27,13 +27,19 @@ RUN conda install -n base nb_conda waitress nodejs datashader tensorflow-gpu pyt
 RUN conda install -n base -c conda-forge dask-labextension
 RUN jupyter labextension install dask-labextension
 RUN jupyter serverextension enable --py --sys-prefix dask_labextension --user
+
+RUN conda install -n base -c conda-forge jupyterlab-nvdashboard
+RUN jupyter labextension install jupyterlab-nvdashboard
+
 RUN pip install jupyter-tensorboard
 RUN jupyter labextension install jupyterlab_tensorboard
 RUN jupyter serverextension enable --py --sys-prefix jupyter_tensorboard
 RUN jupyter tensorboard enable --user 
 
+RUN jupyter lab clean
+
 # Install additional frameworks
-RUN conda install -n base -c conda-forge dask-xgboost spacy fbprophet pomegranate shap lime
+RUN conda install -n base -c conda-forge dask-xgboost spacy fbprophet pomegranate shap lime umap-learn tslearn kmodes
 RUN python -m spacy download en_core_web_sm
 
 RUN mkdir /dltk

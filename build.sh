@@ -21,6 +21,14 @@ case $tag in
 	golden-image-gpu)
 		base="nvidia/cuda:10.2-cudnn7-runtime-ubuntu16.04"
 		;;
+	spark)
+		base="jupyter/pyspark-notebook:latest"
+		dockerfile="Dockerfile.spark"
+		;;
+	rapids)
+		base="rapidsai/rapidsai:cuda10.0-runtime-ubuntu16.04"
+		dockerfile="Dockerfile.rapids"
+		;;
 	tf-cpu)
 		base="tensorflow/tensorflow:2.0.0b1-py3"
 		dockerfile="Dockerfile.root.3.0"

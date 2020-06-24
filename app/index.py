@@ -242,7 +242,6 @@ def set_apply():
     # 3. apply model
     if "algo" in app.Model:
         # TODO check if same algo and model name otherwise hard load by default
-        # . apply model 
         try:
             df_result = pd.DataFrame(app.Model["algo"].apply(app.Model["model"], app.Model["df"], app.Model["meta"]))
             print("/fit: returned result dataframe with shape " + str(df_result.shape) + "")
@@ -265,7 +264,7 @@ def set_apply():
 def get_summary():    
     return_object = {
         "app": "Deep Learning Toolkit for Splunk",
-        "version": "2.2.8",
+        "version": "3.2.0",
         "model": "no model exists"
     }
     if "model" in app.Model:
@@ -284,4 +283,4 @@ def get_info():
 # python entry point to run the flask app
 if __name__ == "__main__":
     serve(app, host="0.0.0.0", port=5000)
-    #app.run()
+    #app.run(ssl_context='adhoc')
