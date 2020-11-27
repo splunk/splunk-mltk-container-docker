@@ -5,7 +5,7 @@ ARG TAG
 
 USER root
 
-RUN pip install flask waitress 
+RUN pip install flask waitress convertdate fbprophet
 # Install basic frameworks
 #RUN conda install -n base nb_conda waitress nodejs datashader tensorflow-gpu pytorch gensim dask-ml 
 

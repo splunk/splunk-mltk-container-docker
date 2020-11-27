@@ -29,6 +29,10 @@ case $tag in
 		base="rapidsai/rapidsai:cuda10.0-runtime-ubuntu16.04"
 		dockerfile="Dockerfile.rapids"
 		;;
+	daskprophet)
+		base="tensorflow/tensorflow:2.0.0b1-py3"
+		dockerfile="Dockerfile.root.daskprophet"
+		;;
 	tf-cpu)
 		base="tensorflow/tensorflow:2.0.0b1-py3"
 		dockerfile="Dockerfile.root.3.0"
