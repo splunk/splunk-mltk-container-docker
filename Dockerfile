@@ -28,7 +28,7 @@ RUN conda install -n base -c conda-forge dask-labextension
 RUN jupyter labextension install dask-labextension
 RUN jupyter serverextension enable --py --sys-prefix dask_labextension --user
 
-RUN conda install -n base -c conda-forge jupyterlab-nvdashboard
+RUN pip install jupyterlab-nvdashboard
 RUN jupyter labextension install jupyterlab-nvdashboard
 
 RUN pip install jupyter-tensorboard
@@ -36,11 +36,16 @@ RUN jupyter labextension install jupyterlab_tensorboard
 RUN jupyter serverextension enable --py --sys-prefix jupyter_tensorboard
 RUN jupyter tensorboard enable --user 
 
-RUN jupyter lab clean
-
 # Install additional frameworks
-RUN conda install -n base -c conda-forge dask-xgboost spacy fbprophet pomegranate shap lime umap-learn tslearn kmodes
+RUN conda install -n base -c conda-forge dask-xgboost spacy fbprophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn pymc3 
 RUN python -m spacy download en_core_web_sm
+
+RUN pip install pyarrow>=0.15 vaex>=3.0.0
+RUN pip install causalnex
+RUN pip install pm4py
+
+RUN jupyter lab build
+RUN jupyter lab clean
 
 RUN mkdir /dltk
 # Define working directory
