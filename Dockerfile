@@ -42,7 +42,6 @@ RUN python -m spacy download en_core_web_sm
 
 RUN pip install pyarrow>=0.15 vaex>=3.0.0
 RUN pip install causalnex
-RUN pip install pm4py
 
 RUN jupyter lab build
 RUN jupyter lab clean
