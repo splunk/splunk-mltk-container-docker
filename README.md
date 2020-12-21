@@ -1,8 +1,10 @@
-# Deep Learning Toolkit for Splunk 
+# Deep Learning Toolkit for Splunk (2.x and 3.x)
 
-Deep Learning Toolkit for Splunk (version 2.3.0)
-Copyright (C) 2005-2019 Splunk Inc. All rights reserved.  
+Deep Learning Toolkit for Splunk (version 2.3.0 - 3.4.0)
+Copyright (C) 2005-2020 Splunk Inc. All rights reserved.  
 Author: [Philipp Drieger]()
+
+For the latest development please check out [DLTK version 4.x available on GitHub](https://github.com/splunk/deep-learning-toolkit).
 
 ## MLTK Container
 
@@ -37,4 +39,4 @@ runtime = none,nvidia
 
 ## Further documentation and usage
 
-Please find further information and documentation contained in the Deep Learning Toolkit app in the overview section. [Download and install the Deep Learning Toolkit](https://splunkbase.splunk.com/app/4607/)
+Please find further information and documentation contained in the Deep Learning Toolkit app on splunkbase: [Download and install the Deep Learning Toolkit](https://splunkbase.splunk.com/app/4607/)
