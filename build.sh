@@ -26,7 +26,7 @@ case $tag in
 		dockerfile="Dockerfile.spark"
 		;;
 	rapids)
-		base="rapidsai/rapidsai:cuda10.0-runtime-ubuntu16.04"
+		base="rapidsai/rapidsai:0.17-cuda10.2-runtime-ubuntu16.04"
 		dockerfile="Dockerfile.rapids"
 		;;
 	tf-cpu)
