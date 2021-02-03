@@ -282,6 +282,4 @@ def get_info():
 # -------------------------------------------------------------------------------
 # python entry point to run the flask app
 if __name__ == "__main__":
-    serve(app, host="0.0.0.0", port=5000)
-    #app.run(ssl_context='adhoc')
-    #app.run()
+    app.run()

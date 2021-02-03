@@ -14,7 +14,9 @@ RUN pip install matplotlib
 RUN pip install networkx
 RUN pip install waitress
 RUN pip install nodejs
-RUN pip install jupyterlab
+# fixed versions for old compatibility in tf-cpu
+RUN pip install nbconvert==5.6.1
+RUN pip install jupyterlab==1.2.6
 
 # Install NLP libs
 RUN if [ ${TAG} = "nlp" ]; then pip install flair spacy nltk gensim && python -m spacy download en_core_web_sm; fi
@@ -30,7 +32,7 @@ COPY app ./app
 COPY notebooks ./notebooks
 
 # Copy jupyter config
-COPY config/jupyter_notebook_config.py /root/.jupyter/jupyter_notebook_config.py
+COPY config/jupyter_notebook_root_config.py /root/.jupyter/jupyter_notebook_config.py
 # Copy jupyter notebook conversion template to export python module
 COPY config/jupyter_notebook_conversion.tpl /root/.jupyter/jupyter_notebook_conversion.tpl
 
