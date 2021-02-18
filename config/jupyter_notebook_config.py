@@ -20,6 +20,8 @@ def post_save(model, os_path, contents_manager):
     print("Destination: " + py_path)
     # convert notebook to python module using the provided template
     # jupyter nbconvert --to python /srv/notebooks/Splunk_MLTK_notebook.ipynb --output-dir /src/models --template=/srv/config/jupyter_notebook_conversion.tpl
+    # /opt/conda/lib/python3.7/site-packages/nbconvert/templates/python.tpl
+    # /opt/conda/lib/python3.7/site-packages/nbconvert/templates/skeleton/null.tpl
     check_call(['jupyter', 'nbconvert', '--to', 'python', nb_filename, '--output-dir', py_path, '--template='+nb_template], cwd=nb_path)
 
 c.FileContentsManager.post_save_hook = post_save
@@ -31,3 +33,6 @@ c.FileContentsManager.post_save_hook = post_save
 c.NotebookApp.password = 'sha1:f7432152c71d:e8520c26b9d960e838d562768c1d24ef5b9b76c7'
 # "Splunk4DeepLearning"
 
+# certificate files
+c.NotebookApp.certfile = u'/dltk/.jupyter/dltk.pem'
+c.NotebookApp.keyfile = u'/dltk/.jupyter/dltk.key'

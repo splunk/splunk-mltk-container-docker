@@ -264,7 +264,7 @@ def set_apply():
 def get_summary():    
     return_object = {
         "app": "Deep Learning Toolkit for Splunk",
-        "version": "3.2.0",
+        "version": "3.5.0",
         "model": "no model exists"
     }
     if "model" in app.Model:
@@ -282,5 +282,5 @@ def get_info():
 # -------------------------------------------------------------------------------
 # python entry point to run the flask app
 if __name__ == "__main__":
-    serve(app, host="0.0.0.0", port=5000)
-    #app.run(ssl_context='adhoc')
+    #serve(app, host="0.0.0.0", port=5000)
+    app.run(host='0.0.0.0', port=5000, ssl_context='adhoc')

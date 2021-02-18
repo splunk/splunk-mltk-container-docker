@@ -6,14 +6,10 @@ ARG TAG
 # Setup Anconda Base
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
-RUN apt-get update && apt-get install -y \
-	wget \
-	vim \
-	bzip2
-RUN apt-get update --fix-missing && apt-get install -y wget bzip2 ca-certificates \
-    libglib2.0-0 libxext6 libsm6 libxrender1 \
-    git mercurial subversion
-RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh -O ~/anaconda.sh && \
+RUN apt-get update && apt-get install -y wget vim bzip2
+RUN apt-get update --fix-missing && apt-get install -y git ca-certificates 
+
+RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -O ~/anaconda.sh && \
     /bin/bash ~/anaconda.sh -b -p /opt/conda && \
     rm ~/anaconda.sh && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
@@ -21,11 +17,10 @@ RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_6
     echo "conda activate base" >> ~/.bashrc
 
 # Install basic frameworks
-RUN conda install -n base nb_conda waitress nodejs datashader tensorflow-gpu pytorch gensim dask-ml 
-RUN conda install -n base -c conda-forge jupyterlab jupyterlab-git
+RUN conda install -n base nb_conda waitress nodejs datashader tensorflow-gpu pytorch 
+RUN conda install -n base -c conda-forge jupyterlab jupyterlab-git dask-ml dask-labextension dask-xgboost spacy fbprophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn pymc3 
 
 # Setup jupyter lab extensions
-RUN conda install -n base -c conda-forge dask-labextension
 RUN jupyter labextension install dask-labextension
 RUN jupyter serverextension enable --py --sys-prefix dask_labextension --user
 
@@ -38,14 +33,14 @@ RUN jupyter serverextension enable --py --sys-prefix jupyter_tensorboard
 RUN jupyter tensorboard enable --user 
 
 # Install additional frameworks
-RUN conda install -n base -c conda-forge dask-xgboost spacy fbprophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn pymc3 
 RUN python -m spacy download en_core_web_sm
-
-RUN pip install pyarrow>=0.15 vaex>=3.0.0 causalnex mlflow stumpy tqdm
-#RUN pip install pyfim
-
+# gensim 
+RUN pip install pyarrow>=0.15 vaex>=3.0.0 causalnex mlflow stumpy tqdm bocd
+#pyfim
 RUN jupyter lab build
 RUN jupyter lab clean
+
+RUN pip install pyopenssl
 
 RUN mkdir /dltk
 # Define working directory
@@ -55,11 +50,15 @@ WORKDIR /srv
 COPY bootstrap.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
-
+# Copy certificates generated with
+# openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout dltk.key -out dltk.pem
+COPY config/dltk.key /dltk/.jupyter/dltk.key
+COPY config/dltk.pem /dltk/.jupyter/dltk.pem
 # Copy jupyter config
 COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py
 # Copy jupyter notebook conversion template to export python module
-COPY config/jupyter_notebook_conversion.tpl /dltk/.jupyter/jupyter_notebook_conversion.tpl
+COPY config/jupyter_notebook_template.tpl /dltk/.jupyter/jupyter_notebook_conversion.tpl
+COPY config/null.tpl /dltk/.jupyter/null.tpl
 
 # Handle user rights
 RUN chgrp -R 0 /dltk && \
