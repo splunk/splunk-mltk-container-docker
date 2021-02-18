@@ -18,14 +18,30 @@ else
   tag="$1"
 fi
 case $tag in
+	golden-image-cpu)
+		base="ubuntu:20.04"
+		dockerfile="Dockerfile.3.5.cpu"
+		;;
 	golden-image-gpu)
+		base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.5"
+		;;
+	golden-image-gpu-3-4)
 		base="nvidia/cuda:10.2-cudnn7-runtime-ubuntu16.04"
 		;;
 	spark)
 		base="jupyter/pyspark-notebook:latest"
+		dockerfile="Dockerfile.3.5.spark"
+		;;
+	spark-3-4)
+		base="jupyter/pyspark-notebook:latest"
 		dockerfile="Dockerfile.spark"
 		;;
 	rapids)
+		base="rapidsai/rapidsai:cuda11.0-runtime-ubuntu16.04-py3.7"
+		dockerfile="Dockerfile.3.5.rapids"
+		;;
+	rapids-3-4)
 		base="rapidsai/rapidsai:0.17-cuda10.2-runtime-ubuntu16.04"
 		dockerfile="Dockerfile.rapids"
 		;;
