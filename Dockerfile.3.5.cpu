@@ -17,27 +17,25 @@ RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_6
     echo "conda activate base" >> ~/.bashrc
 
 # Install basic frameworks
-RUN conda install -n base nb_conda waitress nodejs datashader tensorflow pytorch 
-RUN conda install -n base -c conda-forge jupyterlab jupyterlab-git dask-ml dask-labextension dask-xgboost spacy fbprophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn pymc3 
-
-# Setup jupyter lab extensions
-RUN jupyter labextension install dask-labextension
-RUN jupyter serverextension enable --py --sys-prefix dask_labextension --user
-
-RUN pip install jupyter-tensorboard
-RUN jupyter labextension install jupyterlab_tensorboard
-RUN jupyter serverextension enable --py --sys-prefix jupyter_tensorboard
-RUN jupyter tensorboard enable --user 
-
-# Install additional frameworks
-RUN python -m spacy download en_core_web_sm
-# gensim 
-RUN pip install pyarrow>=0.15 vaex>=3.0.0 causalnex mlflow stumpy tqdm bocd
-#pyfim
-RUN jupyter lab build
-RUN jupyter lab clean
-
-RUN pip install pyopenssl
+RUN conda install -n base pytorch cpuonly -c pytorch && \
+    conda install -c anaconda tensorflow
+RUN conda install -n base nb_conda waitress nodejs datashader && \
+    conda install -n base -c conda-forge jupyterlab jupyterlab-git dask-ml dask-labextension dask-xgboost spacy fbprophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn pymc3 && \
+    jupyter labextension install dask-labextension && \
+    jupyter serverextension enable --py --sys-prefix dask_labextension --user && \
+    pip install jupyter-tensorboard && \
+    jupyter labextension install jupyterlab_tensorboard && \
+    jupyter serverextension enable --py --sys-prefix jupyter_tensorboard && \
+    jupyter tensorboard enable --user && \
+    python -m spacy download en_core_web_sm && \
+    pip install pyarrow>=0.15 vaex>=3.0.0 causalnex mlflow stumpy tqdm bocd && \
+    jupyter lab build && \
+    jupyter lab clean && \
+    pip install pyopenssl && \
+    apt-get install -y build-essential && \
+    pip install pyfim
+RUN conda clean --all -f -y && \
+    find "/opt/conda" -depth \( -type f -a -name '*.pyc' -o -name '*.pyo' -o -name '*.a' -o -name '*.js.map' \) -exec rm -rf '{}' \;
 
 RUN mkdir /dltk
 # Define working directory
