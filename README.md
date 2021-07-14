@@ -1,7 +1,7 @@
 # Deep Learning Toolkit for Splunk (2.x and 3.x)
 
-Deep Learning Toolkit for Splunk (version 2.3.0 - 3.4.0)
-Copyright (C) 2005-2020 Splunk Inc. All rights reserved.  
+Deep Learning Toolkit for Splunk (version 2.3.0 - 3.6.0)
+Copyright (C) 2005-2021 Splunk Inc. All rights reserved.  
 Author: [Philipp Drieger]()
 
 For the latest development please check out [DLTK version 4.x available on GitHub](https://github.com/splunk/deep-learning-toolkit).
@@ -11,19 +11,14 @@ For the latest development please check out [DLTK version 4.x available on GitHu
 This repository contains the container endpoint (`./app`), jupyter notebook configuration (`./config`) and examples (`./notebooks`), build scripts and the main Dockerfile to create the [existing pre-built container images](https://hub.docker.com/u/phdrieger) for TensorFlow 2.0 CPU and GPU, PyTorch CPU and GPU, NLP libraries.
 
 ### Rebuild 
-You can rebuild your own containers with the `build.sh` script. Examples:
+You can rebuild your own containers with the `build.sh` script.
 
-- Build TensorFlow CPU image for your own docker repo
-`./build.sh tf-cpu your_local_docker_repo/`
+Example:
+- Build Golden Image CPU image for your own docker repo
+`./build.sh golden-image-cpu your_local_docker_repo/ 3.6.0`
 
-- Build TensorFlow GPU image for your own docker repo
-`./build.sh tf-gpu your_local_docker_repo/`
-
-- Build PyTorch image for your own docker repo
-`./build.sh pytorch your_local_docker_repo/`
-
-- Build NLP image for your own docker repo
-`./build.sh nlp your_local_docker_repo/`
+- Build Golden Image GPU image for your own docker repo
+`./build.sh golden-image-gpu your_local_docker_repo/ 3.5.0`
 
 If you decide to modify to `your_local_docker_repo/` you need to update your `images.conf` in the Deep Learning Toolkit app: go to your `$SPLUNK_HOME/etc/apps/mltk-container/local/images.conf` and add your own image stanzas. Have a look at `$SPLUNK_HOME/etc/apps/mltk-container/default/images.conf` to see how the stanzas are defined.
 
