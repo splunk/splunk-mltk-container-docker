@@ -12,12 +12,12 @@ RUN conda install -n rapids jupyterlab nb_conda flask waitress
 
 RUN pip install pyopenssl
 
-#RUN conda install -n rapids -c rapidsai jupyterlab-nvdashboard 
-#RUN jupyter labextension install jupyterlab-nvdashboard
+RUN conda install -n rapids -c rapidsai jupyterlab-nvdashboard 
+RUN jupyter labextension install jupyterlab-nvdashboard
 # Setup jupyter lab extensions
-#RUN conda install -n rapids -c conda-forge dask-labextension
-#RUN jupyter labextension install dask-labextension
-#RUN jupyter serverextension enable --py --sys-prefix dask_labextension --user
+RUN conda install -n rapids -c conda-forge dask-labextension
+RUN jupyter labextension install dask-labextension
+RUN jupyter serverextension enable --py --sys-prefix dask_labextension --user
 
 #RUN pip install jupyter-tensorboard
 #RUN jupyter labextension install jupyterlab_tensorboard
