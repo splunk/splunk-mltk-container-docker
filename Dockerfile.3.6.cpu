@@ -38,6 +38,8 @@ RUN pip install rrcf auto-sklearn
 RUN conda clean --all -f -y && \
     find "/opt/conda" -depth \( -type f -a -name '*.pyc' -o -name '*.pyo' -o -name '*.a' -o -name '*.js.map' \) -exec rm -rf '{}' \;
 
+RUN apt-get upgrade 
+
 RUN mkdir /dltk
 # Define working directory
 WORKDIR /srv
