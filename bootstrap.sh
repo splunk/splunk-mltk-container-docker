@@ -14,4 +14,4 @@ cp -R -n /dltk/notebooks /srv
 #fi
 export HOME=/dltk
 
-jupyter lab --port=8888 --ip=0.0.0.0 --no-browser & tensorboard --bind_all --logdir /srv/notebooks/logs/ & mlflow ui -p 6000 -h 0.0.0.0 & flask run -h 0.0.0.0 --cert=adhoc
+jupyter lab --port=8888 --ip=0.0.0.0 --no-browser & tensorboard --bind_all --logdir /srv/notebooks/logs/ & mlflow ui -p 6000 -h 0.0.0.0 & flask run -h 0.0.0.0 --cert=/dltk/.jupyter/dltk.pem --key=/dltk/.jupyter/dltk.key
