@@ -20,9 +20,17 @@ fi
 case $tag in
 	golden-image-cpu)
 		base="ubuntu:20.04"
-		dockerfile="Dockerfile.3.6.cpu"
+		dockerfile="Dockerfile.3.7.cpu"
+		;;
+	golden-image-cpu-3-5)
+		base="ubuntu:20.04"
+		dockerfile="Dockerfile.3.5.cpu"
 		;;
 	golden-image-gpu)
+		base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.7.gpu"
+		;;
+	golden-image-gpu-3-5)
 		base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
 		dockerfile="Dockerfile.3.5"
 		;;
