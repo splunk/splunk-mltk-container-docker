@@ -18,6 +18,10 @@ else
   tag="$1"
 fi
 case $tag in
+	river)
+		base="ubuntu:20.04"
+		dockerfile="Dockerfile.3.8.river"
+		;;
 	golden-image-cpu)
 		base="ubuntu:20.04"
 		dockerfile="Dockerfile.3.7.cpu"
