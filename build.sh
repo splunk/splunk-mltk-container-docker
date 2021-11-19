@@ -19,7 +19,7 @@ else
 fi
 case $tag in
 	river)
-		base="ubuntu:20.04"
+		base="python:3.9"
 		dockerfile="Dockerfile.3.8.river"
 		;;
 	golden-image-cpu)

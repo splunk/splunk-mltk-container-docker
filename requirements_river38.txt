@@ -1,0 +1,11 @@
+# FastAPI stack
+fastapi>=0.68.0,<0.69.0
+pydantic>=1.8.0,<2.0.0
+uvicorn>=0.15.0,<0.16.0
+aiofiles
+
+# Jupyter Lab environment
+jupyterlab
+
+# Machine Learning libraries
+river>=0.8.0
