@@ -24,12 +24,9 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
 
-| makeresults count=5
-| streamstats count as part
-| table part
-| map search="| inputlookup app_usage.csv | streamstats count as t | eval Recruiting=Recruiting*(1.0+random()%100*0.01)  | eval part=$part$ | eval t=t+91*(part-1) | table t Recruiting"
-| table t Recruiting
-| fit MLTKContainer mode=stage algo=river_halfspacetree window_size=100 n_trees=10 height=3 Recruiting into app:online_anomaly_detection
+
+
+
 
     
 # In[5]:
