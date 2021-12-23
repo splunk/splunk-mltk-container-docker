@@ -47,7 +47,11 @@ def get_summary():
         'version': '3.8.0',
         'model': 'no model exists'
     }
-    return return_object
+    if "model" in app.Model:
+        return_object["model"] = str(app.Model["model"])
+        if "algo" in app.Model:
+            return_object["model_summary"] = app.Model["algo"].summary(app.Model["model"])
+    return json.dumps(return_object)
 
 
 # -------------------------------------------------------------------------------

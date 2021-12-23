@@ -7,13 +7,13 @@ echo ' \ \_\ \ \_\ \_____\ \ \_\\\ \_\ \_\    \ \_____\ \_____\ \_\\\"\_\ \ \_\\
 echo '  \/_/  \/_/\/_____/  \/_/ \/_/\/_/     \/_____/\/_____/\/_/ \/_/  \/_/ \/_/\/_/\/_/\/_/ \/_/\/_____/\/_/ /_/ '
 echo "_____________________________________________________________________________________________________________"
 echo "Splunk> MLTK Container for TensorFlow 2.0, PyTorch and Jupyterlab."
-tag="golden-image-gpu"
-base="nvidia/cuda:10.2-cudnn7-runtime-ubuntu16.04"
+tag="golden-image-cpu"
+base="ubuntu:20.04"
 dockerfile="Dockerfile"
 repo="phdrieger/"
 if [ -z "$1" ]; then
-  echo "No build parameters set. Using default tag golden-image-gpu for building and running the container."
-  echo "You can use ./build.sh [golden-image-gpu|tf-cpu|tf-gpu|pytorch|nlp] to build the container for different frameworks."
+  echo "No build parameters set. Using default tag golden-image-cpu for building and running the container."
+  echo "You can use ./build.sh [golden-image-cpu|golden-image-gpu|tf-cpu|tf-gpu|pytorch|nlp] to build the container for different frameworks."
 else
   tag="$1"
 fi
@@ -24,6 +24,10 @@ case $tag in
 		;;
 	golden-image-cpu)
 		base="ubuntu:20.04"
+		dockerfile="Dockerfile.3.8.cpu"
+		;;
+	golden-image-cpu-3-7)
+		base="ubuntu:20.04"
 		dockerfile="Dockerfile.3.7.cpu"
 		;;
 	golden-image-cpu-3-5)
@@ -31,6 +35,11 @@ case $tag in
 		dockerfile="Dockerfile.3.5.cpu"
 		;;
 	golden-image-gpu)
+		#base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
+		base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.8.gpu"
+		;;		
+	golden-image-gpu-3-7)
 		base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
 		dockerfile="Dockerfile.3.7.gpu"
 		;;
@@ -42,6 +51,10 @@ case $tag in
 		base="nvidia/cuda:10.2-cudnn7-runtime-ubuntu16.04"
 		;;
 	spark)
+		base="jupyter/pyspark-notebook:spark-3.2.0"
+		dockerfile="Dockerfile.3.8.spark"
+		;;
+	spark-3-5)
 		base="jupyter/pyspark-notebook:latest"
 		dockerfile="Dockerfile.3.5.spark"
 		;;
@@ -49,7 +62,16 @@ case $tag in
 		base="jupyter/pyspark-notebook:latest"
 		dockerfile="Dockerfile.spark"
 		;;
-	rapids)
+	rapids)	
+		#base="rapidsai/rapidsai:0.18-cuda11.0-runtime-ubuntu20.04"
+		#base="rapidsai/rapidsai-core:21.12-cuda11.5-runtime-ubuntu20.04-py3.7"
+		#base="rapidsai/rapidsai-core:cuda11.0-runtime-ubuntu20.04"
+		#base="rapidsai/rapidsai:21.12-cuda11.5-runtime-ubuntu20.04"
+		base="rapidsai/rapidsai:21.12-cuda11.2-runtime-ubuntu20.04"
+		#base="rapidsai/rapidsai:cuda11.2-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.8.rapids"
+		;;
+	rapids-3-5)
 		base="rapidsai/rapidsai:0.18-cuda11.0-runtime-ubuntu20.04"
 		dockerfile="Dockerfile.3.5.rapids"
 		;;
@@ -74,7 +96,7 @@ case $tag in
 		dockerfile="Dockerfile.root.3.0"
 		;;
 	*)
-		echo "Invalid container image tag: $tag, expected [golden-image-gpu|tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
+		echo "Invalid container image tag: $tag, expected [golden-image-cpu|golden-image-gpu|tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
     	break
 		;;
 esac
