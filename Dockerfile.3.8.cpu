@@ -34,7 +34,7 @@ RUN conda install -n base nb_conda waitress datashader && \
     pip install pyopenssl && \
     apt-get update && apt-get install -y build-essential && \
     pip install pyfim
-RUN pip install rrcf auto-sklearn
+RUN pip install rrcf auto-sklearn pyod kats neuralprophet
 RUN conda clean --all -f -y && \
     find "/opt/conda" -depth \( -type f -a -name '*.pyc' -o -name '*.pyo' -o -name '*.a' -o -name '*.js.map' \) -exec rm -rf '{}' \;
 
