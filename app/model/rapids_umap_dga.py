@@ -3,7 +3,7 @@
 
 
     
-# In[49]:
+# In[1]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
@@ -30,7 +30,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[94]:
+# In[5]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -52,7 +52,7 @@ def stage(name):
 
 
     
-# In[97]:
+# In[8]:
 
 
 # initialize your model
@@ -69,7 +69,7 @@ def init(df,param):
 
 
     
-# In[99]:
+# In[10]:
 
 
 # train your model
@@ -86,7 +86,7 @@ def fit(model,df,param):
 
 
     
-# In[101]:
+# In[16]:
 
 
 # apply your model
@@ -105,14 +105,15 @@ def plot_to_base64(plot):
 def plot_datashader_as_base64(df,param):
     cat = param['target_variables'][0]
     dfr = df.astype({cat: 'category'})
-    cvs = ds.Canvas(plot_width=300, plot_height=300)
+    squ = 25.0
+    dfr = dfr[dfr["UMAP1"].between(-squ, squ) & dfr["UMAP2"].between(-squ, squ)]
+    cvs = ds.Canvas(plot_width=800, plot_height=600)
     agg = cvs.points(dfr, 'UMAP1', 'UMAP2', ds.count_cat(cat))
     color_key_dga = {'dga':'red', 'legit':'blue'}
-    #img = tf.shade(agg, cmap='darkblue', how='log') #, cmap=color_key_dga, how="eq_hist")
 
     img = tf.shade(agg, cmap=color_key_dga, how="eq_hist")
 
-    img.plot()
+    #img.plot()
     pic_IObytes = img.to_bytesio()
     pic_IObytes.seek(0)
     pic_hash = base64.b64encode(pic_IObytes.read())
@@ -135,7 +136,7 @@ def apply(model,df,param):
     dfeatures = df[param['feature_variables']]
     cuml_umap = cumlUMAP()
     #model['umap'] = cuml_umap
-    gdf = cudf.DataFrame.from_pandas(df)
+    gdf = cudf.DataFrame.from_pandas(dfeatures)
     embedding = cuml_umap.fit_transform(gdf)
     result = embedding.rename(columns={0: "UMAP1", 1: "UMAP2"}).to_pandas()
     result_plot = df[param['target_variables']].join(result)

@@ -23,16 +23,9 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x  | bash -
 RUN apt-get -y install nodejs
 RUN npm install
 
-# Setup jupyter lab extensions
-RUN conda install -n rapids -c conda-forge "nodejs>=12.0.0"
-#RUN conda install -n rapids -c rapidsai jupyterlab-nvdashboard 
-#RUN pip install "jupyterlab-nvdashboard==0.5.0"
+# further conda installs
+RUN conda install -n rapids -c conda-forge nb_conda "nodejs>=12.0.0" datashader seaborn uvicorn fastapi pydantic aiofiles
 RUN jupyter labextension install jupyterlab-nvdashboard
-
-RUN conda install -n rapids -c conda-forge dask-labextension
-RUN jupyter labextension install dask-labextension
-#RUN jupyter serverextension enable --py --sys-prefix dask_labextension --user
-
 
 # Copy bootstrap entry point script
 COPY bootstrap_rapids.sh /dltk/

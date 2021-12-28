@@ -63,12 +63,7 @@ case $tag in
 		dockerfile="Dockerfile.spark"
 		;;
 	rapids)	
-		#base="rapidsai/rapidsai:0.18-cuda11.0-runtime-ubuntu20.04"
-		#base="rapidsai/rapidsai-core:21.12-cuda11.5-runtime-ubuntu20.04-py3.7"
-		#base="rapidsai/rapidsai-core:cuda11.0-runtime-ubuntu20.04"
-		#base="rapidsai/rapidsai:21.12-cuda11.5-runtime-ubuntu20.04"
-		base="rapidsai/rapidsai:21.12-cuda11.2-runtime-ubuntu20.04"
-		#base="rapidsai/rapidsai:cuda11.2-runtime-ubuntu20.04"
+		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.7"
 		dockerfile="Dockerfile.3.8.rapids"
 		;;
 	rapids-3-5)
