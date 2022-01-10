@@ -112,11 +112,11 @@ async def set_fit(request : Request):
                     path_json = app.NotebookDataPath+app.Model["model_name"]+'.json'
                     with open(path_json, 'w') as param_file:
                         json.dump(app.Model["meta"], param_file)
-                response["message"] = "Model data staged successfully in " + path + " - no model was built yet."
-                response["status"] = "staged"
-                return response
+                    response["message"] = "Model data staged successfully in " + path + " - no model was built yet."
+                    response["status"] = "staged"
+                    return response
     except Exception as e:
-        response["message"] += 'unable stage dataframe. Ended with exception: ' + str(e)
+        response["message"] += 'unable to stage dataframe. Ended with exception: ' + str(e)
         return response
 
 
