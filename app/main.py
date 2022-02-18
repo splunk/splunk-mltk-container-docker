@@ -8,6 +8,7 @@ from starlette.responses import FileResponse
 from importlib import import_module, reload
 import pandas as pd
 import json
+import os
 
 app = FastAPI()
 
@@ -17,6 +18,16 @@ app = FastAPI()
 app.Model = {}
 app.NotebookDataPath = '/srv/notebooks/data/'
 app.favicon_path = '/srv/app/static/favicon.ico'
+
+@app.on_event("startup")
+def setup_tracing():
+    if 'olly_enabled' in os.environ:
+        if 'true' in os.environ['olly_enabled'] or os.environ['olly_enabled'] == "1":
+            from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+            from splunk_otel.tracing import start_tracing
+            start_tracing()
+            FastAPIInstrumentor.instrument_app(app)
+
 
 # -------------------------------------------------------------------------------
 # HELPER functions
