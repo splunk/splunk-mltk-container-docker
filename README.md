@@ -13,7 +13,7 @@ This repository contains the container endpoint (`./app`), jupyter notebook conf
 ### Rebuild 
 You can rebuild your own containers with the `build.sh` script.
 
-Example:
+Examples:
 - Build Golden Image CPU image for your own docker repo
 `./build.sh golden-image-cpu your_local_docker_repo/ 3.6.0`
 
@@ -26,11 +26,14 @@ If you decide to modify to `your_local_docker_repo/` you need to update your `im
 Feel free to extend the build script and Dockerfile to create your own custom MLTK Container images.
 To make your own images available in the Deep Learning Toolkit app, please add a local config file to the app: go to your `$SPLUNK_HOME/etc/apps/mltk-container/local/images.conf` and add for example your new stanza:
 
-[myimage]
-title = My custom image
-image = mltk-container-myimage
-repo = your_local_docker_repo/
-runtime = none,nvidia
+[myimage]\
+title = My custom image\
+image = mltk-container-myimage\
+repo = your_local_docker_repo/\
+runtime = none,nvidia\
+
+### Certificates
+For development purposes the container images contain a self-signed certificate for HTTPS. You can replace the `dltk.key` and `dltk.pem` files in the `config` folder and build the container. This is one possibility to use your own certificates. There are also other options to configure your container environment with your own certificates.
 
 ## Further documentation and usage
 
