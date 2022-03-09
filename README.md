@@ -1,6 +1,6 @@
 # Deep Learning Toolkit for Splunk (2.x and 3.x)
 
-Deep Learning Toolkit for Splunk (version 2.3.0 - 3.6.0)
+Deep Learning Toolkit for Splunk (version 2.3.0 - 3.8.0)
 Copyright (C) 2005-2021 Splunk Inc. All rights reserved.  
 Author: [Philipp Drieger]()
 
@@ -15,10 +15,10 @@ You can rebuild your own containers with the `build.sh` script.
 
 Examples:
 - Build Golden Image CPU image for your own docker repo
-`./build.sh golden-image-cpu your_local_docker_repo/ 3.6.0`
+`./build.sh golden-image-cpu your_local_docker_repo/ 3.8.0`
 
 - Build Golden Image GPU image for your own docker repo
-`./build.sh golden-image-gpu your_local_docker_repo/ 3.5.0`
+`./build.sh golden-image-gpu your_local_docker_repo/ 3.8.0`
 
 If you decide to modify to `your_local_docker_repo/` you need to update your `images.conf` in the Deep Learning Toolkit app: go to your `$SPLUNK_HOME/etc/apps/mltk-container/local/images.conf` and add your own image stanzas. Have a look at `$SPLUNK_HOME/etc/apps/mltk-container/default/images.conf` to see how the stanzas are defined.
 
