@@ -3,7 +3,7 @@
 
 
     
-# In[8]:
+# In[1]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
@@ -30,7 +30,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[10]:
+# In[5]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -48,7 +48,7 @@ def stage(name):
 
 
     
-# In[13]:
+# In[7]:
 
 
 # initialize your model
@@ -65,7 +65,7 @@ def init(df,param):
 
 
     
-# In[15]:
+# In[9]:
 
 
 # train your model
@@ -82,7 +82,7 @@ def fit(model,df,param):
 
 
     
-# In[21]:
+# In[11]:
 
 
 # apply your model
@@ -99,11 +99,11 @@ def plot_to_base64(plot):
     return pic_hash
 
 def plot_datashader_as_base64(df,param):
-    cvs = ds.Canvas(plot_width=300, plot_height=300)
+    cvs = ds.Canvas(plot_width=800, plot_height=600)
     agg = cvs.points(df, 'UMAP1', 'UMAP2')
     img = tf.shade(agg, cmap='darkblue', how='log')
 
-    img.plot()
+    #img.plot()
     pic_IObytes = img.to_bytesio()
     pic_IObytes.seek(0)
     pic_hash = base64.b64encode(pic_IObytes.read())
@@ -126,7 +126,7 @@ def apply(model,df,param):
     dfeatures = df[param['feature_variables']]
     cuml_umap = cumlUMAP()
     #model['umap'] = cuml_umap
-    gdf = cudf.DataFrame.from_pandas(df)
+    gdf = cudf.DataFrame.from_pandas(dfeatures)
     embedding = cuml_umap.fit_transform(gdf)
     result = embedding.rename(columns={0: "UMAP1", 1: "UMAP2"}).to_pandas()
     if 'plot' in param['options']['params']:
@@ -150,7 +150,7 @@ def apply(model,df,param):
 
 
     
-# In[24]:
+# In[15]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>"
@@ -166,7 +166,7 @@ def save(model,name):
 
 
     
-# In[26]:
+# In[17]:
 
 
 # load model from name in expected convention "<algo_name>_<model_name>"
@@ -183,7 +183,7 @@ def load(name):
 
 
     
-# In[28]:
+# In[19]:
 
 
 # return a model summary

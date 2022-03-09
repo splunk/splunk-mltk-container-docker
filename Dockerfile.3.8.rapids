@@ -1,0 +1,56 @@
+# Start from base image: basic linux or nvidia-cuda
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+ARG TAG
+
+USER root
+
+# Setup Anconda Base
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH /opt/conda/bin:$PATH
+RUN apt-get update && apt-get install -y wget vim bzip2
+RUN apt-get update --fix-missing && apt-get install -y git ca-certificates 
+
+# Install basics
+WORKDIR /srv
+RUN mkdir /dltk
+COPY ./requirements_rapids38.txt /dltk/requirements_rapids38.txt
+RUN pip install --no-cache-dir --upgrade -r /dltk/requirements_rapids38.txt
+RUN apt-get update && apt-get upgrade -y
+
+# Install nodejs 12
+RUN curl -sL https://deb.nodesource.com/setup_12.x  | bash -
+RUN apt-get -y install nodejs
+RUN npm install
+
+# further conda installs
+RUN conda install -n rapids -c conda-forge nb_conda "nodejs>=12.0.0" datashader seaborn uvicorn fastapi pydantic aiofiles
+RUN jupyter labextension install jupyterlab-nvdashboard
+
+# Copy bootstrap entry point script
+COPY bootstrap_rapids.sh /dltk/
+COPY app /dltk/app
+COPY notebooks /dltk/notebooks
+# Copy certificates generated with
+# openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout dltk.key -out dltk.pem
+COPY config/dltk.key /dltk/.jupyter/dltk.key
+COPY config/dltk.pem /dltk/.jupyter/dltk.pem
+# Copy jupyter config
+COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py
+# Copy jupyter notebook conversion template to export python module
+COPY config/jupyter_notebook_template.tpl /dltk/.jupyter/jupyter_notebook_conversion.tpl
+COPY config/null.tpl /dltk/.jupyter/null.tpl
+
+# Handle user rights
+RUN chgrp -R 0 /dltk && \
+    chmod -R g=u /dltk
+RUN chgrp -R 0 /srv && \
+    chmod -R g=u /srv
+RUN chmod g+w /etc/passwd
+USER 1001
+
+# Expose container port 5000 (MLTK Container Service) and 8888 (Notebook)
+EXPOSE 5000 8888
+
+# Define bootstrap as entry point to start container
+ENTRYPOINT ["/dltk/bootstrap_rapids.sh"]
