@@ -282,5 +282,9 @@ def get_info():
 # -------------------------------------------------------------------------------
 # python entry point to run the flask app
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, ssl_context=('/dltk/.jupyter/dltk.pem','/dltk/.jupyter/dltk.key'))
+    if os.getenv('ENABLE_HTTPS', 'true').lower() == 'true':
+        ssl_context = (os.getenv('API_SSL_CERT', '/dltk/.jupyter/dltk.pem'), os.getenv('API_SSL_KEY', '/dltk/.jupyter/dltk.key'))
+    else:
+        ssl_context = None
+    app.run(host='0.0.0.0', port=int(os.getenv('API_PORT', 5000)), ssl_context=ssl_context)
     
