@@ -1,5 +1,5 @@
 # Start from base image: basic linux or nvidia-cuda
-ARG BASE_IMAGE
+ARG BASE_IMAGE=ubuntu:20.04
 FROM ${BASE_IMAGE}
 ARG TAG
 
