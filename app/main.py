@@ -1,4 +1,4 @@
-# Deep Learning Toolkit for Splunk 3.8.0
+# Deep Learning Toolkit for Splunk 3.9.0
 # Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2021
 # -------------------------------------------------------------------------------
 
@@ -8,6 +8,7 @@ from starlette.responses import FileResponse
 from importlib import import_module, reload
 import pandas as pd
 import json
+import csv
 import os
 
 app = FastAPI()
@@ -18,6 +19,7 @@ app = FastAPI()
 app.Model = {}
 app.NotebookDataPath = '/srv/notebooks/data/'
 app.favicon_path = '/srv/app/static/favicon.ico'
+app.data_path = '/srv/app/data/'
 
 @app.on_event("startup")
 def setup_tracing():
@@ -280,4 +282,109 @@ async def set_apply(request : Request):
     # end with a successful response
     response["status"] = "success"
     response["message"] = "/apply done successfully"
+    return response
+
+# -------------------------------------------------------------------------------
+# compute routine 
+# expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
+@app.post('/compute')
+async def set_compute(request : Request):
+    # prepare a return object
+    response = {}
+    response["status"] = "error"
+    response["message"] = "/compute: ERROR: "
+
+    # 1. validate input POST data
+    try:
+        dp = await request.json()
+        #print("/compute: raw data: ", str(dp))
+        app.Model["data"] = dp["data"]
+        print("/compute: raw data type: ", str(type(app.Model["data"])))
+        print("/compute: raw data size: ", len(str(app.Model["data"])))
+        app.Model["meta"] = dp["meta"]
+        print("/compute: meta info: ", str(app.Model["meta"]))
+
+    except Exception as e:
+        response["message"] += 'unable to parse json from POST data. Provide a JSON object with structure { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}. Ended with exception: ' + str(e)
+        print("/compute: data input error: " + str(e))
+        return response
+    
+    # 2. convert to dataframe 
+    try:
+        print("/compute: enter conversion block")
+        # TODO check with compression option and chunked mode
+        #app.Model["df"] = csv.DictReader(app.Model["data"], app.Model["meta"]["fieldnames"], dialect='unix', delimiter=',', quotechar='"')
+        
+        app.Model["df"] = app.Model["data"]
+        #print("/compute: DictReader object: " + str(type(app.Model["df"])))
+        #print("/compute: DictReader content: " + str(list(app.Model["df"])))
+
+        del(app.Model["data"])
+        # memorize model name
+        app.Model["model_name"] = "default"
+        #if "model_name" in app.Model["meta"]["options"]:
+        #    app.Model["model_name"] = app.Model["meta"]["options"]["model_name"]
+        print("/compute: model name: " + app.Model["model_name"])
+
+    except Exception as e:
+        response["message"] += 'unable to convert raw data to DictReader object. Ended with exception: ' + str(e)
+        print("/compute: conversion error: " + str(e))
+        return response
+    
+    # simple index gen and pass through
+    response["results"] = json.dumps([{'predicted':i} for i, row in enumerate(app.Model["df"], start=1)])
+    
+    # end with a successful response
+    response["status"] = "success"
+    response["message"] = "/compute done successfully"
+    return response
+
+# -------------------------------------------------------------------------------
+# stream routine 
+# expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
+@app.post('/stream')
+async def set_stream(request : Request):
+    # prepare a return object
+    response = {}
+    response["status"] = "error"
+    response["message"] = "/stream: ERROR: "
+    
+    # 1. validate input POST data
+    try:
+        dp = await request.json()
+        #print("/stream: raw data: ", str(dp))
+        streamed_data = dp["data"]
+        print("/stream: raw data size: ", len(str(streamed_data)))
+        streamed_meta = dp["meta"]
+        print("/stream: meta info: ", str(streamed_meta))
+
+    except Exception as e:
+        response["message"] += 'unable to parse json from POST data. Provide a JSON object with structure { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}. Ended with exception: ' + str(e)
+        print("/stream: data input error: " + str(e))
+        return response
+    
+    # 2. convert to dataframe 
+    try:
+        streamed_path = os.path.join(app.data_path, streamed_meta['splunk_sid'])
+        print("/stream: path: " + streamed_path)
+        if not os.path.exists(streamed_path):
+            os.path.mkdir(streamed_path)
+        streamed_filename = 'chunk'.str(len(str(streamed_data)))
+        streamed_destination = os.path.join(streamed_path, streamed_filename)
+        with open(streamed_destination, 'wb') as buf:
+            buf.write(streamed_data)
+            
+        print("/stream: written to: " + streamed_destination)
+
+    except Exception as e:
+        response["message"] += 'unable to convert raw data to stream destination. Ended with exception: ' + str(e)
+        print("/stream: conversion error: " + str(e))
+        return response
+    
+    # simple index gen and pass through
+    response["results"] = json.dumps({'stream_destination':streamed_destination, 'stream_chunk_size':str(len(str(streamed_data)))})
+    
+    # end with a successful response
+    response["status"] = "success"
+    response["message"] = "/stream done successfully"
     return response
