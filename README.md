@@ -1,6 +1,6 @@
 # Deep Learning Toolkit for Splunk (2.x and 3.x)
 
-Deep Learning Toolkit for Splunk (version 2.3.0 - 3.8.0)
+Deep Learning Toolkit for Splunk (version 2.3.0 - 3.9.0)
 Copyright (C) 2005-2021 Splunk Inc. All rights reserved.  
 Author: [Philipp Drieger]()
 
@@ -34,6 +34,9 @@ runtime = none,nvidia\
 
 ### Certificates
 For development purposes the container images contain a self-signed certificate for HTTPS. You can replace the `dltk.key` and `dltk.pem` files in the `config` folder and build the container. This is one possibility to use your own certificates. There are also other options to configure your container environment with your own certificates.
+
+### Run and test your container locally
+You can run your container locally, e.g. with `docker run -it --rm --name mltk-container-golden-image-cpu -p 5000:5000 -p 8888:8888 -p 6006:6006 -v mltk-container-data:/srv phdrieger/mltk-container-golden-image-cpu:3.9.0`
 
 ## Further documentation and usage
 

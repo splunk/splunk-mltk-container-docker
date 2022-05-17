@@ -20,9 +20,17 @@ fi
 case $tag in
 	river)
 		base="python:3.9"
+		dockerfile="Dockerfile.3.9.river"
+		;;
+	river-3-8)
+		base="python:3.9"
 		dockerfile="Dockerfile.3.8.river"
 		;;
 	golden-image-cpu)
+		base="ubuntu:20.04"
+		dockerfile="Dockerfile.3.9.cpu"
+		;;
+	golden-image-cpu-3-8)
 		base="ubuntu:20.04"
 		dockerfile="Dockerfile.3.8.cpu"
 		;;
@@ -51,6 +59,10 @@ case $tag in
 		base="nvidia/cuda:10.2-cudnn7-runtime-ubuntu16.04"
 		;;
 	spark)
+		base="jupyter/all-spark-notebook:spark-3.2.1"
+		dockerfile="Dockerfile.3.9.spark"
+		;;
+	spark-3-8)
 		base="jupyter/pyspark-notebook:spark-3.2.0"
 		dockerfile="Dockerfile.3.8.spark"
 		;;
