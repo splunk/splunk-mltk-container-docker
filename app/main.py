@@ -10,6 +10,7 @@ import pandas as pd
 import json
 import csv
 import os
+import uvicorn
 
 app = FastAPI()
 
@@ -285,7 +286,7 @@ async def set_apply(request : Request):
     return response
 
 # -------------------------------------------------------------------------------
-# compute routine 
+# compute routine (experimental)
 # expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
 @app.post('/compute')
 async def set_compute(request : Request):
@@ -340,7 +341,7 @@ async def set_compute(request : Request):
     return response
 
 # -------------------------------------------------------------------------------
-# stream routine 
+# stream routine (experimental)
 # expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
 @app.post('/stream')
 async def set_stream(request : Request):
@@ -388,3 +389,17 @@ async def set_stream(request : Request):
     response["status"] = "success"
     response["message"] = "/stream done successfully"
     return response
+
+# -------------------------------------------------------------------------------
+# python entry point to run the fastapi via uvicorn
+if __name__ == "__main__":
+    kwargs = {
+    }
+    if os.getenv('ENABLE_HTTPS', 'true').lower() == 'true':
+        # add certificate if HTTPS is enabled
+        kwargs['ssl_keyfile'] = os.getenv(
+            'API_SSL_KEY', '/dltk/.jupyter/dltk.key')
+        kwargs['ssl_certfile'] = os.getenv(
+            'API_SSL_CERT', '/dltk/.jupyter/dltk.pem')
+    uvicorn.run('app.main:app', host='0.0.0.0', port=int(
+        os.getenv('API_PORT', 5000)), log_level='info', **kwargs)
