@@ -19,10 +19,10 @@ RUN pip install splunk-sdk
 RUN pip install tqdm
 RUN apt-get update && apt-get upgrade -y
 
-RUN conda install -n base -c conda-forge widgetsnbextension
-#RUN jupyter nbextension enable --py widgetsnbextension --user
-RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
-RUN jupyter labextension enable --py widgetsnbextension
+#RUN conda install -n base -c conda-forge widgetsnbextension
+#RUN pip install ipywidgets
+#RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
+#RUN jupyter labextension enable --py widgetsnbextension
 
 # Copy bootstrap entry point script
 COPY bootstrap_river.sh /dltk/

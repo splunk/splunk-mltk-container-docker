@@ -34,14 +34,17 @@ RUN conda install -n base nb_conda waitress datashader && \
     pip install pyopenssl && \
     apt-get update && apt-get install -y build-essential && \
     pip install pyfim
-RUN pip install rrcf auto-sklearn pyod kats neuralprophet
+RUN pip install rrcf 
+#RUN pip install auto-sklearn 
+RUN pip install pyod kats neuralprophet
 RUN pip install splunk-sdk splunk-opentelemetry[all] opentelemetry-instrumentation-fastapi
 RUN conda install pyg -c pyg
 RUN conda install -n base -c conda-forge widgetsnbextension
-#RUN jupyter nbextension enable --py widgetsnbextension --user
+
 RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
 RUN jupyter labextension enable --py widgetsnbextension
-#RUN jupyter serverextension enable --py --sys-prefix dask_labextension --user && \
+
+RUN conda install -n base -c conda-forge "fastapi<=0.76.0"
 RUN conda clean --all -f -y && \
     find "/opt/conda" -depth \( -type f -a -name '*.pyc' -o -name '*.pyo' -o -name '*.a' -o -name '*.js.map' \) -exec rm -rf '{}' \;
 
