@@ -1,10 +1,11 @@
 import os
 from subprocess import check_call
 
+
 def post_save(model, os_path, contents_manager):
     """post-save hook for converting notebooks to .py scripts"""
     if model['type'] != 'notebook':
-        return # only do this for notebooks
+        return  # only do this for notebooks
     # split in directory and file name
     nb_path, nb_filename = os.path.split(os_path)
     # split out filename
@@ -22,7 +23,9 @@ def post_save(model, os_path, contents_manager):
     # jupyter nbconvert --to python /srv/notebooks/Splunk_MLTK_notebook.ipynb --output-dir /src/models --template=/srv/config/jupyter_notebook_conversion.tpl
     # /opt/conda/lib/python3.7/site-packages/nbconvert/templates/python.tpl
     # /opt/conda/lib/python3.7/site-packages/nbconvert/templates/skeleton/null.tpl
-    check_call(['jupyter', 'nbconvert', '--to', 'python', nb_filename, '--output-dir', py_path, '--template='+nb_template], cwd=nb_path)
+    check_call(['jupyter', 'nbconvert', '--to', 'python', nb_filename,
+               '--output-dir', py_path, '--template=' + nb_template], cwd=nb_path)
+
 
 c.FileContentsManager.post_save_hook = post_save
 
@@ -33,6 +36,9 @@ c.FileContentsManager.post_save_hook = post_save
 c.NotebookApp.password = 'sha1:f7432152c71d:e8520c26b9d960e838d562768c1d24ef5b9b76c7'
 # "Splunk4DeepLearning"
 
-# certificate files
-c.NotebookApp.certfile = u'/dltk/.jupyter/dltk.pem'
-c.NotebookApp.keyfile = u'/dltk/.jupyter/dltk.key'
+c.NotebookApp.ip = '0.0.0.0'
+c.NotebookApp.port = int(os.getenv('JUPYTER_PORT', 8888))
+if os.getenv('ENABLE_HTTPS', 'true').lower() == 'true':
+    c.NotebookApp.certfile = os.getenv(
+        'API_SSL_CERT', '/dltk/.jupyter/dltk.pem')
+    c.NotebookApp.keyfile = os.getenv('API_SSL_KEY', '/dltk/.jupyter/dltk.key')

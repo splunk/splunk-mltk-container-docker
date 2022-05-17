@@ -12,4 +12,4 @@ cp -R -n /dltk/notebooks /srv
 #fi
 export HOME=/dltk
 
-jupyter lab --port=8888 --ip=0.0.0.0 --no-browser & tensorboard --bind_all --logdir /srv/notebooks/logs/ & mlflow ui -p 6000 -h 0.0.0.0 & uvicorn app.main:app --host 0.0.0.0 --port 5000 --ssl-keyfile /dltk/.jupyter/dltk.key --ssl-certfile /dltk/.jupyter/dltk.pem
+jupyter lab --no-browser & tensorboard --bind_all --logdir /srv/notebooks/logs/ & mlflow ui -p 6000 -h 0.0.0.0 & python -m app.main
