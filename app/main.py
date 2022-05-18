@@ -392,14 +392,10 @@ async def set_stream(request : Request):
 
 # -------------------------------------------------------------------------------
 # python entry point to run the fastapi via uvicorn
-if __name__ == "__main__":
-    kwargs = {
-    }
-    if os.getenv('ENABLE_HTTPS', 'true').lower() == 'true':
-        # add certificate if HTTPS is enabled
-        kwargs['ssl_keyfile'] = os.getenv(
-            'API_SSL_KEY', '/dltk/.jupyter/dltk.key')
-        kwargs['ssl_certfile'] = os.getenv(
-            'API_SSL_CERT', '/dltk/.jupyter/dltk.pem')
-    uvicorn.run('app.main:app', host='0.0.0.0', port=int(
-        os.getenv('API_PORT', 5000)), log_level='info', **kwargs)
+#if __name__ == "__main__":
+#    kwargs = {}
+#    if os.getenv('ENABLE_HTTPS', 'true').lower() == 'true':
+#        # add certificate if HTTPS is enabled
+#        kwargs['ssl_keyfile'] = os.getenv('API_SSL_KEY', '/dltk/.jupyter/dltk.key')
+#        kwargs['ssl_certfile'] = os.getenv('API_SSL_CERT', '/dltk/.jupyter/dltk.pem')
+#    uvicorn.run('app.main:app', host='0.0.0.0', port=int(os.getenv('API_PORT', 5000)), log_level='info', **kwargs)

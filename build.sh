@@ -43,6 +43,11 @@ case $tag in
 		dockerfile="Dockerfile.3.5.cpu"
 		;;
 	golden-image-gpu)
+		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
+		#base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.9.gpu"
+		;;		
+	golden-image-gpu-3-8)
 		#base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
 		base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
 		dockerfile="Dockerfile.3.8.gpu"
