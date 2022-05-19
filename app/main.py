@@ -57,8 +57,8 @@ def get_root():
 @app.get('/summary')
 def get_summary():
     return_object = {
-        'app': 'Deep Learning Toolkit for Splunk',
-        'version': '3.8.0',
+        'app': 'Splunk App for Data Science and Deep Learning',
+        'version': '3.9.0',
         'model': 'no model exists'
     }
     if "model" in app.Model:
