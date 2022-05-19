@@ -80,6 +80,10 @@ case $tag in
 		dockerfile="Dockerfile.spark"
 		;;
 	rapids)	
+		base="rapidsai/rapidsai-core:22.04-cuda11.5-runtime-ubuntu20.04-py3.8"
+		dockerfile="Dockerfile.3.9.rapids"
+		;;
+	rapids-3-8)	
 		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.7"
 		dockerfile="Dockerfile.3.8.rapids"
 		;;

@@ -13,5 +13,5 @@ docker push phdrieger/mltk-container-river:3.9.0
 ./build.sh golden-image-gpu phdrieger/ 3.9.0
 docker push phdrieger/mltk-container-golden-image-gpu:3.9.0
 
-#./build.sh rapids phdrieger/ 3.9.0
-#docker push phdrieger/mltk-container-rapids:3.9.0
+./build.sh rapids phdrieger/ 3.9.0
+docker push phdrieger/mltk-container-rapids:3.9.0
