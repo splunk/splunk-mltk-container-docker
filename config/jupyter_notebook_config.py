@@ -33,12 +33,16 @@ c.FileContentsManager.post_save_hook = post_save
 # generate your own PW in python:
 # from notebook.auth import passwd
 # passwd()
-c.NotebookApp.password = 'sha1:f7432152c71d:e8520c26b9d960e838d562768c1d24ef5b9b76c7'
+# passwd(os.environ['JUPYTER_PASSWD'],'sha512')
+# TODO set from UI and ENV variable generated
+c.ServerApp.password = 'sha1:f7432152c71d:e8520c26b9d960e838d562768c1d24ef5b9b76c7'
 # "Splunk4DeepLearning"
 
-c.NotebookApp.ip = '0.0.0.0'
-c.NotebookApp.port = int(os.getenv('JUPYTER_PORT', 8888))
+c.ServerApp.ip = '0.0.0.0'
+c.ServerApp.port = int(os.getenv('JUPYTER_PORT', 8888))
 if os.getenv('ENABLE_HTTPS', 'true').lower() == 'true':
-    c.NotebookApp.certfile = os.getenv(
-        'API_SSL_CERT', '/dltk/.jupyter/dltk.pem')
-    c.NotebookApp.keyfile = os.getenv('API_SSL_KEY', '/dltk/.jupyter/dltk.key')
+    c.ServerApp.certfile = os.getenv('API_SSL_CERT', '/dltk/.jupyter/dltk.pem')
+    c.ServerApp.keyfile = os.getenv('API_SSL_KEY', '/dltk/.jupyter/dltk.key')
+
+# Fix for wigets limit default = 1000000
+c.ServerApp.iopub_data_rate_limit = 20000000

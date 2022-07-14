@@ -150,6 +150,11 @@ class SplunkSearch(object):
             self.ui['progress2'].description = "loading..."
             self.ui['progress2'].max = float(resultCount)
             diagnostic_messages = []
+            modulo_factor = 1
+            if resultCount > 1000:
+                modulo_factor = resultCount / 100
+            if resultCount > 100000:
+                modulo_factor = resultCount / 1000
             while processed < resultCount:
                 for event in splunk_results.JSONResultsReader(job.results(output_mode='json', offset=offset, count=0)):
                     if isinstance(event, splunk_results.Message):
@@ -159,9 +164,9 @@ class SplunkSearch(object):
                     elif isinstance(event, dict):
                         # Normal events are returned as dicts
                         resultset.append(event)
-                        #print(result)
                     processed += 1
-                    self.ui['progress2'].value = float(processed)
+                    if processed % modulo_factor == 0:
+                        self.ui['progress2'].value = float(processed)
                 offset = processed            
             self.ui['progress2'].value = self.ui['progress2'].max
             self.ui['progress2'].description = "loading done"
