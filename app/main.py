@@ -273,7 +273,7 @@ async def set_apply(request : Request):
         # TODO check if same algo and model name otherwise hard load by default
         try:
             df_result = pd.DataFrame(app.Model["algo"].apply(app.Model["model"], app.Model["df"], app.Model["meta"]))
-            print("/fit: returned result dataframe with shape " + str(df_result.shape) + "")
+            print("/apply: returned result dataframe with shape " + str(df_result.shape) + "")
         except Exception as e:
             response["message"] += 'unable to apply model. Ended with exception: ' + str(e)
             return response
