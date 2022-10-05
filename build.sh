@@ -41,6 +41,10 @@ case $tag in
 		;;		
 	river)
 		base="python:3.9"
+		dockerfile="Dockerfile.3.9.1.river"
+		;;
+	river-3-9)
+		base="python:3.9"
 		dockerfile="Dockerfile.3.9.river"
 		;;
 	river-3-8)
@@ -88,6 +92,10 @@ case $tag in
 		base="nvidia/cuda:10.2-cudnn7-runtime-ubuntu16.04"
 		;;
 	spark)
+		base="jupyter/all-spark-notebook:spark-3.2.1"
+		dockerfile="Dockerfile.3.9.1.spark"
+		;;
+	spark-3-9)
 		base="jupyter/all-spark-notebook:spark-3.2.1"
 		dockerfile="Dockerfile.3.9.spark"
 		;;

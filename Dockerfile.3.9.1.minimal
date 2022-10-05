@@ -27,6 +27,7 @@ COPY bootstrap_minimal.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
 
+# Install local DSDL supporting functions
 RUN mkdir /dltk/packages
 COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
 RUN pip install /dltk/packages/dsdlsupport-1.0.0.tar.gz
