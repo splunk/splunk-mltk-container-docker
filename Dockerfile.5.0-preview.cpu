@@ -1,0 +1,119 @@
+# Start from base image: basic linux or nvidia-cuda
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+ARG TAG
+
+# Setup Anconda Base based on https://github.com/ContinuumIO/docker-images/blob/master/anaconda3/debian/Dockerfile
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ENV PATH /opt/conda/bin:/dltk/.local/bin:/dltk/.local/lib/python3.9/site-packages/:$PATH
+RUN set -x && \
+    apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
+        bzip2 \
+        ca-certificates \
+        git \
+        libglib2.0-0 \
+        libsm6 \
+        libxcomposite1 \
+        libxcursor1 \
+        libxdamage1 \
+        libxext6 \
+        libxfixes3 \
+        libxi6 \
+        libxinerama1 \
+        libxrandr2 \
+        libxrender1 \
+        mercurial \
+        openssh-client \
+        procps \
+        subversion \
+        wget \
+        nodejs \
+        build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+RUN UNAME_M="$(uname -m)" && \
+    if [ "${UNAME_M}" = "x86_64" ]; then \
+        ANACONDA_URL="https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh"; \
+        SHA256SUM="a7c0afe862f6ea19a596801fc138bde0463abcbce1b753e8d5c474b506a2db2d"; \
+    elif [ "${UNAME_M}" = "s390x" ]; then \
+        ANACONDA_URL="https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-s390x.sh"; \
+        SHA256SUM="c14415df69e439acd7458737a84a45c6067376cbec2fccf5e2393f9837760ea7"; \
+    elif [ "${UNAME_M}" = "aarch64" ]; then \
+        ANACONDA_URL="https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-aarch64.sh"; \
+        SHA256SUM="dc6bb4eab3996e0658f8bc4bbd229c18f55269badd74acc36d9e23143268b795"; \
+    elif [ "${UNAME_M}" = "ppc64le" ]; then \
+        ANACONDA_URL="https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-ppc64le.sh"; \
+        SHA256SUM="a50bf5bd26b5c5a2c24028c1aff6da2fa4d4586ca43ae3acdf7ffb9b50d7f282"; \
+    fi && \
+    wget "${ANACONDA_URL}" -O anaconda.sh -q --no-check-certificate && \
+    echo "${SHA256SUM} anaconda.sh" > shasum && \
+    sha256sum --check --status shasum && \
+    /bin/bash anaconda.sh -b -p /opt/conda && \
+    rm anaconda.sh shasum && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc && \
+    find /opt/conda/ -follow -type f -name '*.a' -delete && \
+    find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
+    /opt/conda/bin/conda clean -afy    
+
+# Install basics
+WORKDIR /srv
+RUN mkdir /dltk
+COPY ./requirements_cpu40.txt /dltk/requirements_cpu40.txt
+RUN conda config --add channels conda-forge && \
+    conda update --all --yes
+RUN conda install -n base --file /dltk/requirements_cpu40.txt
+# Splunk related via pip install only
+RUN pip install splunk-sdk splunk-opentelemetry[all] opentelemetry-instrumentation-fastapi
+
+# Idea to have multiple venvs for different libraries to be installed with less dependency resolving friction
+# consequence to have an added mandatory meta information for use outside notebook. E.g. activate the appropriate env
+# for a selected algorithm to run. Ideally this is automated and abstracted from any user input.
+# Could be a conf entry, folder structure or part of naming convention etc. to identify which env to activate
+
+# Install modules
+RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager && \
+    jupyter labextension enable --py widgetsnbextension && \
+    jupyter lab clean
+
+
+# clean up post install
+#RUN conda clean --all -f -y && \
+#    find "/opt/conda" -depth \( -type f -a -name '*.pyc' -o -name '*.pyo' -o -name '*.a' -o -name '*.js.map' \) -exec rm -rf '{}' \;
+
+
+
+# Copy bootstrap entry point script
+COPY bootstrap_minimal.sh /dltk/
+COPY app /dltk/app
+COPY notebooks /dltk/notebooks
+# Copy certificates generated with
+# openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout dltk.key -out dltk.pem
+COPY config/dltk.key /dltk/.jupyter/dltk.key
+COPY config/dltk.pem /dltk/.jupyter/dltk.pem
+# Copy jupyter config
+COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py
+# Since JupyterLab 3 jupyter server config needs to be set
+COPY config/jupyter_server_config.py /dltk/.jupyter/jupyter_server_config.py
+# TODO see if it makes sense to separate it with a specific jupyter_server_config.py 
+# For now: shortcut with a copy of the notebook config
+
+# Copy jupyter notebook conversion template to export python module
+COPY config/jupyter_notebook_template.tpl /dltk/.jupyter/jupyter_notebook_conversion.tpl
+COPY config/null.tpl /dltk/.jupyter/null.tpl
+
+# Handle user rights
+RUN chgrp -R 0 /dltk && \
+    chmod -R g=u /dltk
+RUN chgrp -R 0 /srv && \
+    chmod -R g=u /srv
+RUN chmod g+w /etc/passwd
+USER 1001
+
+# Expose container port 5000 (MLTK Container Service) and 8888 (Notebook)
+EXPOSE 5000 8888
+
+# Define bootstrap as entry point to start container
+ENTRYPOINT ["/dltk/bootstrap_minimal.sh"]
