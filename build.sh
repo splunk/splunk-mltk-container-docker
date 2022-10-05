@@ -18,6 +18,27 @@ else
   tag="$1"
 fi
 case $tag in
+	minimal-cpu)
+		#base="python:3.9.13-bullseye"
+		#base="python:3.11-rc-slim"
+		#base="ubuntu:22.04"
+		base="python:3.10-bullseye"
+		dockerfile="Dockerfile.3.9.1.minimal"
+		;;
+	golden-image-cpu)
+		base="ubuntu:22.04"
+		dockerfile="Dockerfile.3.9.1.cpu"
+		;;
+	golden-image-gpu)
+		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
+		#base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.9.1.gpu"
+		;;		
+	golden-image-gpu-3-9)
+		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
+		#base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.9.gpu"
+		;;		
 	river)
 		base="python:3.9"
 		dockerfile="Dockerfile.3.9.river"
@@ -26,7 +47,15 @@ case $tag in
 		base="python:3.9"
 		dockerfile="Dockerfile.3.8.river"
 		;;
-	golden-image-cpu)
+	golden-image-cpu-show)
+		base="ubuntu:22.04"
+		dockerfile="Dockerfile.3.9.cpu"
+		;;
+	golden-image-cpu-3-9-1)
+		base="ubuntu:22.04"
+		dockerfile="Dockerfile.3.9.1.cpu"
+		;;
+	golden-image-cpu-3-9)
 		base="ubuntu:20.04"
 		dockerfile="Dockerfile.3.9.cpu"
 		;;
@@ -42,11 +71,6 @@ case $tag in
 		base="ubuntu:20.04"
 		dockerfile="Dockerfile.3.5.cpu"
 		;;
-	golden-image-gpu)
-		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		#base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.3.9.gpu"
-		;;		
 	golden-image-gpu-3-8)
 		#base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
 		base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
