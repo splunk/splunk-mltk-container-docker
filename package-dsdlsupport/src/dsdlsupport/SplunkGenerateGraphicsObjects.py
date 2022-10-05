@@ -1,6 +1,6 @@
 import base64
 import io 
-
+import os
 #todo
 # path should incorporate model name, algo name and cell metadata?
 # create a package with this and the other functions required
@@ -10,7 +10,7 @@ import io
 def SplunkGenerateGraphicsObjects(model,key,plot,graphics_path="/srv/app/graphics"):
     pic_IObytes = io.BytesIO()
 
-    path=graphics_path+key+".png"
+    path = os.path.join(graphics_path, key + ".png")
 
     if hasattr(plot,'fig'):
         plot.fig.savefig(pic_IObytes, format='png')
