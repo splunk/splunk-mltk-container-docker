@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dsdl-support"
+version = "1.0.0"
+authors = [
+  { name="Philipp Drieger", email="pdrieger@splunk.com" },
+  { name="Josh Cowling", email="jcowling@splunk.com" }
+]
+description = "Supporting functions for containers in Splunk app for Data Science and Deep Learning"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://splunkbase.splunk.com/app/4607"
+
