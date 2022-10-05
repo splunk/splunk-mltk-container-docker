@@ -19,7 +19,7 @@ RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_6
 # Install basic frameworks
 RUN conda install -n base tensorflow-gpu pytorch 
 RUN conda install -n base nb_conda waitress datashader && \
-    conda install -n base -c conda-forge "nodejs>=10.0.0" jupyterlab jupyterlab-git dask-ml dask-labextension dask-xgboost "spacy==2.3.2" fbprophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn pymc3 stumpy tqdm node2vec mlflow && \
+    conda install -n base -c conda-forge "nodejs>=10.0.0" jupyterlab jupyterlab-git dask-ml dask-labextension dask-xgboost "spacy==2.3.2" fbprophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn stumpy tqdm node2vec mlflow widgetsnbextension && \
     jupyter labextension install dask-labextension && \
     jupyter serverextension enable --py --sys-prefix dask_labextension --user && \
     pip install jupyter-tensorboard && \
@@ -35,7 +35,6 @@ RUN conda install -n base nb_conda waitress datashader && \
     pip install pyopenssl
 RUN pip install splunk-sdk splunk-opentelemetry[all] opentelemetry-instrumentation-fastapi
 #RUN conda install pyg -c pyg # omit as it currently causes huge dependency resolving conflicts
-RUN conda install -n base -c conda-forge widgetsnbextension
 
 RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
 RUN jupyter labextension enable --py widgetsnbextension
@@ -44,8 +43,6 @@ RUN conda install -n base -c conda-forge "fastapi<=0.76.0"
 RUN conda install -n base aiofiles
 RUN conda clean --all -f -y && \
     find "/opt/conda" -depth \( -type f -a -name '*.pyc' -o -name '*.pyo' -o -name '*.a' -o -name '*.js.map' \) -exec rm -rf '{}' \;
-
-### TODD hint: pip install --upgrade typing-extensions && \
 
 #RUN conda install -n base pyg -c pyg -c conda-forge
 RUN apt-get update && apt-get upgrade -y

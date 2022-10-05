@@ -31,21 +31,22 @@ RUN conda install -n base nb_conda waitress datashader && \
     pip install pyarrow>=3.0.0 vaex>=4.0.0 causalnex bocd spacytextblob==0.1.7 spektral && \
     jupyter lab build && \
     jupyter lab clean && \
-    pip install pyopenssl && \
-    apt-get update && apt-get install -y build-essential && \
-    pip install pyfim
+    pip install pyopenssl 
+#    apt-get update && apt-get install -y build-essential && \
+#    pip install pyfim
 RUN pip install rrcf 
 #RUN pip install auto-sklearn 
-RUN pip install pyod kats neuralprophet
+RUN pip install pyod 
+#kats neuralprophet
 RUN pip install splunk-sdk splunk-opentelemetry[all] opentelemetry-instrumentation-fastapi
-RUN conda install pyg -c pyg
+#RUN conda install pyg -c pyg
 RUN conda install -n base -c conda-forge widgetsnbextension
-
 RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
 RUN jupyter labextension enable --py widgetsnbextension
 
-RUN conda install -n base -c conda-forge "fastapi<=0.76.0"
-RUN conda install -n base aiofiles
+RUN pip install "fastapi>=0.68.0,<0.69.0" "pydantic>=1.8.0,<2.0.0" "uvicorn>=0.15.0,<0.16.0" aiofiles
+
+#RUN conda install -n base aiofiles
 RUN conda clean --all -f -y && \
     find "/opt/conda" -depth \( -type f -a -name '*.pyc' -o -name '*.pyo' -o -name '*.a' -o -name '*.js.map' \) -exec rm -rf '{}' \;
 
