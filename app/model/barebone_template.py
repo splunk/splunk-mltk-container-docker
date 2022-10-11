@@ -24,10 +24,15 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
 
-
+| makeresults count=10 
+| streamstats c as i 
+| eval s = i%3 
+| eval feature_{s}=0 
+| foreach feature_* [eval <<FIELD>>=random()/pow(2,31)]
+| fit MLTKContainer mode=stage algo=barebone_template _time feature_* i into app:barebone_template
 
     
-# In[6]:
+# In[5]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -49,7 +54,7 @@ def stage(name):
 
 
     
-# In[10]:
+# In[9]:
 
 
 # initialize your model
@@ -67,7 +72,7 @@ def init(df,param):
 
 
     
-# In[12]:
+# In[11]:
 
 
 # train your model
@@ -84,7 +89,7 @@ def fit(model,df,param):
 
 
     
-# In[14]:
+# In[13]:
 
 
 # apply your model
@@ -101,7 +106,7 @@ def apply(model,df,param):
 
 
     
-# In[16]:
+# In[15]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>"
@@ -115,7 +120,7 @@ def save(model,name):
 
 
     
-# In[17]:
+# In[16]:
 
 
 # load model from name in expected convention "<algo_name>_<model_name>"
@@ -130,7 +135,7 @@ def load(name):
 
 
     
-# In[18]:
+# In[17]:
 
 
 # return a model summary
