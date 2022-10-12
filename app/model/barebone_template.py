@@ -21,17 +21,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
 
-
-
-
-| makeresults count=10 
-| streamstats c as i 
-| eval s = i%3 
-| eval feature_{s}=0 
-| foreach feature_* [eval <<FIELD>>=random()/pow(2,31)]
-| fit MLTKContainer mode=stage algo=barebone_template _time feature_* i into app:barebone_template
-
-    
+   
 # In[5]:
 
 
