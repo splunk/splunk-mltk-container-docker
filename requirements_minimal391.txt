@@ -18,7 +18,7 @@ matplotlib
 # Splunk related
 splunk-sdk
 splunk-opentelemetry[all]
-opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-fastapi==0.33b0
 
 # Python data science basics
 et-xmlfile==1.1.0

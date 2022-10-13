@@ -13,14 +13,14 @@ jupyter_client<7.0.0
 ipywidgets
 jupyterlab-git
 widgetsnbextension
+matplotlib
 #nb_conda
 #nodejs>10.0.0
-
 
 # Splunk related
 splunk-sdk
 splunk-opentelemetry[all]
-opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-fastapi==0.33b0
 
 # Python data science basics
 pandas
