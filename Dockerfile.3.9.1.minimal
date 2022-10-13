@@ -16,7 +16,9 @@ WORKDIR /srv
 RUN mkdir /dltk
 COPY ./requirements_minimal391.txt /dltk/requirements_minimal391.txt
 RUN pip install --no-cache-dir --upgrade -r /dltk/requirements_minimal391.txt
-RUN apt-get update && apt-get upgrade -y
+#RUN pip install pm4py
+#RUN apt-get update --fix-missing && apt-get -y install graphviz
+#RUN apt-get update && apt-get upgrade -y
 
 # Install modules
 RUN jupyter labextension enable --py widgetsnbextension && \
