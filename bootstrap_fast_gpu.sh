@@ -25,5 +25,5 @@ if [ "$MODE_DEV_PROD" = "PROD" ]; then
   uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
 else
   echo "Starting in mode = DEV"
-  jupyter lab --no-browser --ip=0.0.0.0 --port=8888 --allow-root & uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
+  jupyter lab --no-browser --ip=0.0.0.0 --port=8888 & tensorboard --bind_all --logdir /srv/notebooks/logs/ & mlflow ui -p 6000 -h 0.0.0.0 & uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
 fi

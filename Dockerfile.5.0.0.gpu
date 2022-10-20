@@ -23,7 +23,6 @@ RUN pip install --no-cache-dir --upgrade -r /dltk/requirements_minimal_gpu_templ
 RUN pip install torch tensorflow-gpu
 RUN pip install datashader dask-ml dask-labextension jupyter-tensorboard dask-xgboost mlflow
 RUN pip install prophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn stumpy tqdm bocd rrcf pyod suod pymc3
-RUN pip install jupyterlab-nvdashboard
 
 RUN apt-get update && apt-get upgrade -y
 
@@ -35,7 +34,7 @@ RUN jupyter labextension install dask-labextension && \
 
 
 # Copy bootstrap entry point script
-COPY bootstrap_fast.sh /dltk/
+COPY bootstrap_fast_gpu.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
 
@@ -71,4 +70,4 @@ USER 1001
 EXPOSE 5000 8888
 
 # Define bootstrap as entry point to start container
-ENTRYPOINT ["/dltk/bootstrap_fast.sh"]
+ENTRYPOINT ["/dltk/bootstrap_fast_gpu.sh"]
