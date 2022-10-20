@@ -17,4 +17,11 @@ else
   echo "ENABLE_HTTPS=true"
 fi
 
-jupyter lab --no-browser & mlflow ui -p 6000 -h 0.0.0.0 & uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
+if [ "$MODE_DEV_PROD" = "PROD" ]; then
+  echo "Starting in mode = PROD"
+  uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
+else
+  echo "Starting in mode = DEV"
+  jupyter lab --no-browser --ip=0.0.0.0 --port=8888 & mlflow ui -p 6000 -h 0.0.0.0 & uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
+fi
+
