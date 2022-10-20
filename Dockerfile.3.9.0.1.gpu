@@ -39,8 +39,9 @@ RUN pip install splunk-sdk splunk-opentelemetry[all] opentelemetry-instrumentati
 RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
 RUN jupyter labextension enable --py widgetsnbextension
 
-RUN conda install -n base -c conda-forge "fastapi<=0.76.0"
-RUN conda install -n base aiofiles
+RUN pip install "fastapi<=0.76.0" aiofiles "uvicorn>=0.15.0,<0.16.0" "pydantic>=1.8.0,<2.0.0" pyopenssl
+#RUN conda install -n base -c conda-forge "fastapi<=0.76.0"
+#RUN conda install -n base aiofiles
 RUN conda clean --all -f -y && \
     find "/opt/conda" -depth \( -type f -a -name '*.pyc' -o -name '*.pyo' -o -name '*.a' -o -name '*.js.map' \) -exec rm -rf '{}' \;
 

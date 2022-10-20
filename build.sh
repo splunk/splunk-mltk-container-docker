@@ -18,6 +18,34 @@ else
   tag="$1"
 fi
 case $tag in
+	template-cpu)
+		base="python:3.9.13-bullseye"
+		dockerfile="Dockerfile.5.0.0.minimal.cpu.template"
+		;;
+	template-gpu)
+		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.5.0.0.minimal.gpu.template"
+		;;
+	golden-image-cpu)
+		base="python:3.9.13-bullseye"
+		dockerfile="Dockerfile.5.0.0.cpu"
+		;;
+	golden-image-gpu)
+		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.5.0.0.gpu"
+		;;		
+	river)
+		base="python:3.9"
+		dockerfile="Dockerfile.5.0.0.river"
+		;;
+	spark)
+		base="jupyter/all-spark-notebook:spark-3.2.1"
+		dockerfile="Dockerfile.5.0.0.spark"
+		;;
+	rapids)	
+		base="rapidsai/rapidsai-core:22.04-cuda11.5-runtime-ubuntu20.04-py3.8"
+		dockerfile="Dockerfile.5.0.0.rapids"
+		;;
 	minimal-cpu)
 		#base="python:3.9.13-bullseye"
 		#base="python:3.11-rc-slim"
@@ -25,24 +53,11 @@ case $tag in
 		base="python:3.10-bullseye"
 		dockerfile="Dockerfile.3.9.1.minimal"
 		;;
-	golden-image-cpu)
-		base="ubuntu:22.04"
-		dockerfile="Dockerfile.3.9.1.cpu"
-		;;
-	golden-image-gpu)
-		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		#base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.3.9.1.gpu"
-		;;		
 	golden-image-gpu-3-9)
 		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
 		#base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
 		dockerfile="Dockerfile.3.9.gpu"
 		;;		
-	river)
-		base="python:3.9"
-		dockerfile="Dockerfile.3.9.1.river"
-		;;
 	river-3-9)
 		base="python:3.9"
 		dockerfile="Dockerfile.3.9.river"
@@ -91,10 +106,6 @@ case $tag in
 	golden-image-gpu-3-4)
 		base="nvidia/cuda:10.2-cudnn7-runtime-ubuntu16.04"
 		;;
-	spark)
-		base="jupyter/all-spark-notebook:spark-3.2.1"
-		dockerfile="Dockerfile.3.9.1.spark"
-		;;
 	spark-3-9)
 		base="jupyter/all-spark-notebook:spark-3.2.1"
 		dockerfile="Dockerfile.3.9.spark"
@@ -110,10 +121,6 @@ case $tag in
 	spark-3-4)
 		base="jupyter/pyspark-notebook:latest"
 		dockerfile="Dockerfile.spark"
-		;;
-	rapids)	
-		base="rapidsai/rapidsai-core:22.04-cuda11.5-runtime-ubuntu20.04-py3.8"
-		dockerfile="Dockerfile.3.9.rapids"
 		;;
 	rapids-3-8)	
 		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.7"
