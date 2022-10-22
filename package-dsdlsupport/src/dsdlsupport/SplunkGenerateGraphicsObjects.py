@@ -1,16 +1,17 @@
 import base64
 import io 
 import os
+
 #todo
 # path should incorporate model name, algo name and cell metadata?
 # create a package with this and the other functions required
 # summary command should have mode options?
 # need to pass hostname from DLTK into container for absolute URI reference
 
-def SplunkGenerateGraphicsObjects(model,key,plot,graphics_path="/srv/app/graphics"):
+def SplunkGenerateGraphicsObjects(model,key,plot,graphics_path="/srv/app/graphics/"):
     pic_IObytes = io.BytesIO()
 
-    path = os.path.join(graphics_path, key + ".png")
+    path=graphics_path+key+".png"
 
     if hasattr(plot,'fig'):
         plot.fig.savefig(pic_IObytes, format='png')
@@ -26,7 +27,8 @@ def SplunkGenerateGraphicsObjects(model,key,plot,graphics_path="/srv/app/graphic
         model["graphics"] = {}
 
     model["graphics"][key] = {}
-    model["graphics"][key]["base64"]=pic_base64
-    model["graphics"][key]["path"]=path
+    #model["graphics"][key]["base64"]=pic_base64
+    model["graphics"][key]["container_local_path"]=path
+    model["graphics"][key]["external_relative_path"]="graphics/"+key+".png"
         
     return model
