@@ -27,7 +27,7 @@ def SplunkGenerateGraphicsObjects(model,key,plot,graphics_path="/srv/app/graphic
         model["graphics"] = {}
 
     model["graphics"][key] = {}
-    #model["graphics"][key]["base64"]=pic_base64
+    model["graphics"][key]["base64"]=pic_base64
     model["graphics"][key]["container_local_path"]=path
     model["graphics"][key]["external_relative_path"]="graphics/"+key+".png"
         
