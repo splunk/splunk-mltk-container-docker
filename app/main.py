@@ -3,6 +3,7 @@
 # -------------------------------------------------------------------------------
 
 from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 
 from importlib import import_module, reload
@@ -21,6 +22,7 @@ app.Model = {}
 app.NotebookDataPath = '/srv/notebooks/data/'
 app.favicon_path = '/srv/app/static/favicon.ico'
 app.data_path = '/srv/app/data/'
+app.graphics_path = '/srv/app/graphics/'
 
 @app.on_event("startup")
 def setup_tracing():
@@ -31,6 +33,10 @@ def setup_tracing():
             start_tracing()
             FastAPIInstrumentor.instrument_app(app)
 
+# -------------------------------------------------------------------------------
+# STATIC mounts
+# -------------------------------------------------------------------------------
+app.mount("/graphics", StaticFiles(directory=app.graphics_path), name="graphics")
 
 # -------------------------------------------------------------------------------
 # HELPER functions
