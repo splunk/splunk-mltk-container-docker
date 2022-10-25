@@ -1,5 +1,5 @@
-# Deep Learning Toolkit for Splunk 3.9.0
-# Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2021
+# Deep Learning Toolkit for Splunk 5.0.0
+# Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2022
 # -------------------------------------------------------------------------------
 
 from fastapi import FastAPI, Request
@@ -64,7 +64,7 @@ def get_root():
 def get_summary():
     return_object = {
         'app': 'Splunk App for Data Science and Deep Learning',
-        'version': '3.9.0',
+        'version': '5.0.0',
         'model': 'no model exists'
     }
     if "model" in app.Model:
