@@ -1,5 +1,5 @@
 #!/bin/sh
-echo "Build and push all 3.8 images"
+echo "Build and push all 5.0.0 images"
 
 ./build.sh golden-image-cpu phdrieger/ 3.8.0
 docker push phdrieger/mltk-container-golden-image-cpu:3.8.0
