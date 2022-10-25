@@ -31,8 +31,8 @@ case $tag in
 		dockerfile="Dockerfile.5.0.0.cpu"
 		;;
 	golden-image-gpu)
-		#base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		base="nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04"
+		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
+		#base="nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04"
 		dockerfile="Dockerfile.5.0.0.gpu"
 		;;		
 	river)
@@ -44,7 +44,9 @@ case $tag in
 		dockerfile="Dockerfile.5.0.0.spark"
 		;;
 	rapids)	
-		base="rapidsai/rapidsai-core:22.04-cuda11.5-runtime-ubuntu20.04-py3.8"
+		#base="rapidsai/rapidsai-core:22.04-cuda11.5-runtime-ubuntu20.04-py3.8"
+		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.8"
+		#base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.7"
 		dockerfile="Dockerfile.5.0.0.rapids"
 		;;
 	minimal-cpu)

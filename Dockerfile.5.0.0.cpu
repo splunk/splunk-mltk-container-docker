@@ -32,7 +32,6 @@ RUN jupyter labextension install dask-labextension && \
     jupyter labextension enable --py widgetsnbextension && \
     jupyter lab clean
 
-
 # Copy bootstrap entry point script
 COPY bootstrap_fast.sh /dltk/
 COPY app /dltk/app

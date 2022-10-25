@@ -15,6 +15,7 @@ jupyterlab-git
 widgetsnbextension
 matplotlib
 datashader
+seaborn
 dask-ml
 dask-labextension
 jupyter-tensorboard
