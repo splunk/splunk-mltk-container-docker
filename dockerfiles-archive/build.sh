@@ -18,34 +18,12 @@ else
   tag="$1"
 fi
 case $tag in
-	template-cpu)
-		base="python:3.9.13-bullseye"
-		dockerfile="Dockerfile.5.0.0.minimal.cpu.template"
-		;;
-	template-gpu)
-		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.5.0.0.minimal.gpu.template"
-		;;
-	golden-image-cpu)
-		base="python:3.9.13-bullseye"
-		dockerfile="Dockerfile.5.0.0.cpu"
-		;;
-	golden-image-gpu)
-		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.5.0.0.gpu"
-		;;		
-	river)
-		base="python:3.9"
-		dockerfile="Dockerfile.5.0.0.river"
-		;;
-	spark)
-		base="jupyter/all-spark-notebook:spark-3.2.1"
-		dockerfile="Dockerfile.5.0.0.spark"
-		;;
-	rapids)	
-		#base="rapidsai/rapidsai-core:22.04-cuda11.5-runtime-ubuntu20.04-py3.8"
-		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.8"
-		dockerfile="Dockerfile.5.0.0.rapids"
+	minimal-cpu)
+		#base="python:3.9.13-bullseye"
+		#base="python:3.11-rc-slim"
+		#base="ubuntu:22.04"
+		base="python:3.10-bullseye"
+		dockerfile="Dockerfile.3.9.1.minimal"
 		;;
 	golden-image-gpu-3-9)
 		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
@@ -56,17 +34,93 @@ case $tag in
 		base="python:3.9"
 		dockerfile="Dockerfile.3.9.river"
 		;;
+	river-3-8)
+		base="python:3.9"
+		dockerfile="Dockerfile.3.8.river"
+		;;
+	golden-image-cpu-show)
+		base="ubuntu:22.04"
+		dockerfile="Dockerfile.3.9.cpu"
+		;;
+	golden-image-cpu-3-9-1)
+		base="ubuntu:22.04"
+		dockerfile="Dockerfile.3.9.1.cpu"
+		;;
 	golden-image-cpu-3-9)
 		base="ubuntu:20.04"
 		dockerfile="Dockerfile.3.9.cpu"
+		;;
+	golden-image-cpu-3-8)
+		base="ubuntu:20.04"
+		dockerfile="Dockerfile.3.8.cpu"
+		;;
+	golden-image-cpu-3-7)
+		base="ubuntu:20.04"
+		dockerfile="Dockerfile.3.7.cpu"
+		;;
+	golden-image-cpu-3-5)
+		base="ubuntu:20.04"
+		dockerfile="Dockerfile.3.5.cpu"
+		;;
+	golden-image-gpu-3-8)
+		#base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
+		base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.8.gpu"
+		;;		
+	golden-image-gpu-3-7)
+		base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.7.gpu"
+		;;
+	golden-image-gpu-3-5)
+		base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.5"
+		;;
+	golden-image-gpu-3-4)
+		base="nvidia/cuda:10.2-cudnn7-runtime-ubuntu16.04"
 		;;
 	spark-3-9)
 		base="jupyter/all-spark-notebook:spark-3.2.1"
 		dockerfile="Dockerfile.3.9.spark"
 		;;
-	rapids-3-9)	
+	spark-3-8)
+		base="jupyter/pyspark-notebook:spark-3.2.0"
+		dockerfile="Dockerfile.3.8.spark"
+		;;
+	spark-3-5)
+		base="jupyter/pyspark-notebook:latest"
+		dockerfile="Dockerfile.3.5.spark"
+		;;
+	spark-3-4)
+		base="jupyter/pyspark-notebook:latest"
+		dockerfile="Dockerfile.spark"
+		;;
+	rapids-3-8)	
 		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.7"
-		dockerfile="Dockerfile.3.9.rapids"
+		dockerfile="Dockerfile.3.8.rapids"
+		;;
+	rapids-3-5)
+		base="rapidsai/rapidsai:0.18-cuda11.0-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.5.rapids"
+		;;
+	rapids-3-4)
+		base="rapidsai/rapidsai:cuda11.0-runtime-ubuntu16.04-py3.7"
+		dockerfile="Dockerfile.rapids"
+		;;
+	tf-cpu)
+		base="tensorflow/tensorflow:2.0.0b1-py3"
+		dockerfile="Dockerfile.root.3.0"
+		;;
+	tf-gpu)
+		base="tensorflow/tensorflow:2.0.0b1-gpu-py3"
+		dockerfile="Dockerfile.root.3.0"
+		;;
+	pytorch)
+		base="pytorch/pytorch:latest"
+		dockerfile="Dockerfile.root.3.0"
+		;;
+	nlp)
+		base="tensorflow/tensorflow:2.0.0b1-gpu-py3"
+		dockerfile="Dockerfile.root.3.0"
 		;;
 	*)
 		echo "Invalid container image tag: $tag, expected [golden-image-cpu|golden-image-gpu|tf-cpu|tf-gpu|pytorch|pytorch-nlp]"

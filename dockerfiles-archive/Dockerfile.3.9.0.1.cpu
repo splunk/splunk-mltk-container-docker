@@ -17,37 +17,37 @@ RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_6
     echo "conda activate base" >> ~/.bashrc
 
 # Install basic frameworks
-RUN conda install -n base tensorflow-gpu pytorch 
+RUN conda install -n base pytorch cpuonly -c pytorch && \
+    conda install -c anaconda tensorflow
 RUN conda install -n base nb_conda waitress datashader && \
-    conda install -n base -c conda-forge "nodejs>=10.0.0" jupyterlab jupyterlab-git dask-ml dask-labextension dask-xgboost "spacy==2.3.2" fbprophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn pymc3 stumpy tqdm node2vec mlflow && \
+    conda install -n base -c conda-forge "nodejs>=10.0.0" jupyterlab jupyterlab-git dask-ml dask-labextension dask-xgboost "spacy==2.3.2" fbprophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn pymc3 stumpy tqdm node2vec mlflow ipywidgets widgetsnbextension && \
     jupyter labextension install dask-labextension && \
     jupyter serverextension enable --py --sys-prefix dask_labextension --user && \
     pip install jupyter-tensorboard && \
     jupyter labextension install jupyterlab_tensorboard && \
     jupyter serverextension enable --py --sys-prefix jupyter_tensorboard && \
     jupyter tensorboard enable --user && \
-    pip install "jupyterlab-nvdashboard==0.5.0" && \
-    jupyter labextension install jupyterlab-nvdashboard && \
-    python -m spacy download en_core_web_sm && \
-    pip install pyarrow>=3.0.0 vaex>=4.0.0 causalnex bocd spacytextblob==0.1.7 spektral && \
+    python -m spacy download en_core_web_sm
+RUN pip install causalnex bocd spacytextblob==0.1.7 pyopenssl rrcf pyod
+#FIX for instrumentation to use version 0.33b0
+RUN pip install splunk-sdk splunk-opentelemetry[all] opentelemetry-instrumentation-fastapi==0.33b0
+#RUN conda install pyg -c pyg
+#RUN conda install -n base -c conda-forge 
+#RUN pip install causalnex bocd spacytextblob==0.1.7
+#RUN pip install pyarrow>=3.0.0 vaex>=4.0.0 causalnex bocd spacytextblob==0.1.7 spektral && \
+#    pip install pyfim
+
+RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager && \
+    jupyter labextension enable --py widgetsnbextension && \
     jupyter lab build && \
     jupyter lab clean && \
-    pip install pyopenssl
-RUN pip install splunk-sdk splunk-opentelemetry[all] opentelemetry-instrumentation-fastapi
-#RUN conda install pyg -c pyg # omit as it currently causes huge dependency resolving conflicts
-RUN conda install -n base -c conda-forge widgetsnbextension
+    apt-get update && apt-get install -y build-essential 
 
-RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
-RUN jupyter labextension enable --py widgetsnbextension
+RUN pip install "fastapi<=0.76.0" aiofiles "uvicorn>=0.15.0,<0.16.0" "pydantic>=1.8.0,<2.0.0" pyopenssl
 
-RUN conda install -n base -c conda-forge "fastapi<=0.76.0"
-RUN conda install -n base aiofiles
 RUN conda clean --all -f -y && \
     find "/opt/conda" -depth \( -type f -a -name '*.pyc' -o -name '*.pyo' -o -name '*.a' -o -name '*.js.map' \) -exec rm -rf '{}' \;
 
-### TODD hint: pip install --upgrade typing-extensions && \
-
-#RUN conda install -n base pyg -c pyg -c conda-forge
 RUN apt-get update && apt-get upgrade -y
 
 RUN mkdir /dltk
@@ -58,12 +58,22 @@ WORKDIR /srv
 COPY bootstrap_fast.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
+
+# Install local DSDL supporting functions
+RUN mkdir /dltk/packages
+COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
+RUN pip install /dltk/packages/dsdlsupport-1.0.0.tar.gz
+
 # Copy certificates generated with
 # openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout dltk.key -out dltk.pem
 COPY config/dltk.key /dltk/.jupyter/dltk.key
 COPY config/dltk.pem /dltk/.jupyter/dltk.pem
 # Copy jupyter config
 COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py
+# Since JupyterLab 3 jupyter server config needs to be set
+COPY config/jupyter_server_config.py /dltk/.jupyter/jupyter_server_config.py
+# TODO see if it makes sense to separate it with a specific jupyter_server_config.py 
+# For now: shortcut with a copy of the notebook config
 # Copy jupyter notebook conversion template to export python module
 COPY config/jupyter_notebook_template.tpl /dltk/.jupyter/jupyter_notebook_conversion.tpl
 COPY config/null.tpl /dltk/.jupyter/null.tpl
@@ -77,7 +87,6 @@ RUN chmod g+w /etc/passwd
 USER 1001
 
 # Install additional user libraries
-# RUN pip install ginza
 
 # Expose container port 5000 (MLTK Container Service) and 8888 (Notebook) and 6006 (Tensorboard)
 EXPOSE 5000 8888 6006

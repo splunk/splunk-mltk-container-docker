@@ -1,0 +1,43 @@
+# FastAPI stack
+fastapi>=0.68.0,<0.69.0
+pydantic>=1.8.0,<2.0.0
+uvicorn>=0.15.0,<0.16.0
+aiofiles
+pyopenssl 
+
+# Jupyter Lab environment
+jupyterlab
+# due to https://github.com/jupyter/notebook/issues/6164
+jupyter_client<7.0.0
+
+ipywidgets
+jupyterlab-git
+widgetsnbextension
+matplotlib
+
+# Splunk related
+splunk-sdk
+splunk-opentelemetry[all]
+opentelemetry-instrumentation-fastapi==0.33b0
+
+# Python data science basics
+et-xmlfile==1.1.0
+greenlet==1.1.3
+imbalanced-learn==0.9.0
+imblearn==0.0
+importlib-metadata==4.12.0
+joblib==1.2.0
+numpy==1.21.6
+openpyxl==3.0.10
+pandas==1.3.5
+pymssql==2.2.5
+python-dateutil==2.8.2
+pytz==2022.2.1
+scikit-learn==1.0.2
+scipy==1.7.3
+six==1.16.0
+sklearn==0.0
+SQLAlchemy==1.4.41
+threadpoolctl==3.1.0
+typing_extensions==4.3.0
+zipp==3.8.1

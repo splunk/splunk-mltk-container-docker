@@ -1,8 +1,9 @@
-# Deep Learning Toolkit for Splunk 3.9.0
-# Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2021
+# Deep Learning Toolkit for Splunk 5.0.0
+# Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2022
 # -------------------------------------------------------------------------------
 
 from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 
 from importlib import import_module, reload
@@ -21,6 +22,7 @@ app.Model = {}
 app.NotebookDataPath = '/srv/notebooks/data/'
 app.favicon_path = '/srv/app/static/favicon.ico'
 app.data_path = '/srv/app/data/'
+app.graphics_path = '/srv/app/graphics/'
 
 @app.on_event("startup")
 def setup_tracing():
@@ -31,6 +33,10 @@ def setup_tracing():
             start_tracing()
             FastAPIInstrumentor.instrument_app(app)
 
+# -------------------------------------------------------------------------------
+# STATIC mounts
+# -------------------------------------------------------------------------------
+app.mount("/graphics", StaticFiles(directory=app.graphics_path), name="graphics")
 
 # -------------------------------------------------------------------------------
 # HELPER functions
@@ -58,7 +64,7 @@ def get_root():
 def get_summary():
     return_object = {
         'app': 'Splunk App for Data Science and Deep Learning',
-        'version': '3.9.0',
+        'version': '5.0.0',
         'model': 'no model exists'
     }
     if "model" in app.Model:
@@ -273,7 +279,7 @@ async def set_apply(request : Request):
         # TODO check if same algo and model name otherwise hard load by default
         try:
             df_result = pd.DataFrame(app.Model["algo"].apply(app.Model["model"], app.Model["df"], app.Model["meta"]))
-            print("/fit: returned result dataframe with shape " + str(df_result.shape) + "")
+            print("/apply: returned result dataframe with shape " + str(df_result.shape) + "")
         except Exception as e:
             response["message"] += 'unable to apply model. Ended with exception: ' + str(e)
             return response

@@ -10,6 +10,9 @@ if [ -w /etc/passwd ]; then
 fi
 export HOME=/dltk
 
+# add path for user installed packages (TO TEST)
+export PATH=/dltk/.local/bin:/dltk/.local/lib/python3.9/site-packages/:$PATH
+
 uvicorn_https_param="--ssl-keyfile /dltk/.jupyter/dltk.key --ssl-certfile /dltk/.jupyter/dltk.pem" 
 if [ "$ENABLE_HTTPS" = "false" ]; then
   uvicorn_https_param=""
@@ -17,4 +20,10 @@ else
   echo "ENABLE_HTTPS=true"
 fi
 
-jupyter lab --no-browser & uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
+if [ "$MODE_DEV_PROD" = "PROD" ]; then
+  echo "Starting in mode = PROD"
+  uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
+else
+  echo "Starting in mode = DEV"
+  jupyter lab --no-browser --ip=0.0.0.0 --port=8888 & uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
+fi

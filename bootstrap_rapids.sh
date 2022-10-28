@@ -6,7 +6,7 @@ export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
 umask 002
-cp -R -n /dltk/app /srv
+cp -R /dltk/app /srv
 cp -R -n /dltk/notebooks /srv
 if [ -w /etc/passwd ]; then
   echo "dltk:x:$(id -u):0:dltk user:/dltk:/sbin/nologin" >> /etc/passwd
@@ -20,4 +20,10 @@ else
   echo "ENABLE_HTTPS=true"
 fi
 
-jupyter lab --no-browser & uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
+if [ "$MODE_DEV_PROD" = "PROD" ]; then
+  echo "Starting in mode = PROD"
+  uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
+else
+  echo "Starting in mode = DEV"
+  jupyter lab --no-browser --ip=0.0.0.0 --port=8888 --allow-root & uvicorn app.main:app --host 0.0.0.0 --port 5000 $uvicorn_https_param
+fi
