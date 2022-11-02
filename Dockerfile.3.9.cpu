@@ -43,9 +43,6 @@ RUN pip install --use-feature=2020-resolver splunk-sdk splunk-opentelemetry[all]
 RUN conda install pyg -c pyg
 RUN conda install -n base -c conda-forge widgetsnbextension
 
-
-RUN conda install pyg -c pyg
-
 RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
 RUN jupyter labextension enable --py widgetsnbextension
 
