@@ -62,10 +62,10 @@ RUN mkdir -p /dltk/app/data/classification/en
 RUN mkdir -p /dltk/app/data/classification/jp
 RUN mkdir -p /dltk/app/data/summarization/en
 RUN mkdir -p /dltk/app/data/summarization/jp
-ADD basemodels/bert_classification_en.tar.gz /dltk/app/model/data/classification/en/bert_classification_en
-ADD basemodels/bert_classification_jp.tar.gz /dltk/app/model/data/classification/jp/bert_classification_jp
-ADD basemodels/t5_summarization_en.tar.gz /dltk/app/model/data/summarization/en/t5_summarization_en
-ADD basemodels/t5_summarization_jp.tar.gz /dltk/app/model/data/summarization/jp/t5_summarization_jp
+ADD basemodels/class_en.tar.gz /dltk/app/model/data/classification/en
+ADD basemodels/class_jp.tar.gz /dltk/app/model/data/classification/jp
+ADD basemodels/sum_en.tar.gz /dltk/app/model/data/summarization/en
+ADD basemodels/sum_jp.tar.gz /dltk/app/model/data/summarization/jp
 # Copy certificates generated with
 # openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout dltk.key -out dltk.pem
 COPY config/dltk.key /dltk/.jupyter/dltk.key
