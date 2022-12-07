@@ -16,6 +16,7 @@ torchmetrics
 tensorflow==2.8.0
 keras==2.8.0 # come with tensorflow
 numpy==1.22.1
+numexpr==2.7.3
 sklearn
 pandas
 fugashi
