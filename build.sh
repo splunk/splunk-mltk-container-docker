@@ -68,6 +68,14 @@ case $tag in
 		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.7"
 		dockerfile="Dockerfile.3.9.rapids"
 		;;
+	transformers-cpu)
+		base="tensorflow/tensorflow:2.8.0"
+		dockerfile="Dockerfile.3.9.transformers.cpu"
+		;;
+	transformers-gpu)
+		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.3.9.transformers.gpu"
+		;;
 	*)
 		echo "Invalid container image tag: $tag, expected [golden-image-cpu|golden-image-gpu|tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
     	break
