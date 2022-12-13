@@ -1,0 +1,13 @@
+ARG BASE_IMAGE=jupyterhub/jupyterhub
+FROM ${BASE_IMAGE}
+# Install the notebook package
+#RUN python3 -m pip install notebook jupyterlab
+RUN python3 -m pip install dockerspawner jupyterhub-dummyauthenticator
+WORKDIR /srv/jupyterhub
+COPY bootstrap_hub.sh /srv/jupyterhub/
+COPY jupyterhub_config.py /etc/jupyterhub/
+# Create a demo user
+#RUN useradd --create-home dsdl
+#RUN chown dsdl .
+#USER dsdl
+ENTRYPOINT ["/srv/jupyterhub/bootstrap_hub.sh"]
