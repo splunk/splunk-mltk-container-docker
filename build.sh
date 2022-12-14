@@ -69,8 +69,10 @@ case $tag in
 		dockerfile="Dockerfile.3.9.rapids"
 		;;
 	transformers-cpu)
-		base="tensorflow/tensorflow:2.8.0"
-		dockerfile="Dockerfile.3.9.transformers.cpu"
+		#base="tensorflow/tensorflow:2.8.0"
+		#dockerfile="Dockerfile.3.9.transformers.cpu"
+		base="python:3.9.13-bullseye"
+		dockerfile="Dockerfile.5.1.0.transformers.cpu"
 		;;
 	transformers-gpu)
 		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
