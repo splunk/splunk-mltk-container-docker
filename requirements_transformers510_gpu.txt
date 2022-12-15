@@ -19,6 +19,8 @@ seaborn
 dask-ml
 dask-labextension
 jupyter-tensorboard
+jupyterlab-nvdashboard
+jupyterlab_nvdashboard
 mlflow
 
 # Splunk related
@@ -41,3 +43,6 @@ sklearn
 pandas
 fugashi
 ipadic
+scipy
+scikit-learn
+networkx
