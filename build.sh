@@ -76,7 +76,7 @@ case $tag in
 		;;
 	transformers-gpu)
 		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.3.9.transformers.gpu"
+		dockerfile="Dockerfile.5.1.0.transformers.gpu"
 		;;
 	*)
 		echo "Invalid container image tag: $tag, expected [golden-image-cpu|golden-image-gpu|tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
