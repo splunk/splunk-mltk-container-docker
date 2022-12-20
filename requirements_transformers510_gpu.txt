@@ -46,4 +46,3 @@ ipadic
 scipy
 scikit-learn
 networkx
-tornado
