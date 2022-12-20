@@ -15,5 +15,6 @@ torch
 torchmetrics
 pandas
 transformers
+sentencepiece
 fugashi
 ipadic
