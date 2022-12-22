@@ -42,7 +42,7 @@ RUN pip install --no-cache-dir --upgrade -r /dltk/requirements_transformers39_cp
 RUN apt-get update && apt-get upgrade -y
 
 # Copy bootstrap entry point script
-COPY bootstrap_transformers.sh /dltk/
+COPY bootstrap_fast.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
 # Unzip basemodel files
