@@ -76,4 +76,4 @@ USER 1001
 EXPOSE 5000 8888 6006
 
 # Define bootstrap as entry point to start container
-ENTRYPOINT ["/dltk/bootstrap_transformers.sh"]
+ENTRYPOINT ["/dltk/bootstrap_fast.sh"]
