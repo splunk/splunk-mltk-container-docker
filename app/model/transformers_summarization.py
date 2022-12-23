@@ -114,9 +114,12 @@ def init(df,param):
     model = model.to(device)
     print(tag + "Model Initialization: successfully finished")
     # GPU memory calculation
-    t = torch.cuda.get_device_properties(0).total_memory
-    r = torch.cuda.memory_reserved(0)
-    a = torch.cuda.memory_allocated(0)
+    if torch.cuda.is_available(): 
+        t = torch.cuda.get_device_properties(0).total_memory
+        r = torch.cuda.memory_reserved(0)
+        a = torch.cuda.memory_allocated(0)
+    else:
+        t, r, a = 0,0,0
     f = r-a  # free inside reserved
     load1, load5, load15 = psutil.getloadavg()
     cpu_usage = (load15/os.cpu_count()) * 100
@@ -269,9 +272,12 @@ def fit(model,df,param):
 
         loss_valid = evaluate(model=model, data=valid_iter, PAD_IDX=PAD_IDX)
         
-        t = torch.cuda.get_device_properties(0).total_memory
-        r = torch.cuda.memory_reserved(0)
-        a = torch.cuda.memory_allocated(0)
+        if torch.cuda.is_available(): 
+            t = torch.cuda.get_device_properties(0).total_memory
+            r = torch.cuda.memory_reserved(0)
+            a = torch.cuda.memory_allocated(0)
+        else:
+            t, r, a = 0,0,0
         f = r-a  # free inside reserved
         load1, load5, load15 = psutil.getloadavg()
         cpu_usage = (load15/os.cpu_count()) * 100
