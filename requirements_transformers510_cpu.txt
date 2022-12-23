@@ -40,3 +40,4 @@ pandas
 transformers
 fugashi
 ipadic
+nltk

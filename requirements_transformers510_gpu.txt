@@ -46,3 +46,4 @@ ipadic
 scipy
 scikit-learn
 networkx
+nltk
