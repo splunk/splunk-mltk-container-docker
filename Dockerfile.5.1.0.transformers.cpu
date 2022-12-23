@@ -28,10 +28,6 @@ COPY app /dltk/app
 COPY notebooks /dltk/notebooks
 
 # Unzip basemodel files
-RUN mkdir -p /dltk/app/data/classification/en
-RUN mkdir -p /dltk/app/data/classification/jp
-RUN mkdir -p /dltk/app/data/summarization/en
-RUN mkdir -p /dltk/app/data/summarization/jp
 ADD basemodels/class_en.tar.gz /dltk/app/model/data/classification/en
 ADD basemodels/class_jp.tar.gz /dltk/app/model/data/classification/jp
 ADD basemodels/sum_en.tar.gz /dltk/app/model/data/summarization/en
