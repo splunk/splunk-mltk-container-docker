@@ -117,10 +117,27 @@ def init(df,param):
     print(tag + "Model Initialization: started")
     l = len(list(df.columns)) - 1
     MODEL_NAME = "/srv/app/model/data/classification"
-    MODEL_NAME = os.path.join(MODEL_NAME, param['options']['params']['lang'], param['options']['params']['base_model'])
-    print(tag + "Model file in " + MODEL_NAME)
-    model = BertClassifier(MODEL_NAME, l)
-    model = model.to(device)
+    if param['options']['params']['base_model'] == "bert_classification_en" or param['options']['params']['base_model'] == "bert_classification_jp":
+        MODEL_NAME = os.path.join(MODEL_NAME, param['options']['params']['lang'], param['options']['params']['base_model'])
+        print(tag + "Model file in " + MODEL_NAME)
+        model = BertClassifier(MODEL_NAME, l)
+        model = model.to(device)
+    elif param['options']['params']['lang'] == "en":
+        MODEL_NAME = os.path.join(MODEL_NAME, param['options']['params']['lang'], param['options']['params']['base_model'])
+        BERT_MODEL = "/srv/app/model/data/classification/en/bert_classification_en"
+        print(tag + "Model file in " + MODEL_NAME)
+        model = BertClassifier(BERT_MODEL, l)
+        model = model.to(device)
+        model.load_state_dict(torch.load(os.path.join(MODEL_NAME, "pytorch_model.pt")))
+    else:
+        MODEL_NAME = os.path.join(MODEL_NAME, param['options']['params']['lang'], param['options']['params']['base_model'])
+        BERT_MODEL = "/srv/app/model/data/classification/jp/bert_classification_jp"
+        print(tag + "Model file in " + MODEL_NAME)
+        model = BertClassifier(BERT_MODEL, l)
+        model = model.to(device)
+        model.load_state_dict(torch.load(os.path.join(MODEL_NAME, "pytorch_model.pt")))
+        
+
     print(tag + "Model Initialization: successfully finished")
     # GPU memory calculation
     if torch.cuda.is_available(): 
@@ -425,7 +442,10 @@ def apply(model,df,param):
     tokenizer = BertTokenizer.from_pretrained(MODEL_DIRECTORY)
     MODEL_NAME = os.path.join("/srv/app/model/data/classification", param['options']['params']['lang'], param['options']['params']['base_model'])
     MODEL_DIRECTORY = os.path.join("/srv/app/model/data/classification", param['options']['params']['lang'],param['options']['model_name'])
-    model = BertClassifier(MODEL_NAME,l)
+    if param['options']['params']['lang'] == "en":
+        model = BertClassifier("/srv/app/model/data/classification/en/bert_classification_en",l)
+    else:
+        model = BertClassifier("/srv/app/model/data/classification/jp/bert_classification_jp",l)
     model = model.to(device)
     model.load_state_dict(torch.load(os.path.join(MODEL_DIRECTORY, "pytorch_model.pt"), map_location=torch.device(device)))
     print(tag + "Fine-tuned model reloaded.")
