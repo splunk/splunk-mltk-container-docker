@@ -35,6 +35,8 @@ numexpr==2.7.3
 # libraries
 torch
 torchmetrics
+sumeval
+janome
 sentencepiece
 pandas
 transformers

@@ -39,6 +39,8 @@ transformers
 sentencepiece
 torch
 torchmetrics
+sumeval
+janome
 sklearn
 pandas
 fugashi

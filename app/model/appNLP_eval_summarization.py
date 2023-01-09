@@ -32,6 +32,7 @@ import io
 import os
 import psutil
 import shutil
+from sumeval.metrics.rouge import RougeCalculator
 
 
 
@@ -88,12 +89,28 @@ def apply(model,df,param):
     X = df["summary"].values.tolist()
     Y = df["extracted_summary"].values.tolist()
     temp_rouge=list()
-    rouge = ROUGEScore()
+    pattern = re.compile(r'[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]')
+    if pattern.findall(X[0]):
+        language = "jp"
+        rouge = RougeCalculator(stopwords=True, lang="ja")
+    else:
+        language = "en"
+        rouge = ROUGEScore()
+    # rouge = ROUGEScore()
     print(tag + "scoring begins")
     for i in range(len(X)):
         print(tag + "scoring {}-th utterance over {}. {}% finished.".format(i+1, len(X), round(i/len(X)*100)))
-        r = rouge(X[i], Y[i])
-        temp_rouge.append(round(r[param['options']['params']['metrics']].item(),2))
+        # r = rouge(X[i], Y[i])
+        if language == "jp":
+            rouge_1 = rouge.rouge_n(
+                summary=Y[i],
+                references=X[i],
+                n=1)
+            # temp_rouge.append(round(r[param['options']['params']['metrics']].item(),2))
+            temp_rouge.append(rouge_1)
+        else:
+            r = rouge(X[i], Y[i])
+            temp_rouge.append(round(r[param['options']['params']['metrics']].item(),2))
     cols={param['options']['params']['metrics']: temp_rouge}
     returns=pd.DataFrame(data=cols)
     print(tag + "scoring successfully finished")
