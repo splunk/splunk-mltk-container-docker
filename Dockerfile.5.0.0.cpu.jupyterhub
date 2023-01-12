@@ -43,7 +43,7 @@ RUN jupyter labextension install dask-labextension && \
     jupyter lab clean
 
 # Copy bootstrap entry point script
-COPY bootstrap_fast.sh /dltk/
+COPY bootstrap_fast_jupyterhub.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
 
@@ -84,7 +84,4 @@ USER root
 EXPOSE 5000 8888
 
 # Define bootstrap as entry point to start container
-ENTRYPOINT ["/dltk/bootstrap_fast.sh"]
-
-# # Using CMD instead of bootstrap_fast.sh
-# CMD ["jupyterhub-singleuser"]
+ENTRYPOINT ["/dltk/bootstrap_fast_jupyterhub.sh"]
