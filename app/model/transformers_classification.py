@@ -513,10 +513,14 @@ def apply(model,df,param):
     train_dataloader = DataLoader(train_data, batch_size=batch_size_train, shuffle=False)
     
     all_logits = []
+    total_batches = len(train_dataloader)
+    i = 0
     for batch in train_dataloader:
+        i += 1
         b_input_ids, b_attn_mask = tuple(t.to(device) for t in batch)[:2]
         with torch.no_grad():
             logits = model(b_input_ids, b_attn_mask)
+        print(tag + "finished applying {} out of {} batches".format(i, total_batches))
         all_logits.append(logits)
     all_logits = torch.cat(all_logits, dim=0)
 
