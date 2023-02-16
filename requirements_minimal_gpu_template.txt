@@ -6,9 +6,10 @@ aiofiles
 pyopenssl 
 
 # Jupyter Lab environment
-jupyterlab
+jupyterlab<3.5.0
 # due to https://github.com/jupyter/notebook/issues/6164
 jupyter_client<7.0.0
+#jupyter_client==6.1.12
 
 ipywidgets
 jupyterlab-git

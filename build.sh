@@ -20,19 +20,19 @@ fi
 case $tag in
 	template-cpu)
 		base="python:3.9.13-bullseye"
-		dockerfile="Dockerfile.5.0.0.minimal.cpu.template"
+		dockerfile="Dockerfile.5.1.0.minimal.cpu.template"
 		;;
 	template-gpu)
 		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.5.0.0.minimal.gpu.template"
+		dockerfile="Dockerfile.5.1.0.minimal.gpu.template"
 		;;
 	golden-image-cpu)
 		base="python:3.9.13-bullseye"
-		dockerfile="Dockerfile.5.0.0.cpu"
+		dockerfile="Dockerfile.5.1.0.cpu"
 		;;
 	golden-image-gpu)
 		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.5.0.0.gpu"
+		dockerfile="Dockerfile.5.1.0.gpu"
 		;;		
 	river)
 		base="python:3.9"
@@ -40,9 +40,33 @@ case $tag in
 		;;
 	spark)
 		base="jupyter/all-spark-notebook:spark-3.2.1"
-		dockerfile="Dockerfile.5.0.0.spark"
+		dockerfile="Dockerfile.5.1.0.spark"
 		;;
 	rapids)	
+		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.8"
+		dockerfile="Dockerfile.5.1.0.rapids"
+		;;
+	template-cpu-5-0)
+		base="python:3.9.13-bullseye"
+		dockerfile="Dockerfile.5.0.0.minimal.cpu.template"
+		;;
+	template-gpu-5-0)
+		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.5.0.0.minimal.gpu.template"
+		;;
+	golden-image-cpu-5-0)
+		base="python:3.9.13-bullseye"
+		dockerfile="Dockerfile.5.0.0.cpu"
+		;;
+	golden-image-gpu-5-0)
+		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
+		dockerfile="Dockerfile.5.0.0.gpu"
+		;;		
+	spark-5-0)
+		base="jupyter/all-spark-notebook:spark-3.2.1"
+		dockerfile="Dockerfile.5.0.0.spark"
+		;;
+	rapids-5-0)	
 		#base="rapidsai/rapidsai-core:22.04-cuda11.5-runtime-ubuntu20.04-py3.8"
 		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.8"
 		dockerfile="Dockerfile.5.0.0.rapids"
