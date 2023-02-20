@@ -20,15 +20,16 @@ RUN mkdir /dltk
 COPY ./requirements_transformers510_gpu.txt /dltk/requirements_transformers510_gpu.txt
 RUN pip install --no-cache-dir --upgrade -r /dltk/requirements_transformers510_gpu.txt
 
-RUN pip install torch tensorflow-gpu
+#RUN pip install torch tensorflow-gpu 'tensorflow-gpu is not required after 1.15'
+RUN pip install torch tensorflow
 RUN pip install datashader dask-ml dask-labextension jupyter-tensorboard dask-xgboost mlflow
 RUN pip install prophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn stumpy tqdm bocd rrcf pyod suod pymc3
 
 # Install modules
-RUN jupyter labextension install dask-labextension && \
-    jupyter serverextension enable --py --sys-prefix dask_labextension --user && \
-    jupyter labextension enable --py widgetsnbextension && \
-    jupyter lab clean
+#RUN jupyter labextension install dask-labextension && \
+#    jupyter serverextension enable --py --sys-prefix dask_labextension --user && \
+#    jupyter labextension enable --py widgetsnbextension && \
+#    jupyter lab clean
 
 RUN apt-get update && apt-get upgrade -y
 # Copy bootstrap entry point script
