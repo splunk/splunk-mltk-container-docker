@@ -18,6 +18,10 @@ else
   tag="$1"
 fi
 case $tag in
+	golden-image-cpu-jupyterhub)
+		base="python:3.9.13-bullseye"
+		dockerfile="Dockerfile.5.0.0.cpu.jupyterhub"
+		;;
 	template-cpu)
 		base="python:3.9.13-bullseye"
 		dockerfile="Dockerfile.5.0.0.minimal.cpu.template"
