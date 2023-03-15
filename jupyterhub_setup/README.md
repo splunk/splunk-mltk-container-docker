@@ -181,7 +181,7 @@ By making changes to your `config.yaml`, you can customize Jupyterhub deployment
 
 This section describes how to configure your Jupyterhub to 1) support multiple users, 2) use DSDL image and 3) support persistent shared volume.
 
-**Please download the `jupyterhub_setup/config.yaml` as reference.**
+**Please download the [jupyterhub_setup/config.yaml](https://github.com/splunk/splunk-mltk-container-docker/blob/jupyterhub-with-kubernetes/jupyterhub_setup/config.yaml) as reference.**
 
 ### 1. Support multiple users
 - Please add the following block to your `config.yaml`, and replace the <USERNAME> and <PASSWORD> with your desired values.
