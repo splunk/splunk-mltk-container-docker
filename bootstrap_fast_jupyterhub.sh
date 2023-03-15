@@ -3,15 +3,14 @@ export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
 umask 002
-# cp -R /dltk/app /srv
-# cp -R -n /dltk/notebooks /srv
 
-# copy app & notebooks into user jovyan's dir
-cp -R /dltk/app /home/jovyan
-cp -R -n /dltk/notebooks /home/jovyan
+### SHARED Content on /srv volume
+cp -R /dltk/app /srv
+cp -R -n /dltk/notebooks /srv
 
 # create a symlink so that the newly created notebook can be stored in the user's pvc
-ln -s /home/jovyan /srv
+ln -s /home/jovyan /workdir/private
+ln -s /srv /workdir/shared
 
 if [ -w /etc/passwd ]; then
   echo "dltk:x:$(id -u):0:dltk user:/dltk:/sbin/nologin" >> /etc/passwd

@@ -12,7 +12,11 @@ def post_save(model, os_path, contents_manager):
     # add .py extension for target python module
     py_name = nb_name + ".py"
     # defined modules path in /srv (hardcoded to prevent notebooks subfolder relative problems)
-    py_path = "/srv/app/model/"
+    # py_path = "/srv/app/model/"
+
+    # TODO test - change the py_path
+    py_path = "/home/jovyan/app/model/"
+
     # notebook config path in /srv (hardcoded to prevent notebooks subfolder relative problems)
     nb_template = "/dltk/.jupyter/jupyter_notebook_conversion.tpl"
     #print("Config path: " + nb_template)

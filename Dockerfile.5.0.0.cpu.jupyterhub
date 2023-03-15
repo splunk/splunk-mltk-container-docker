@@ -18,7 +18,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash -
 RUN apt-get update --fix-missing && apt-get install -y wget bzip2 git ca-certificates nodejs build-essential sudo net-tools dnsutils vim docker
 
 # Install basics
-WORKDIR /srv
+WORKDIR /workdir
 RUN mkdir /dltk
 COPY ./requirements_minimal_cpu_template.txt /dltk/requirements_minimal_cpu_template.txt
 RUN pip install --no-cache-dir --upgrade -r /dltk/requirements_minimal_cpu_template.txt
@@ -73,6 +73,8 @@ RUN chgrp -R 0 /dltk && \
     chmod -R g=u /dltk
 RUN chgrp -R 0 /srv && \
     chmod -R g=u /srv
+RUN chgrp -R 0 /workdir && \
+    chmod -R g=u /workdir
 RUN chmod g+w /etc/passwd
 USER 1001
 
