@@ -1,0 +1,54 @@
+# This file can update the JupyterHub Helm chart's default configuration values.
+#
+# For reference see the configuration reference and default values, but make
+# sure to refer to the Helm chart version of interest to you!
+#
+# Introduction to YAML:     https://www.youtube.com/watch?v=cdLNKUoMc6c
+# Chart config reference:   https://zero-to-jupyterhub.readthedocs.io/en/stable/resources/reference.html
+# Chart default values:     https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/HEAD/jupyterhub/values.yaml
+# Available chart versions: https://jupyterhub.github.io/helm-chart/
+
+# Proxy setting is optional. Feel free to comment it if not needed
+proxy:
+  https:
+    enabled: true
+  service:
+    loadBalancerIP: 10.202.10.13
+# Configure multiple users
+hub:
+  config:
+    Authenticator:
+      admin_users:
+        - user1
+        - user2
+      allowed_users:
+        - user3
+        - user4
+    DummyAuthenticator:
+      password: fdse4ever
+    JupyterHub:
+      authenticator_class: dummy
+singleuser:
+  # Define the default image
+  image:
+    name: jupyter/minimal-notebook
+    tag: 2343e33dec46
+  profileList:
+    - display_name: "Minimal environment"
+      description: "To avoid too much bells and whistles: Python."
+      default: true
+    - display_name: "Gold Image CPU - Jupyterhub 5.0.0"
+      description: "Splunk DLDS Gold Image CPU Jupyterhub"
+      kubespawner_override:
+        image: yling454/mltk-container-golden-image-cpu-jupyterhub:5.1.7
+        http_timeout: 3600
+      cmd: null
+  # Configure shared volume
+  storage:
+    extraVolumes:
+      - name: shared-storage-dir
+        persistentVolumeClaim:
+          claimName: jupyterhub-shared-volume
+    extraVolumeMounts:
+      - name: shared-storage-dir
+        mountPath: /srv   # Destination DIR inside container
