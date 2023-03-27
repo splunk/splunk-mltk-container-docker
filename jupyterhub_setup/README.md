@@ -19,7 +19,9 @@ This section describes how to set up Jupyterhub on Kubernetes on a Bare Metal Ho
 
 
 ### 1. Set up Kubernetes Cluser on a Bare Metal Host with MicroK8s.
-Please follow the steps [here](https://z2jh.jupyter.org/en/stable/kubernetes/other-infrastructure/step-zero-microk8s.html) to set up your own Kubernetes Cluster.
+Please follow the steps below to set up your own Kubernetes Cluster.
+
+(Reference: The following steps are based on the official documentation which can be found [here](https://z2jh.jupyter.org/en/stable/kubernetes/other-infrastructure/step-zero-microk8s.html)).
 
 
 1. Login as root user
@@ -29,7 +31,7 @@ Please follow the steps [here](https://z2jh.jupyter.org/en/stable/kubernetes/oth
 
 2. Install microk8s
     ```
-    snap install microk8s
+    snap install microk8s --classic
     ```
 
 3. Enable the necessary MicroK8s Add ons
@@ -90,7 +92,9 @@ Please follow the steps [here](https://z2jh.jupyter.org/en/stable/kubernetes/oth
 
 
 ### 2. Set up `helm`
-Please follow the steps [here](https://z2jh.jupyter.org/en/stable/kubernetes/setup-helm.html) to set up helm.
+Please follow the steps below to set up helm. 
+
+(Reference: The following steps are based on the official documentation which can be found [here](https://z2jh.jupyter.org/en/stable/kubernetes/setup-helm.html)).
 
 1. Installation
     ```
@@ -107,7 +111,9 @@ Please follow the steps [here](https://z2jh.jupyter.org/en/stable/kubernetes/set
 
 
 ### 3. Install JupyterHub
-Please follow the steps [here](https://z2jh.jupyter.org/en/stable/jupyterhub/installation.html) to install JupyterHub in the Kubernetes cluster using the JupyterHub Helm chart.
+Please follow the steps below to install JupyterHub in the Kubernetes cluster using the JupyterHub Helm chart.
+
+(Reference: The following steps are based on the official documentation which can be found [here](https://z2jh.jupyter.org/en/stable/jupyterhub/installation.html)).
 
 1. Create default `config.yaml`. Create a config.yaml file with some helpful comments.
     ```
