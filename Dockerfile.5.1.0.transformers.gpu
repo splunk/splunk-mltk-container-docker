@@ -24,24 +24,19 @@ RUN pip install --no-cache-dir --upgrade -r /dltk/requirements_transformers510_g
 RUN pip install torch tensorflow
 RUN pip install datashader dask-ml dask-labextension jupyter-tensorboard dask-xgboost mlflow
 RUN pip install prophet pomegranate shap lime umap-learn tslearn kmodes imbalanced-learn stumpy tqdm bocd rrcf pyod suod pymc3
-
-# Install modules
-#RUN jupyter labextension install dask-labextension && \
-#    jupyter serverextension enable --py --sys-prefix dask_labextension --user && \
-#    jupyter labextension enable --py widgetsnbextension && \
-#    jupyter lab clean
-
-RUN apt-get update && apt-get upgrade -y
-# Copy bootstrap entry point script
-COPY bootstrap_fast.sh /dltk/
-COPY app /dltk/app
-COPY notebooks /dltk/notebooks
+RUN pip install onnx onnxruntime skl2onnx tf2onnx
 
 # Unzip basemodel files
 ADD basemodels/class_en.tar.gz /dltk/app/model/data/classification/en
 ADD basemodels/class_jp.tar.gz /dltk/app/model/data/classification/jp
 ADD basemodels/sum_en.tar.gz /dltk/app/model/data/summarization/en
 ADD basemodels/sum_jp.tar.gz /dltk/app/model/data/summarization/jp
+
+RUN apt-get update && apt-get upgrade -y
+# Copy bootstrap entry point script
+COPY bootstrap_fast.sh /dltk/
+COPY app /dltk/app
+COPY notebooks /dltk/notebooks
 
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages
@@ -62,6 +57,12 @@ COPY config/jupyter_server_config.py /dltk/.jupyter/jupyter_server_config.py
 # Copy jupyter notebook conversion template to export python module
 COPY config/jupyter_notebook_template.tpl /dltk/.jupyter/jupyter_notebook_conversion.tpl
 COPY config/null.tpl /dltk/.jupyter/null.tpl
+
+# Install modules
+#RUN jupyter labextension install dask-labextension && \
+#    jupyter serverextension enable --py --sys-prefix dask_labextension --user && \
+#    jupyter labextension enable --py widgetsnbextension && \
+#    jupyter lab clean
 
 # Handle user rights
 RUN chgrp -R 0 /dltk && \
