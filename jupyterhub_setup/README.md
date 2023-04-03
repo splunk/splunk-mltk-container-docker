@@ -91,6 +91,7 @@ Please follow the steps below to set up your own Kubernetes Cluster.
     ```
 
 
+
 ### 2. Set up `helm`
 Please follow the steps below to set up helm. 
 
@@ -164,8 +165,18 @@ Please follow the steps below to install JupyterHub in the Kubernetes cluster us
     `Error: Kubernetes cluster unreachable`
   
 
-    Please try the following command
+    Please try the following command with the current user(non-root user).
+
     ```
+    mkdir $HOME/.kube
+
+    # Add current user to the microk8s group.
+    sudo usermod -a -G microk8s $USER
+    sudo chown -R $USER ~/.kube
+
+    # Reload the user groups.
+    newgrp MicroK8s
+
     microk8s.kubectl config view --raw > $HOME/.kube/config
     ```
 
@@ -181,6 +192,46 @@ Please follow the steps below to install JupyterHub in the Kubernetes cluster us
 
   - Check if the Jupyterhub login page is available at `http://<INSTANCE_IP>/hub/login`. e.g. `http://10.202.21.250/hub/login`. You can use any random username and password to log in.
 
+  - **Troubleshooting**
+  
+    If the login page doesn't show up.
+
+    1. Verify that created Pods enter a Running state:
+
+
+        ```microk8s.kubectl --namespace=default get pod```
+
+        
+        If a pod is stuck with a Pending or ContainerCreating status, diagnose with:
+
+        
+        ```microk8s.kubectl --namespace=default describe pod <name of pod>```
+    
+
+    2. If the Pods are running successfully, check the IP we can use to access the JupyterHub:
+
+        ```microk8s.kubectl --namespace=default get service proxy-public```
+
+        ```
+        # output
+        NAME           TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)        AGE
+        proxy-public   LoadBalancer   10.152.183.200   10.202.15.239   80:31312/TCP   15m
+        ```
+        The EXTERNAL-IP is used to access JupyterHub. If it is different from your instance's IP, the login page would not be available at http://<INSTANCE_IP>/hub/login.
+
+        You can change it to your instance's IP by adding the following content into `config.yaml`.
+
+        ```
+        proxy:
+          service:
+            loadBalancerIP: <YOUR_INSTANCE_IP>
+        ```
+
+        Then apply the changes to the cluster by re-running
+
+        ```
+        helm upgrade --cleanup-on-fail   --install jupyterhub jupyterhub/jupyterhub   --namespace default   --create-namespace   --values config.yaml
+        ```
 
 ## Customize Jupyterhub
 By making changes to your `config.yaml`, you can customize Jupyterhub deployment.
