@@ -35,8 +35,8 @@ In this latest version the following combinations are available, but customizati
 
 | `build configuration tag` | Description |
 | --- | --- |
-| minimal-cpu | Debian bullseye based with a minimal data-science environment (numpy,scipi,pandas,scikit-learn,matplotlib,etc). Notibly this does not include tensorflow or pytorch which significantly bloat image size. |
-| minimal-gpu | Debian bullseye based with a minimal data-science environment (numpy,scipi,pandas,scikit-learn,matplotlib,etc). Notibly this does not include tensorflow or pytorch which significantly bloat image size. Does include jupyter nvidia dashboards for GPU resource monitoring. |
+| minimal-cpu | Debian bullseye based with a minimal data-science environment (numpy,scipi,pandas,scikit-learn,matplotlib,etc). Notably this does not include tensorflow or pytorch which significantly bloat image size. |
+| minimal-gpu | Debian bullseye based with a minimal data-science environment (numpy,scipi,pandas,scikit-learn,matplotlib,etc). Notably this does not include tensorflow or pytorch which significantly bloat image size. Does include jupyter nvidia dashboards for GPU resource monitoring. |
 | golden-cpu | Debian bullseye based with a wide range of data science libraries and tools. (all of the above including tensorflow, pytorch, umap-learn, datashader, dask, spacy, networkx and many more see `requirements_files/specific_golden_cpu.txt` for more details). Excludes tensorflow and torch GPU functionality where possible | 
 | golden-gpu | The same as golden-cpu but with tensorflow and pytorch GPU libraries |
 | ubi-functional-cpu | Redhat UBI9 based image. Contains only the specific libraries needed to have a functional conntection between the DSDL app and an external container. Most suitable for building custom enterprise-ready images on top of. |
