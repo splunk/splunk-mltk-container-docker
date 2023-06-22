@@ -33,6 +33,7 @@ ADD basemodels/class_jp.tar.gz /dltk/app/model/data/classification/jp
 ADD basemodels/sum_en.tar.gz /dltk/app/model/data/summarization/en
 ADD basemodels/sum_jp.tar.gz /dltk/app/model/data/summarization/jp
 
+Add basemodels/pytorch_model.tar.gz /dltk/app/model/data/classification/en/bert_phishing
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages
 COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
