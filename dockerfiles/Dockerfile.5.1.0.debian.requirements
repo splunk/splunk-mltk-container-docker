@@ -1,0 +1,15 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+ARG TAG
+ARG COMPILED_REQUIREMENTS_FILE
+
+RUN apt-get update && apt-get upgrade -y
+
+RUN mkdir /temp
+
+RUN apt-get install -y python3 python3-pip
+RUN pip3 install -U pip setuptools wheel pip-tools
+
+COPY ./requirements_files/${COMPILED_REQUIREMENTS_FILE} /temp/${COMPILED_REQUIREMENTS_FILE}
+RUN cat /temp/${COMPILED_REQUIREMENTS_FILE}
+RUN python3 -m piptools compile /temp/${COMPILED_REQUIREMENTS_FILE} --resolver=backtracking

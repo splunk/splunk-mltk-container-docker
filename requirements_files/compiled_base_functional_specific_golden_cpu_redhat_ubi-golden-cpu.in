@@ -1,0 +1,71 @@
+# FastAPI stack
+fastapi>=0.68.0,<0.69.0
+pydantic>=1.8.0,<2.0.0
+uvicorn>=0.15.0,<0.16.0
+aiofiles
+pyopenssl 
+
+# jupyter
+jupyterlab
+# due to https://github.com/jupyter/notebook/issues/6164
+jupyter_client<7.0.0
+
+#interactive python dependancies
+ipywidgets
+jupyterlab-git
+widgetsnbextension
+matplotlib
+
+# splunk functionality dependancies
+splunk-sdk
+splunk-opentelemetry[all]
+opentelemetry-instrumentation-fastapi==0.33b0
+
+# basic data-science libraries
+pandas
+numpy
+
+
+datashader
+seaborn
+
+dask-ml
+dask-labextension
+
+jupyter-tensorboard
+
+mlflow
+
+scipy
+scikit-learn
+networkx
+
+tensorflow-cpu
+datashader 
+dask-ml 
+dask-labextension 
+jupyter-tensorboard 
+dask-xgboost 
+mlflow
+
+prophet 
+pomegranate 
+shap 
+lime 
+umap-learn 
+tslearn 
+kmodes 
+imbalanced-learn 
+stumpy 
+tqdm 
+bocd 
+rrcf 
+pyod 
+suod
+pymc3
+#Spacy does not compile in ubi9 because of blis and thinc
+#spacy==2.3.2
+#spacytextblob==0.1.7
+
+ --extra-index-url https://download.pytorch.org/whl/cpu
+ torch

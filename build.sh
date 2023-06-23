@@ -65,6 +65,20 @@ docker stop $container_name
 docker rm $container_name
 docker rmi $container_name
 
+base_requirements_id="${base_requirements%.*}"
+specific_requirements_id="${specific_requirements%.*}"
+
+compiled_requirements_id=compiled_${base_requirements_id}_${specific_requirements_id}_$tag
+compiled_requirements_filename=./requirements_files/$compiled_requirements_id.txt
+
+echo "Checking for compiled requirements $compiled_requirements_id"
+
+if [[ -f $compiled_requirements_filename ]]; then
+  echo "Found pre-compiled requirements: Using $compiled_requirements_id instead of $base_requirements and $specific_requirements"
+  base_requirements=$compiled_requirements_id.txt
+  specific_requirements="empty".txt
+fi
+
 docker build --rm -t $container_name:$version\
   --build-arg BASE_IMAGE=$base_image \
   --build-arg TAG=$tag \
@@ -74,5 +88,19 @@ docker build --rm -t $container_name:$version\
   .
 
 echo "Creating images.conf, move this file or copy-paste contents into <splunk_dir>/etc/apps/mltk-container/local/images.conf:"
-echo "[$tag]\ntitle = $tag\nimage = mltk-container-$tag:$version\nrepo = $repo\nruntime = $runtime" > images.conf
-cat images.conf
+
+# ensure both options are present if the nvidia runtime is specified
+if [ "$runtime" = "nvidia" ]; then
+  runtime="none,nvidia"
+fi
+
+echo "[$tag]\ntitle = $tag\nimage = mltk-container-$tag:$version\nrepo = $repo\nruntime = $runtime" > ./images_conf_files/$tag-images.txt
+
+# Remove output file if it already exists
+rm -f ./images_conf_files/images.conf
+
+# Loop over all .txt files in the current directory
+for file in ./images_conf_files/*-images.txt; do
+  # Concatenate the file to the output file
+  cat "$file" >> ./images_conf_files/images.conf
+done

@@ -1,59 +1,67 @@
+# Start from base image: nvidia-cuda or rapids base image
+# FROM nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04
+# FROM rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.8
+
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 ARG TAG
 ARG REQUIREMENTS_PYTHON_BASE
 ARG REQUIREMENTS_PYTHON_SPECIFIC
 
+USER root
+
 # setup environment
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /dltk/.local/bin:/dltk/.local/lib/python3.9/site-packages/:$PATH
+ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC 
 
-# package management
-RUN yum install wget bzip2 git ca-certificates build-essential -y
-RUN yum install nodejs -y
-RUN yum install python39 -y
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
 
-# setup python+pip
-RUN python3 -m ensurepip --upgrade
+# install nodejs
+RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash -
+RUN apt-get update --fix-missing && apt-get install -y wget bzip2 git ca-certificates nodejs>=12.0.0 build-essential
 
 # update everything
-RUN yum update -y
-RUN yum upgrade -y
-RUN yum remove vim-minimal -y
-RUN yum autoremove -y
+RUN apt-get update && apt-get upgrade -y
 
 # configure file system
 WORKDIR /srv
 RUN mkdir /dltk
 
-# install base python requirements
+# rapids env upgrade pip
+RUN source activate rapids && \
+    pip install --upgrade pip
+
+# rapids env basic requirements
 COPY ./requirements_files/${REQUIREMENTS_PYTHON_BASE} /dltk/${REQUIREMENTS_PYTHON_BASE}
-RUN pip3 install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_BASE}
+RUN source activate rapids && \ 
+    pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_BASE}
 
-# install specific python requirements
+# rapids env specific requirements
 COPY ./requirements_files/${REQUIREMENTS_PYTHON_SPECIFIC} /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
-RUN if [ -s "/dltk/${REQUIREMENTS_PYTHON_SPECIFIC}" ]; then \
-    pip3 install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}; fi
+RUN source activate rapids && \ 
+    pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
 
-# configure spacy if it was installed
-RUN if pip3 freeze | grep -q spacy;\
-    then echo 'Spacy is installed, downloading language file...';\
-    python3 -m spacy download en_core_web_sm;\
-    else echo 'Spacy is not installed'; fi
+# rapids setup jupyter
+RUN source activate rapids && \
+    jupyter labextension install dask-labextension && \
+    jupyter serverextension enable --py --sys-prefix dask_labextension --user && \
+    jupyter labextension enable --py widgetsnbextension && \
+    jupyter lab clean
 
 # creating new self signed certs
-RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout dltk.key -out dltk.pem -subj="/CN=dsdl"
+RUN openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout dltk.key -out dltk.pem -subj="/CN=dsdl"
 RUN mkdir /dltk/.jupyter/; mv dltk.key /dltk/.jupyter/dltk.key; mv dltk.pem /dltk/.jupyter/dltk.pem
 
 # Copy bootstrap entry point script
-COPY ./bootstrap_scripts/bootstrap_fast.sh /dltk/
+COPY bootstrap_rapids.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
 
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages
 COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
-RUN pip3 install /dltk/packages/dsdlsupport-1.0.0.tar.gz
+RUN pip install /dltk/packages/dsdlsupport-1.0.0.tar.gz
 
 # Copy jupyter config
 COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py
@@ -76,4 +84,4 @@ USER 1001
 # Expose container port 5000 (MLTK Container Service) and 8888 (Notebook)
 EXPOSE 5000 8888
 # Define bootstrap as entry point to start container
-ENTRYPOINT ["/dltk/bootstrap_fast.sh"]
+ENTRYPOINT ["/dltk/bootstrap_rapids.sh"]

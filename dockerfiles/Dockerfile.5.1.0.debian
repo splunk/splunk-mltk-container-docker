@@ -20,18 +20,21 @@ RUN apt-get update && apt-get upgrade -y
 WORKDIR /srv
 RUN mkdir /dltk
 
+# setup python+pip
+RUN apt-get install -y python3 python3-pip
+
 # install base python requirements
 COPY ./requirements_files/${REQUIREMENTS_PYTHON_BASE} /dltk/${REQUIREMENTS_PYTHON_BASE}
-RUN pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_BASE}
+RUN pip3 install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_BASE}
 
 # install specific python requirements
 COPY ./requirements_files/${REQUIREMENTS_PYTHON_SPECIFIC} /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
-RUN pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
+RUN pip3 install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
 
 # configure spacy if it was installed
 RUN if pip3 freeze | grep -q spacy;\
     then echo 'Spacy is installed, downloading language file...';\
-    python -m spacy download en_core_web_sm;\
+    python3 -m spacy download en_core_web_sm;\
     else echo 'Spacy is not installed'; fi
 
 # creating new self signed certs

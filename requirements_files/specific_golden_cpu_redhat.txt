@@ -1,3 +1,5 @@
+
+
 datashader
 seaborn
 
@@ -12,8 +14,7 @@ scipy
 scikit-learn
 networkx
 
-torch 
-tensorflow
+tensorflow-cpu
 datashader 
 dask-ml 
 dask-labextension 
@@ -36,5 +37,10 @@ rrcf
 pyod 
 suod
 pymc3
-spacy==2.3.2
-spacytextblob==0.1.7
+#Spacy does not compile in ubi9 because of blis and thinc
+#spacy==2.3.2
+#spacytextblob==0.1.7
+
+# CPU version of pytorch seems to fail to install on redhat, may be a server side issue?
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch

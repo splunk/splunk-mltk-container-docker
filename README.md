@@ -41,7 +41,7 @@ In this latest version the following combinations are available, but customizati
 | golden-gpu | The same as golden-cpu but with tensorflow and pytorch GPU libraries |
 | ubi-functional-cpu | Redhat UBI9 based image. Contains only the specific libraries needed to have a functional conntection between the DSDL app and an external container. Most suitable for building custom enterprise-ready images on top of. |
 | ubi-minimal-cpu | Redhat UBI9 based image with a basic data science environment. |
-| ubi-golden-cpu | Redhat UBI9 based image with a wide range of data science libraries and tools. |
+| ubi-golden-cpu | Redhat UBI9 based image with a wide range of data science libraries and tools. Spacy excluded due to build issues on redhat. |
 | golden-cpu-milvus | Variation on the Debian golden CPU image which contains the pymilvus library for use with push_to_milvus and query_milvus notebooks and can be used to integrate Splunk with the open-source vector database Milvus. |
 | golden-cpu-transformers | Variation on the Debian golden CPU image which supports the use of certain transformer models |
 | golden-gpu-transformers | Variation on the Debian golden CPU image which supports the use of certain transformer models, including GPU suppport |
