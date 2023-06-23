@@ -49,7 +49,7 @@ COPY notebooks /dltk/notebooks
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages
 COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
-RUN pip install /dltk/packages/dsdlsupport-1.0.0.tar.gz
+RUN pip3 install /dltk/packages/dsdlsupport-1.0.0.tar.gz
 
 # Copy jupyter config
 COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py
