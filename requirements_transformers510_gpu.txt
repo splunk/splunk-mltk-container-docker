@@ -6,7 +6,7 @@ aiofiles
 pyopenssl 
 
 # Jupyter Lab environment
-jupyterlab
+jupyterlab<3.5.0
 # due to https://github.com/jupyter/notebook/issues/6164
 jupyter_client<7.0.0
 
@@ -37,11 +37,11 @@ numexpr==2.7.3
 # libraries
 transformers
 sentencepiece
-torch
+torch==1.9.*
 torchmetrics
 sumeval
 janome
-sklearn
+#sklearn
 pandas
 fugashi
 ipadic
@@ -49,3 +49,4 @@ scipy
 scikit-learn
 networkx
 nltk
+protobuf==3.20.*
