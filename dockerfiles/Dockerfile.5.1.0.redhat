@@ -9,7 +9,7 @@ ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /dltk/.local/bin:/dltk/.local/lib/python3.9/site-packages/:$PATH
 
 # package management
-RUN yum install wget bzip2 git ca-certificates build-essential -y
+RUN yum install wget bzip2 git ca-certificates -y
 RUN yum install nodejs -y
 RUN yum install python39 -y
 

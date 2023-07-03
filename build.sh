@@ -9,7 +9,7 @@ echo '    ____\_\  \ \__\    \ \_______\ \_______\ \__\\ \__\ \__\\ \__\       \
 echo '   |\_________\|__|     \|_______|\|_______|\|__| \|__|\|__| \|__|        \|_______|\_________\|_______|\|_______|'
 echo '   \|_________|                                                                    \|_________|                   '
 echo '__________________________________________________________________________________________________________________'
-echo 'Splunk> DSDL Container for Custom Data-Science Runtimes'
+echo 'Splunk> DSDL Container Build Script for Custom Data-Science Runtimes'
 
 if [ -z "$1" ]; then
   echo "No build tag specified. Pick a tag:"
