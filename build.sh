@@ -94,7 +94,7 @@ if [ "$runtime" = "nvidia" ]; then
   runtime="none,nvidia"
 fi
 
-echo "[$tag]\ntitle = $tag\nimage = mltk-container-$tag:$version\nrepo = $repo\nruntime = $runtime" > ./images_conf_files/$tag-images.txt
+echo -e "[$tag]\ntitle = $tag\nimage = mltk-container-$tag:$version\nrepo = $repo\nruntime = $runtime" > ./images_conf_files/$tag-images.txt
 
 # Remove output file if it already exists
 rm -f ./images_conf_files/images.conf
