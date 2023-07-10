@@ -5,6 +5,8 @@ dask-ml
 dask-labextension
 
 jupyter-tensorboard
+jupyterlab-nvdashboard
+jupyterlab_nvdashboard
 
 mlflow
 
@@ -51,6 +53,7 @@ janome
 fugashi
 ipadic
 nltk
-torch
+torch==1.9.*
 torchmetrics
 
+protobuf==3.20.*
