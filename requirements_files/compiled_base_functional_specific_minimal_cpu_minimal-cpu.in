@@ -1,0 +1,61 @@
+# FastAPI stack
+fastapi>=0.68.0,<0.69.0
+pydantic>=1.8.0,<2.0.0
+uvicorn>=0.15.0,<0.16.0
+aiofiles
+pyopenssl 
+
+# Jupyter Lab environment
+jupyterlab
+# due to https://github.com/jupyter/notebook/issues/6164
+jupyter_client<7.0.0
+
+#interactive python dependancies
+ipywidgets
+jupyterlab-git
+widgetsnbextension
+matplotlib
+
+# splunk functionality dependancies
+splunk-sdk
+splunk-opentelemetry[all]
+opentelemetry-instrumentation-fastapi==0.33b0
+
+<<<<<<< HEAD:requirements_transformers510_gpu.txt
+# other dependencies
+tensorflow==2.8.0
+keras==2.8.0
+numpy==1.22.1
+numexpr==2.7.3
+
+# libraries
+transformers
+sentencepiece
+torch==1.9.*
+torchmetrics
+sumeval
+janome
+#sklearn
+=======
+# basic data-science libraries
+>>>>>>> joshsplunks-v5.1.0:requirements_files/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
+pandas
+numpy
+datashader
+seaborn
+
+dask-ml
+dask-labextension
+
+jupyter-tensorboard
+
+mlflow
+
+scipy
+scikit-learn
+networkx
+<<<<<<< HEAD:requirements_transformers510_gpu.txt
+nltk
+protobuf==3.20.*
+=======
+>>>>>>> joshsplunks-v5.1.0:requirements_files/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in

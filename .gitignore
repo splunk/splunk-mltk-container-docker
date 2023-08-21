@@ -105,3 +105,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+images_conf_files/*.txt
+images_conf_files/*.conf

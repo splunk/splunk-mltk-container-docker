@@ -1,0 +1,12 @@
+datashader
+seaborn
+dask-ml
+dask-labextension
+jupyter-tensorboard
+jupyterlab-nvdashboard
+jupyterlab_nvdashboard
+mlflow
+
+# Python data science basics
+graphistry[all]
+neo4j

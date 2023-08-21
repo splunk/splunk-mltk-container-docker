@@ -1,127 +1,106 @@
 #!/bin/sh
-echo "_____________________________________________________________________________________________________________"
-echo ' __    __  __      ______ __  __       ______  ______  __   __  ______ ______  __  __   __  ______  ______    '
-echo '/\ "-./  \/\ \    /\__  _/\ \/ /      /\  ___\/\  __ \/\ "-.\ \/\__  _/\  __ \/\ \/\ "-.\ \/\  ___\/\  == \   '
-echo '\ \ \-./\ \ \ \___\/_/\ \\\ \  _"-.    \ \ \___\ \ \/\ \ \ \-.  \/_/\ \\\ \  __ \ \ \ \ \-.  \ \  __\\\ \  __<   '
-echo ' \ \_\ \ \_\ \_____\ \ \_\\\ \_\ \_\    \ \_____\ \_____\ \_\\\"\_\ \ \_\\\ \_\ \_\ \_\ \_\\\"\_\ \_____\ \_\ \_\ '
-echo '  \/_/  \/_/\/_____/  \/_/ \/_/\/_/     \/_____/\/_____/\/_/ \/_/  \/_/ \/_/\/_/\/_/\/_/ \/_/\/_____/\/_/ /_/ '
-echo "_____________________________________________________________________________________________________________"
-echo "Splunk> MLTK Container for TensorFlow 2.0, PyTorch and Jupyterlab."
-tag="golden-image-cpu"
-base="ubuntu:20.04"
-dockerfile="Dockerfile"
-repo="phdrieger/"
+echo '__________________________________________________________________________________________________________________'
+echo ' ________  ________  ___       ___  ___  ________   ___  __            ________  ________  ________  ___          '
+echo '|\   ____\|\   __  \|\  \     |\  \|\  \|\   ___  \|\  \|\  \         |\   ___ \|\   ____\|\   ___ \|\  \         '
+echo '\ \  \___|\ \  \|\  \ \  \    \ \  \\\  \ \  \\ \  \ \  \/  /|_       \ \  \_|\ \ \  \___|\ \  \_|\ \ \  \        '
+echo ' \ \_____  \ \   ____\ \  \    \ \  \\\  \ \  \\ \  \ \   ___  \       \ \  \ \\ \ \_____  \ \  \ \\ \ \  \       '
+echo '  \|____|\  \ \  \___|\ \  \____\ \  \\\  \ \  \\ \  \ \  \\ \  \       \ \  \_\\ \|____|\  \ \  \_\\ \ \  \____  '
+echo '    ____\_\  \ \__\    \ \_______\ \_______\ \__\\ \__\ \__\\ \__\       \ \_______\____\_\  \ \_______\ \_______\'
+echo '   |\_________\|__|     \|_______|\|_______|\|__| \|__|\|__| \|__|        \|_______|\_________\|_______|\|_______|'
+echo '   \|_________|                                                                    \|_________|                   '
+echo '__________________________________________________________________________________________________________________'
+echo 'Splunk> DSDL Container Build Script for Custom Data-Science Runtimes'
+
 if [ -z "$1" ]; then
-  echo "No build parameters set. Using default tag golden-image-cpu for building and running the container."
-  echo "You can use ./build.sh [golden-image-cpu|golden-image-gpu|tf-cpu|tf-gpu|pytorch|nlp] to build the container for different frameworks."
+  echo "No build tag specified. Pick a tag:"
+  values=$(cut -d ',' -f 1 tag_mapping.csv)
+  echo $values
+  exit
 else
   tag="$1"
 fi
-case $tag in
-	template-cpu)
-		base="python:3.9.13-bullseye"
-		dockerfile="Dockerfile.5.1.0.minimal.cpu.template"
-		;;
-	template-gpu)
-		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.5.1.0.minimal.gpu.template"
-		;;
-	golden-image-cpu)
-		base="python:3.9.13-bullseye"
-		dockerfile="Dockerfile.5.1.0.cpu"
-		;;
-	golden-image-gpu)
-		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.5.1.0.gpu"
-		;;		
-	river)
-		base="python:3.9"
-		dockerfile="Dockerfile.5.0.0.river"
-		;;
-	spark)
-		base="jupyter/all-spark-notebook:spark-3.2.1"
-		dockerfile="Dockerfile.5.1.0.spark"
-		;;
-	rapids)	
-		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.8"
-		dockerfile="Dockerfile.5.1.0.rapids"
-		;;
-	template-cpu-5-0)
-		base="python:3.9.13-bullseye"
-		dockerfile="Dockerfile.5.0.0.minimal.cpu.template"
-		;;
-	template-gpu-5-0)
-		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.5.0.0.minimal.gpu.template"
-		;;
-	golden-image-cpu-5-0)
-		base="python:3.9.13-bullseye"
-		dockerfile="Dockerfile.5.0.0.cpu"
-		;;
-	golden-image-gpu-5-0)
-		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.5.0.0.gpu"
-		;;		
-	spark-5-0)
-		base="jupyter/all-spark-notebook:spark-3.2.1"
-		dockerfile="Dockerfile.5.0.0.spark"
-		;;
-	rapids-5-0)	
-		#base="rapidsai/rapidsai-core:22.04-cuda11.5-runtime-ubuntu20.04-py3.8"
-		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.8"
-		dockerfile="Dockerfile.5.0.0.rapids"
-		;;
-	golden-image-gpu-3-9)
-		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		#base="nvidia/cuda:11.1-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.3.9.gpu"
-		;;		
-	river-3-9)
-		base="python:3.9"
-		dockerfile="Dockerfile.3.9.river"
-		;;
-	golden-image-cpu-3-9)
-		base="ubuntu:20.04"
-		dockerfile="Dockerfile.3.9.cpu"
-		;;
-	spark-3-9)
-		base="jupyter/all-spark-notebook:spark-3.2.1"
-		dockerfile="Dockerfile.3.9.spark"
-		;;
-	rapids-3-9)	
-		base="rapidsai/rapidsai-core:21.12-cuda11.0-runtime-ubuntu20.04-py3.7"
-		dockerfile="Dockerfile.3.9.rapids"
-		;;
-	transformers-cpu)
-		#base="tensorflow/tensorflow:2.8.0"
-		#dockerfile="Dockerfile.3.9.transformers.cpu"
-		base="python:3.9.13-bullseye"
-		dockerfile="Dockerfile.5.1.0.transformers.cpu"
-		;;
-	transformers-gpu)
-		base="nvidia/cuda:11.3.0-cudnn8-runtime-ubuntu20.04"
-		dockerfile="Dockerfile.5.1.0.transformers.gpu"
-		;;
-	*)
-		echo "Invalid container image tag: $tag, expected [golden-image-cpu|golden-image-gpu|tf-cpu|tf-gpu|pytorch|pytorch-nlp]"
-    	break
-		;;
-esac
+
 if [ -z "$2" ]; then
-  echo "No target repo set, using default prefix phdrieger/"
-  repo="phdrieger/"
+  repo="local/"
+  echo "No repo name specified. Using default repo name: ${repo}"
 else
   repo="$2"
 fi
-echo "Using tag [$tag] for building container based on [$base]"
-echo "Stop, remove and build container..."
-docker stop "$repo"mltk-container-$tag
-docker rm "$repo"mltk-container-$tag
-docker rmi "$repo"mltk-container-$tag
-docker build --rm -t "$repo"mltk-container-$tag:latest --build-arg BASE_IMAGE=$base --build-arg TAG=$tag -f $dockerfile .
+
 if [ -z "$3" ]; then
-  version=""
+  version="latest"
+  echo "No version specified. Using version: ${version}"
 else
   version="$3"
-  docker tag "$repo"mltk-container-$tag:latest "$repo"mltk-container-$tag:$version
 fi
+
+line=$(grep "^${tag}," tag_mapping.csv)
+
+if [ "$line" != "" ]; then
+    base_image=$(echo $line | cut -d',' -f2)
+    dockerfile=$(echo $line | cut -d',' -f3)
+    base_requirements=$(echo $line | cut -d',' -f4)
+    specific_requirements=$(echo $line | cut -d',' -f5)
+    runtime=$(echo $line | cut -d',' -f6) 
+
+    echo "Tag: $tag"
+    echo "Base Image: $base_image"
+    echo "Dockerfile: $dockerfile"
+    echo "Base Requirements File: $base_requirements"
+    echo "Specific Requirements File: $specific_requirements"
+    echo "Runtime Options: $runtime"
+else
+    echo "No match found for tag: $tag"
+    exit
+fi
+
+echo "Building custom module."
+./package-dsdlsupport/build_package.sh
+
+container_name="$repo"mltk-container-$tag
+echo "Target container name: $container_name"
+
+echo "Stopping and removing running containers with this name."
+docker stop $container_name
+docker rm $container_name
+docker rmi $container_name
+
+base_requirements_id="${base_requirements%.*}"
+specific_requirements_id="${specific_requirements%.*}"
+
+compiled_requirements_id=compiled_${base_requirements_id}_${specific_requirements_id}_$tag
+compiled_requirements_filename=./requirements_files/$compiled_requirements_id.txt
+
+echo "Checking for compiled requirements $compiled_requirements_id"
+
+if [[ -f $compiled_requirements_filename ]]; then
+  echo "Found pre-compiled requirements: Using $compiled_requirements_id instead of $base_requirements and $specific_requirements"
+  base_requirements=$compiled_requirements_id.txt
+  specific_requirements="empty".txt
+fi
+
+docker build --rm -t $container_name:$version\
+  --build-arg BASE_IMAGE=$base_image \
+  --build-arg TAG=$tag \
+  --build-arg REQUIREMENTS_PYTHON_BASE=$base_requirements \
+  --build-arg REQUIREMENTS_PYTHON_SPECIFIC=$specific_requirements \
+  -f ./dockerfiles/$dockerfile \
+  .
+
+echo "Creating images.conf, move this file or copy-paste contents into <splunk_dir>/etc/apps/mltk-container/local/images.conf:"
+
+# ensure both options are present if the nvidia runtime is specified
+if [ "$runtime" = "nvidia" ]; then
+  runtime="none,nvidia"
+fi
+
+echo -e "[$tag]\ntitle = $tag\nimage = mltk-container-$tag:$version\nrepo = $repo\nruntime = $runtime" > ./images_conf_files/$tag-images.txt
+
+# Remove output file if it already exists
+rm -f ./images_conf_files/images.conf
+
+# Loop over all .txt files in the current directory
+for file in ./images_conf_files/*-images.txt; do
+  # Concatenate the file to the output file
+  cat "$file" >> ./images_conf_files/images.conf
+done
