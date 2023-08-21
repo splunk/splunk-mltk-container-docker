@@ -9,8 +9,10 @@ ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /dltk/.local/bin:/dltk/.local/lib/python3.9/site-packages/:$PATH
 ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC 
 
-# install nodejs
+# install nodejs + other packages
+# nodejs from source
 RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash -
+# nodejs and other from apt package repos
 RUN apt-get update --fix-missing && apt-get install -y wget bzip2 git ca-certificates nodejs build-essential python3 python3-pip
 
 # update everything
@@ -49,6 +51,8 @@ ADD basemodels/class_jp.tar.gz /dltk/app/model/data/classification/jp
 ADD basemodels/sum_en.tar.gz /dltk/app/model/data/summarization/en
 ADD basemodels/sum_jp.tar.gz /dltk/app/model/data/summarization/jp
 
+RUN ls -lah /dltk/app/model/data/classification/en/
+RUN mkdir /dltk/app/model/data/classification/en/bert_phishing
 ADD basemodels/pytorch_model.tar.gz /dltk/app/model/data/classification/en/bert_phishing
 
 # Install local DSDL supporting functions

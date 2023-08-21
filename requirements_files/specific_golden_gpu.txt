@@ -4,6 +4,7 @@ seaborn
 dask-ml
 dask-labextension
 
+tornado
 jupyter-tensorboard
 
 mlflow
