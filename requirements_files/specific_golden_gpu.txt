@@ -1,13 +1,4 @@
-datashader
 seaborn
-
-dask-ml
-dask-labextension
-
-tornado
-jupyter-tensorboard
-
-mlflow
 
 scipy
 scikit-learn
@@ -18,7 +9,6 @@ tensorflow
 datashader 
 dask-ml 
 dask-labextension 
-jupyter-tensorboard 
 dask-xgboost 
 mlflow
 

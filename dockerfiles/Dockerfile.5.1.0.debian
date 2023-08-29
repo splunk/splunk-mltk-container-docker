@@ -9,6 +9,10 @@ ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /dltk/.local/bin:/dltk/.local/lib/python3.9/site-packages/:$PATH
 ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC 
 
+# curl not installed in some images :(
+RUN apt-get update
+RUN apt-get install curl -y
+
 # install nodejs
 RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash -
 RUN apt-get update --fix-missing && apt-get install -y wget bzip2 git ca-certificates nodejs build-essential

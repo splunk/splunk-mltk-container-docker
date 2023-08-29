@@ -5,8 +5,6 @@ seaborn
 dask-ml
 dask-labextension
 
-jupyter-tensorboard
-
 mlflow
 
 scipy
@@ -21,7 +19,6 @@ dask-xgboost
 mlflow
 
 prophet 
-pomegranate 
 shap 
 lime 
 umap-learn 

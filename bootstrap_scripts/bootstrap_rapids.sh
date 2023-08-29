@@ -1,5 +1,5 @@
 #!/bin/bash
-source activate rapids
+source activate base
 #ipython kernel install --user --name=rapids
 
 export LC_ALL=C.UTF-8

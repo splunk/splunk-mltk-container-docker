@@ -19,7 +19,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
 
 # install nodejs
 RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash -
-RUN apt-get update --fix-missing && apt-get install -y wget bzip2 git ca-certificates nodejs>=12.0.0 build-essential
+RUN apt-get update --fix-missing && apt-get install -y wget bzip2 git ca-certificates nodejs>=18.0.0 build-essential
 
 # update everything
 RUN apt-get update && apt-get upgrade -y
@@ -29,39 +29,29 @@ WORKDIR /srv
 RUN mkdir /dltk
 
 # rapids env upgrade pip
-RUN source activate rapids && \
-    pip install --upgrade pip
+RUN /bin/bash -c "source activate base && pip install --upgrade pip"
 
 # rapids env basic requirements
 COPY ./requirements_files/${REQUIREMENTS_PYTHON_BASE} /dltk/${REQUIREMENTS_PYTHON_BASE}
-RUN source activate rapids && \ 
-    pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_BASE}
+RUN /bin/bash -c "source activate base && pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_BASE}"
 
 # rapids env specific requirements
 COPY ./requirements_files/${REQUIREMENTS_PYTHON_SPECIFIC} /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
-RUN source activate rapids && \ 
-    pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
-
-# rapids setup jupyter
-RUN source activate rapids && \
-    jupyter labextension install dask-labextension && \
-    jupyter serverextension enable --py --sys-prefix dask_labextension --user && \
-    jupyter labextension enable --py widgetsnbextension && \
-    jupyter lab clean
+RUN /bin/bash -c "source activate base && pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}"
 
 # creating new self signed certs
 RUN openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout dltk.key -out dltk.pem -subj="/CN=dsdl"
 RUN mkdir /dltk/.jupyter/; mv dltk.key /dltk/.jupyter/dltk.key; mv dltk.pem /dltk/.jupyter/dltk.pem
 
 # Copy bootstrap entry point script
-COPY bootstrap_rapids.sh /dltk/
+COPY bootstrap_scripts/bootstrap_rapids.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
 
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages
 COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
-RUN pip install /dltk/packages/dsdlsupport-1.0.0.tar.gz
+RUN pip3 install /dltk/packages/dsdlsupport-1.0.0.tar.gz
 
 # Copy jupyter config
 COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py

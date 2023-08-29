@@ -6,16 +6,11 @@ seaborn
 dask-ml
 dask-labextension
 
-jupyter-tensorboard
-
-mlflow
-
 scipy
 scikit-learn
 networkx
 
 tensorflow-cpu
-datashader 
 dask-ml 
 dask-labextension 
 jupyter-tensorboard 

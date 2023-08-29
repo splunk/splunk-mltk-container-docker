@@ -30,7 +30,6 @@ seaborn
 dask-ml
 dask-labextension
 
-jupyter-tensorboard
 jupyterlab-nvdashboard
 jupyterlab_nvdashboard
 

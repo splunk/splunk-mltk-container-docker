@@ -30,8 +30,6 @@ seaborn
 dask-ml
 dask-labextension
 
-jupyter-tensorboard
-
 mlflow
 
 scipy

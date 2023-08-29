@@ -87,6 +87,14 @@ docker build --rm -t $container_name:$version\
   -f ./dockerfiles/$dockerfile \
   .
 
+# Check exit status
+if [ $? -eq 0 ]; then
+    echo "Docker build was successful."
+else
+    echo "Docker build encountered an error."
+    exit 1
+fi
+
 echo "Creating images.conf, move this file or copy-paste contents into <splunk_dir>/etc/apps/mltk-container/local/images.conf:"
 
 # ensure both options are present if the nvidia runtime is specified
@@ -104,3 +112,5 @@ for file in ./images_conf_files/*-images.txt; do
   # Concatenate the file to the output file
   cat "$file" >> ./images_conf_files/images.conf
 done
+
+exit 0
