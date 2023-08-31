@@ -64,12 +64,10 @@ COPY config/jupyter_notebook_template.tpl /dltk/.jupyter/jupyter_notebook_conver
 COPY config/null.tpl /dltk/.jupyter/null.tpl
 
 # Handle user rights
-RUN chgrp -R 0 /dltk && \
-    chmod -R g=u /dltk
-RUN chgrp -R 0 /srv && \
-    chmod -R g=u /srv
-RUN chmod g+w /etc/passwd
-USER 1001
+RUN chown -R rapids:conda /dltk
+RUN chown -R rapids:conda /srv
+
+USER rapids
 
 # Expose container port 5000 (MLTK Container Service) and 8888 (Notebook)
 EXPOSE 5000 8888

@@ -18,10 +18,14 @@ else
   tag_file="$1"
 fi
 
+epochTime=$(date +%s)
+log_file="./testing/output/${epochTime}-bulktest.log"
+
+echo "Running a bulk test for all tags in ${tag_file}. See results in ${log_file}"
+
 # Read the first column values (excluding header) using awk
 awk -F, 'NR>1 {print $1}' $tag_file | while read line; do
     # $line now contains the value from the first column
-
-    echo "Testing ${line}, see ./testing/output/$line.log logs for details."
-    ./test_container.sh $line $repo $version >> ./testing/output/$line.log
+    echo "Testing: ${line} ----------------------------------------------" 2>&1 | tee -a $log_file
+    ./test_container.sh $line $repo $version 2>&1 | tee -a $log_file
 done
