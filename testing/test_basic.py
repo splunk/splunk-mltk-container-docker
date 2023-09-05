@@ -28,19 +28,6 @@ if configuration:
 else:
     print("Error in loading the configuration.")
 
-#def check_container_status_and_stop(playwright: Playwright) -> None:
-#    browser = playwright.chromium.launch(headless=False)
-#    context = browser.new_context(ignore_https_errors=True)
-#    page = context.new_page()
-#    page.goto(f"http://{instance_location}:8000/en-GB/account/login?return_to=%2Fen-GB%2F")
-#    page.get_by_placeholder("Username").fill(username)
-#    page.get_by_placeholder("Password", exact=True).fill(password)
-#    page.get_by_placeholder("Password", exact=True).press("Enter")
-#    page.get_by_label("Splunk App for Data Science and Deep Learning").click()
-#    page.get_by_role("link", name="Containers", exact=True).click()
-#    page.get_by_role("link", name="Configuration ▾").click()
-#    expect(page.get_by_text("NOT RUNNING",exact=True)).to_be_visible(timeout=60000)   
-
 def test_docker_configure(playwright: Playwright) -> None:
     browser = playwright.chromium.launch(headless=False)
     context = browser.new_context(ignore_https_errors=True)
