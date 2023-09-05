@@ -19,30 +19,32 @@ if configuration:
     instance_location = configuration.get("instance_location")
     username = configuration.get("username")
     password = configuration.get("password")
+    headless = configuration.get("headless") == "True"
 
     # Print out the loaded values (for demonstration)
     print("Instance Location:", instance_location)
     print("Username:", username)
     print("Password:", password)
+    print("Headless:", headless)
 
 else:
     print("Error in loading the configuration.")
 
 def test_docker_configure(playwright: Playwright) -> None:
-    browser = playwright.chromium.launch(headless=True)
+    browser = playwright.chromium.launch(headless=headless)
     context = browser.new_context(ignore_https_errors=True)
     page = context.new_page()
     page.goto(f"http://{instance_location}:8000/en-GB/account/login?return_to=%2Fen-GB%2F")
     page.get_by_placeholder("Username").fill(username)
     page.get_by_placeholder("Password", exact=True).fill(password)
     page.get_by_placeholder("Password", exact=True).press("Enter")
-    page.get_by_label("Splunk App for Data Science and Deep Learning",exact=True)
+    page.get_by_label("Navigate to Splunk App for Data Science and Deep Learning app").click()
     page.get_by_role("link", name="Configuration ▾").click()
     page.get_by_role("link", name="Setup", exact=True).click()
     page.locator("[data-test=\"button\"]").click()
     page.get_by_label("Docker Host").get_by_label("value").fill("unix://var/run/docker.sock")
     page.get_by_label("Endpoint URL", exact=True).get_by_label("value").fill("localhost")
-    page.get_by_label("External URL").get_by_label("value").fill("dsdl.splunkyourface.com")
+    page.get_by_label("External URL").get_by_label("value").fill(instance_location)
     page.get_by_label("Disabled").click()
     page.get_by_label("Jupyter Password").get_by_label("value").fill("testpassword")
     time.sleep(1.0)
@@ -58,14 +60,14 @@ def test_docker_configure(playwright: Playwright) -> None:
     browser.close()
 
 def test_start_container(playwright: Playwright, containername) -> None:
-    browser = playwright.chromium.launch(headless=True)
+    browser = playwright.chromium.launch(headless=headless)
     context = browser.new_context(ignore_https_errors=True)
     page = context.new_page()
     page.goto(f"http://{instance_location}:8000/en-GB/account/login?return_to=%2Fen-GB%2F")
     page.get_by_placeholder("Username").fill(username)
     page.get_by_placeholder("Password", exact=True).fill(password)
     page.get_by_placeholder("Password", exact=True).press("Enter")
-    page.get_by_label("Splunk App for Data Science and Deep Learning",exact=True)
+    page.get_by_label("Navigate to Splunk App for Data Science and Deep Learning app").click()
     page.get_by_role("link", name="Configuration ▾").click()
     page.get_by_role("link", name="Containers", exact=True).click()
     page.get_by_label("Container Image").click()
@@ -78,7 +80,7 @@ def test_start_container(playwright: Playwright, containername) -> None:
     browser.close()
 
 def test_check_jupyter(playwright: Playwright, containername) -> None:
-    browser = playwright.chromium.launch(headless=True)
+    browser = playwright.chromium.launch(headless=headless)
     context = browser.new_context(ignore_https_errors=True)
     page = context.new_page()
     time.sleep(10)
@@ -99,7 +101,7 @@ def test_check_jupyter(playwright: Playwright, containername) -> None:
     browser.close()
 
 def test_barebones_model(playwright: Playwright, containername) -> None:
-    browser = playwright.chromium.launch(headless=True)
+    browser = playwright.chromium.launch(headless=headless)
     context = browser.new_context(ignore_https_errors=True)
     page = context.new_page()
     page.goto(f"http://{instance_location}:8000/en-GB/account/login?return_to=%2Fen-GB%2F")
@@ -116,14 +118,14 @@ def test_barebones_model(playwright: Playwright, containername) -> None:
 
 
 def test_stop_container(playwright: Playwright, containername) -> None:
-    browser = playwright.chromium.launch(headless=True)
+    browser = playwright.chromium.launch(headless=headless)
     context = browser.new_context(ignore_https_errors=True)
     page = context.new_page()
     page.goto(f"http://{instance_location}:8000/en-GB/account/login?return_to=%2Fen-GB%2F")
     page.get_by_placeholder("Username").fill(username)
     page.get_by_placeholder("Password", exact=True).fill(password)
     page.get_by_placeholder("Password", exact=True).press("Enter")
-    page.get_by_label("Splunk App for Data Science and Deep Learning",exact=True)
+    page.get_by_label("Navigate to Splunk App for Data Science and Deep Learning app").click()
     page.get_by_role("link", name="Configuration ▾").click()
     page.get_by_role("link", name="Containers", exact=True).click()
     expect(page.get_by_text("RUNNING",exact=True)).to_be_visible(timeout=60000)
