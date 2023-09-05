@@ -29,7 +29,7 @@ else:
     print("Error in loading the configuration.")
 
 def test_docker_configure(playwright: Playwright) -> None:
-    browser = playwright.chromium.launch(headless=False)
+    browser = playwright.chromium.launch(headless=True)
     context = browser.new_context(ignore_https_errors=True)
     page = context.new_page()
     page.goto(f"http://{instance_location}:8000/en-GB/account/login?return_to=%2Fen-GB%2F")
@@ -58,7 +58,7 @@ def test_docker_configure(playwright: Playwright) -> None:
     browser.close()
 
 def test_start_container(playwright: Playwright, containername) -> None:
-    browser = playwright.chromium.launch(headless=False)
+    browser = playwright.chromium.launch(headless=True)
     context = browser.new_context(ignore_https_errors=True)
     page = context.new_page()
     page.goto(f"http://{instance_location}:8000/en-GB/account/login?return_to=%2Fen-GB%2F")
@@ -78,7 +78,7 @@ def test_start_container(playwright: Playwright, containername) -> None:
     browser.close()
 
 def test_check_jupyter(playwright: Playwright, containername) -> None:
-    browser = playwright.chromium.launch(headless=False)
+    browser = playwright.chromium.launch(headless=True)
     context = browser.new_context(ignore_https_errors=True)
     page = context.new_page()
     time.sleep(10)
@@ -99,7 +99,7 @@ def test_check_jupyter(playwright: Playwright, containername) -> None:
     browser.close()
 
 def test_barebones_model(playwright: Playwright, containername) -> None:
-    browser = playwright.chromium.launch(headless=False)
+    browser = playwright.chromium.launch(headless=True)
     context = browser.new_context(ignore_https_errors=True)
     page = context.new_page()
     page.goto(f"http://{instance_location}:8000/en-GB/account/login?return_to=%2Fen-GB%2F")
@@ -116,7 +116,7 @@ def test_barebones_model(playwright: Playwright, containername) -> None:
 
 
 def test_stop_container(playwright: Playwright, containername) -> None:
-    browser = playwright.chromium.launch(headless=False)
+    browser = playwright.chromium.launch(headless=True)
     context = browser.new_context(ignore_https_errors=True)
     page = context.new_page()
     page.goto(f"http://{instance_location}:8000/en-GB/account/login?return_to=%2Fen-GB%2F")
