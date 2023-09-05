@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # build test env
 
 if [ -d "./testing/venv" ]; then

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Compile python requirement versions for a specific image tag
 
 # What does this script do?
