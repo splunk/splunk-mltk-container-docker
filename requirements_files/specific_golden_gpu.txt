@@ -29,3 +29,5 @@ suod
 pymc3
 spacy==2.3.2
 spacytextblob==0.1.7
+
+pymilvus

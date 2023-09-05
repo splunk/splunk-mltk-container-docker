@@ -32,5 +32,7 @@ pymc3
 spacy==2.3.2
 spacytextblob==0.1.7
 
+pymilvus
+
  --extra-index-url https://download.pytorch.org/whl/cpu
  torch
