@@ -18,20 +18,6 @@ else
   tag_file="$1"
 fi
 
-if [ -z "$2" ]; then
-  repo="local/"
-  echo "No repo name specified. Using default repo name: ${repo}"
-else
-  repo="$2"
-fi
-
-if [ -z "$3" ]; then
-  version="latest"
-  echo "No version specified. Using version: ${version}"
-else
-  version="$3"
-fi
-
 # Read the first column values (excluding header) using awk
 awk -F, 'NR>1 {print $1}' $tag_file | while read line; do
     # $line now contains the value from the first column

@@ -3,6 +3,8 @@ FROM ${BASE_IMAGE}
 ARG TAG
 ARG COMPILED_REQUIREMENTS_FILE
 
+USER root
+
 RUN apt-get update && apt-get upgrade -y
 
 RUN mkdir /temp

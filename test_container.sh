@@ -17,4 +17,4 @@ else
   container_tag="$1"
 fi
 
-pytest ./testing/ -q --containername $container_tag
+pytest ./testing/ -q --containername $container_tag -v

@@ -14,14 +14,11 @@ scikit-learn
 networkx
 
 datashader 
-dask-ml 
-dask-labextension 
 jupyter-tensorboard 
 dask-xgboost 
 mlflow
 
 prophet 
-pomegranate 
 shap 
 lime 
 umap-learn 

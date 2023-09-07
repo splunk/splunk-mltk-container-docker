@@ -110,3 +110,5 @@ images_conf_files/*.txt
 images_conf_files/*.conf
 
 testing/config.yaml
+
+.code-workspace
