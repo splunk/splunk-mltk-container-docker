@@ -17,4 +17,19 @@ else
   container_tag="$1"
 fi
 
-pytest ./testing/ -q --containername $container_tag -v
+files=$(find ./testing/test_mapping/ -type f)
+found_match=false
+
+for file in $files; do
+  echo $file
+  echo $container_tag
+  if grep -q "$container_tag" "$file"; then
+    test_name=$(basename "$file")
+    pytest ./testing/test_$test_name.py -q --containername $container_tag -v
+    found_match=true
+  fi
+done
+
+if [ "$found_match" = false ]; then
+  echo "no tests found for this container"
+fi

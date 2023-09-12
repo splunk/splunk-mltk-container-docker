@@ -1,0 +1,9 @@
+minimal-cpu
+minimal-gpu
+golden-cpu
+golden-gpu
+ubi-functional-cpu
+ubi-minimal-cpu
+ubi-golden-cpu
+golden-gpu-transformers
+golden-gpu-rapids
