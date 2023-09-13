@@ -17,7 +17,7 @@ else
   container_tag="$1"
 fi
 
-files=$(find ./testing/test_mapping/ -type f)
+files=$(find ./testing/test_mapping/ -type f | sort)
 found_match=false
 
 for file in $files; do

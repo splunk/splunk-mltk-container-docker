@@ -6,4 +6,5 @@ ubi-functional-cpu
 ubi-minimal-cpu
 ubi-golden-cpu
 golden-gpu-transformers
+golden-cpu-transformers
 golden-gpu-rapids

@@ -30,22 +30,6 @@ if configuration:
 else:
     print("Error in loading the configuration.")
 
-# def test_barebones_model(playwright: Playwright, containername) -> None:
-#     browser = playwright.chromium.launch(headless=headless)
-#     context = browser.new_context(ignore_https_errors=True)
-#     page = context.new_page()
-#     page.goto(f"http://{instance_location}:8000/en-GB/account/login?return_to=%2Fen-GB%2F")
-#     page.get_by_placeholder("Username").fill(username)
-#     page.get_by_placeholder("Password", exact=True).fill(password)
-#     page.get_by_placeholder("Password", exact=True).press("Enter")
-#     page2 = context.new_page()
-#     page2.goto(f"http://{instance_location}:8000/en-GB/app/search/search?q=%7C%20makeresults%20count%3D10%20%0A%7C%20streamstats%20c%20as%20i%20%0A%7C%20eval%20i%3Di-1%20%0A%7C%20fit%20MLTKContainer%20algo%3Dbarebone_template%20i%20%0A%7C%20eval%20test%3Di-predicted_index%20%0A%7C%20stats%20sum(test)%20as%20test%20%0A%7C%20eval%20test%3Dif(test%3D%3D0%2C%22SUCCESS%22%2C%22FAIL%22)&display.page.search.mode=fast&dispatch.sample_ratio=1&workload_pool=&earliest=-24h%40h&latest=now&display.page.search.tab=statistics&display.general.type=statistics")
-#     page2.get_by_role("link", name="Run Query Anyway").click()
-#     expect(page2.get_by_role("cell", name="SUCCESS", exact=True)).to_be_visible(timeout=60000)
-#     # ---------------------
-#     context.close()
-#     browser.close()
-
 def test_transformers_finetune_en(playwright: Playwright,containername) -> None:
     browser = playwright.chromium.launch(headless=False)
     context = browser.new_context(ignore_https_errors=True)
