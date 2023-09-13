@@ -1,0 +1,39 @@
+# FastAPI stack
+fastapi>=0.68.0,<0.69.0
+pydantic>=1.8.0,<2.0.0
+uvicorn>=0.15.0,<0.16.0
+aiofiles
+pyopenssl 
+
+# jupyter
+jupyterlab
+# due to https://github.com/jupyter/notebook/issues/6164
+jupyter_client<7.0.0
+
+#interactive python dependancies
+ipywidgets
+jupyterlab-git
+widgetsnbextension
+matplotlib
+
+# splunk functionality dependancies
+splunk-sdk
+splunk-opentelemetry[all]
+opentelemetry-instrumentation-fastapi==0.33b0
+
+# basic data-science libraries
+pandas
+numpy
+pandas==1.5.3
+
+datashader
+seaborn
+dask-ml
+dask-labextension
+jupyterlab-nvdashboard
+jupyterlab_nvdashboard
+mlflow
+
+# Python data science basics
+graphistry[all]
+neo4j
