@@ -4,7 +4,7 @@ seaborn
 dask-ml
 dask-labextension
 
-mlflow
+mlflow==2.7.0
 
 scipy
 scikit-learn

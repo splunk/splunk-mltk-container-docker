@@ -5,18 +5,13 @@ dask-ml
 dask-labextension
 
 jupyterlab-nvdashboard
-jupyterlab_nvdashboard
-
-mlflow
 
 scipy
 scikit-learn
 networkx
 
-datashader 
-jupyter-tensorboard 
 dask-xgboost 
-mlflow
+mlflow==2.7.0
 
 prophet 
 shap 

@@ -10,7 +10,7 @@ datashader
 dask-ml 
 dask-labextension 
 dask-xgboost 
-mlflow
+mlflow==2.7.0
 
 prophet 
 shap 

@@ -4,9 +4,9 @@ seaborn
 dask-ml
 dask-labextension
 
-jupyterlab_nvdashboard
+jupyterlab-nvdashboard
 
-mlflow
+mlflow==2.7.0
 
 scipy
 scikit-learn

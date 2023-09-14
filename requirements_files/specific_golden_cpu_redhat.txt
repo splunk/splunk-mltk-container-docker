@@ -11,7 +11,7 @@ networkx
 
 tensorflow-cpu
 dask-xgboost 
-mlflow
+mlflow==2.7.0
 
 prophet 
 shap 
