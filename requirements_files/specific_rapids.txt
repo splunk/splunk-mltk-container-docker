@@ -5,8 +5,7 @@ seaborn
 dask-ml
 dask-labextension
 jupyterlab-nvdashboard
-jupyterlab_nvdashboard
-mlflow
+mlflow==2.7.0
 
 # Python data science basics
 graphistry[all]
