@@ -55,7 +55,7 @@ else
 fi
 
 echo "Building custom module."
-./package-dsdlsupport/build_package.sh
+./build_package.sh
 
 container_name="$repo"mltk-container-$tag
 echo "Target container name: $container_name"
