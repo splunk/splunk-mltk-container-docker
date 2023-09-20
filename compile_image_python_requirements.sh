@@ -12,6 +12,9 @@
 # e.g. ./compile_image_python_requirements.sh ubi-minimal-cpu
 # A "Dockerfile.*.requirements" version must exist for the image tag's dockerfile. Please see 
 # dockerfiles/Dockerfile.5.1.0.redhat.requirements for an example.
+# For most of the images provided the requirements dockerfile will automatically be selected, if not
+# Dockerfile.5.1.0.debian.requirements or Dockerfile.5.1.0.redhat.requirements are likely to be appropriate
+# depending upon the specific OS base image used.
 
 if [ -z "$1" ]; then
   echo "No build tag specified. Pick a tag:"
