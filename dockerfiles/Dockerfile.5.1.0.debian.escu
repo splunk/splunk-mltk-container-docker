@@ -55,8 +55,10 @@ RUN mkdir /dltk/packages
 COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
 RUN pip3 install /dltk/packages/dsdlsupport-1.0.0.tar.gz
 
+ARG INVALIDATE_CACHE=1
+
 # Copy ESCU pre-trained models
-COPY escu_models/ app/model/data
+COPY ./escu_models/ /dltk/app/model/data
 
 # Copy jupyter config
 COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py
