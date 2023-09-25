@@ -55,17 +55,8 @@ RUN mkdir /dltk/packages
 COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
 RUN pip3 install /dltk/packages/dsdlsupport-1.0.0.tar.gz
 
-# Get ESCU DSDL Content
-RUN wget https://seal.splunkresearch.com/pretrained_dga_model_dsdl.tar.gz
-RUN wget https://seal.splunkresearch.com/detect_suspicious_dns_txt_records_using_pretrained_model_in_dsdl.tar.gz
-RUN wget https://seal.splunkresearch.com/detect_suspicious_processnames_using_pretrained_model_in_dsdl.tar.gz
-RUN wget https://seal.splunkresearch.com/detect_dns_data_exfiltration_using_pretrained_model_in_dsdl.tar.gz
-
-# Extract ESCU Content
-RUN tar -xf pretrained_dga_model_dsdl.tar.gz -C app/model/data
-RUN tar -xf detect_suspicious_dns_txt_records_using_pretrained_model_in_dsdl.tar.gz -C app/model/data
-RUN tar -xf detect_suspicious_processnames_using_pretrained_model_in_dsdl.tar.gz -C app/model/data
-RUN tar -xf detect_dns_data_exfiltration_using_pretrained_model_in_dsdl.tar.gz -C app/model/data
+# Copy ESCU pre-trained models
+COPY escu_models/ app/model/data
 
 # Copy jupyter config
 COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py
