@@ -1,0 +1,17 @@
+services:
+  dsdl-base:
+    container_name: dsdl-base
+    image: phdrieger/mltk-container-golden-image-cpu:5.1.0
+    volumes:
+     - mltk-container-data:/srv:rw
+     - mltk-container-app:/srv/backup/app:ro
+     - mltk-container-notebooks:/srv/backup/notebooks:ro
+    ports:
+     - 5000:5000 # Model Interaction API
+    environment:
+     - olly_enabled=false
+     - splunk_access_enabled=false
+     - splunk_hec_enabled=false
+     - ENABLE_HTTPS=true
+     - JUPYTER_PASSWD=sha1:f7432152c71d:e8520c26b9d960e838d562768c1d24ef5b9b76c7 # PW:Splunk4DeepLearning
+     - MODE_DEV_PROD=PROD
