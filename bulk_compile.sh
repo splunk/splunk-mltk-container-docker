@@ -23,5 +23,5 @@ awk -F, 'NR>1 {print $1}' $tag_file | while read tag; do
     # $line now contains the value from the first column
     echo "Processing: $tag"
 
-    ./compile_image_python_requirements.sh $line >> bulk_compile.log
+    ./compile_image_python_requirements.sh $tag >> bulk_compile.log
 done
