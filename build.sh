@@ -42,6 +42,8 @@ if [ "$line" != "" ]; then
     base_requirements=$(echo $line | cut -d',' -f4)
     specific_requirements=$(echo $line | cut -d',' -f5)
     runtime=$(echo $line | cut -d',' -f6) 
+    requirements_dockerfile=$(echo $line | cut -d',' -f7) 
+    title=$(echo $line | cut -d',' -f8) 
 
     echo "Tag: $tag"
     echo "Base Image: $base_image"
@@ -49,6 +51,8 @@ if [ "$line" != "" ]; then
     echo "Base Requirements File: $base_requirements"
     echo "Specific Requirements File: $specific_requirements"
     echo "Runtime Options: $runtime"
+    echo "Requirements Dockerfile: $requirements_dockerfile"
+    echo "Title: $title"
 else
     echo "No match found for tag: $tag"
     exit
@@ -102,7 +106,7 @@ if [ "$runtime" = "nvidia" ]; then
   runtime="none,nvidia"
 fi
 
-echo -e "[$tag]\ntitle = $tag\nimage = mltk-container-$tag:$version\nrepo = $repo\nruntime = $runtime" > ./images_conf_files/$tag-images.txt
+echo -e "[$tag]\ntitle = $title\nimage = mltk-container-$tag:$version\nrepo = $repo\nruntime = $runtime" > ./images_conf_files/$tag-images.txt
 
 # Remove output file if it already exists
 rm -f ./images_conf_files/images.conf

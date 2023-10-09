@@ -1,12 +1,12 @@
-Tags:,base_image,dockerfile,base_requirements,specific_requirements,runtime,requirements_dockerfile 
-minimal-cpu,python:3.9.13-bullseye,Dockerfile.5.1.0.debian,base_functional.txt,specific_minimal_cpu.txt,none,Dockerfile.5.1.0.debian.requirements
-minimal-gpu,nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04,Dockerfile.5.1.0.debian,base_functional.txt,specific_minimal_gpu.txt,nvidia,Dockerfile.5.1.0.debian.requirements
-golden-cpu,python:3.9.13-bullseye,Dockerfile.5.1.0.debian,base_functional.txt,specific_golden_cpu.txt,none,Dockerfile.5.1.0.debian.requirements
-golden-gpu,nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04,Dockerfile.5.1.0.debian,base_functional.txt,specific_golden_gpu.txt,nvidia,Dockerfile.5.1.0.debian.requirements
-ubi-functional-cpu,redhat/ubi9,Dockerfile.5.1.0.redhat,base_functional.txt,empty.txt,none,Dockerfile.5.1.0.redhat.requirements
-ubi-minimal-cpu,redhat/ubi9,Dockerfile.5.1.0.redhat,base_functional.txt,specific_minimal_cpu.txt,none,Dockerfile.5.1.0.redhat.requirements
-ubi-golden-cpu,redhat/ubi9,Dockerfile.5.1.0.redhat,base_functional.txt,specific_golden_cpu_redhat.txt,none,Dockerfile.5.1.0.redhat.requirements
-golden-gpu-transformers,nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04,Dockerfile.5.1.0.debian.transformers,base_functional.txt,specific_golden_gpu_transformers.txt,nvidia,Dockerfile.5.1.0.debian.requirements
-golden-cpu-transformers,python:3.9.13-bullseye,Dockerfile.5.1.0.debian.transformers,base_functional.txt,specific_golden_cpu_transformers.txt,none,Dockerfile.5.1.0.debian.requirements
-golden-gpu-rapids,rapidsai/base:23.08-cuda11.2-py3.9,Dockerfile.5.1.0.debian.rapids,base_functional.txt,specific_rapids.txt,nvidia,Dockerfile.5.1.0.debian.requirements
-escu-cpu,python:3.9.13-bullseye,Dockerfile.5.1.0.debian.escu,base_functional.txt,specific_escu.txt,none,Dockerfile.5.1.0.debian.requirements
+Tags:,base_image,dockerfile,base_requirements,specific_requirements,runtime,requirements_dockerfile,stanza_name
+minimal-cpu,python:3.9.13-bullseye,Dockerfile.5.1.0.debian,base_functional.txt,specific_minimal_cpu.txt,none,Dockerfile.5.1.0.debian.requirements,Minimal CPU (5.1.1)
+minimal-gpu,nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04,Dockerfile.5.1.0.debian,base_functional.txt,specific_minimal_gpu.txt,nvidia,Dockerfile.5.1.0.debian.requirements,Minimal GPU (5.1.1)
+golden-cpu,python:3.9.13-bullseye,Dockerfile.5.1.0.debian,base_functional.txt,specific_golden_cpu.txt,none,Dockerfile.5.1.0.debian.requirements,Golden Image CPU (5.1.1)
+golden-gpu,nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04,Dockerfile.5.1.0.debian,base_functional.txt,specific_golden_gpu.txt,nvidia,Dockerfile.5.1.0.debian.requirements,Golden Image GPU (5.1.1)
+ubi-functional-cpu,redhat/ubi9,Dockerfile.5.1.0.redhat,base_functional.txt,empty.txt,none,Dockerfile.5.1.0.redhat.requirements,Red Hat UBI Functional CPU (5.1.1)
+ubi-minimal-cpu,redhat/ubi9,Dockerfile.5.1.0.redhat,base_functional.txt,specific_minimal_cpu.txt,none,Dockerfile.5.1.0.redhat.requirements,Red Hat UBI Minimal CPU (5.1.1)
+ubi-golden-cpu,redhat/ubi9,Dockerfile.5.1.0.redhat,base_functional.txt,specific_golden_cpu_redhat.txt,none,Dockerfile.5.1.0.redhat.requirements,Red Hat UBI Golden CPU (5.1.1)
+golden-gpu-transformers,nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04,Dockerfile.5.1.0.debian.transformers,base_functional.txt,specific_golden_gpu_transformers.txt,nvidia,Dockerfile.5.1.0.debian.requirements,Transformers GPU (5.1.1)
+golden-cpu-transformers,python:3.9.13-bullseye,Dockerfile.5.1.0.debian.transformers,base_functional.txt,specific_golden_cpu_transformers.txt,none,Dockerfile.5.1.0.debian.requirements,Transformers CPU (5.1.1)
+golden-gpu-rapids,rapidsai/base:23.08-cuda11.2-py3.9,Dockerfile.5.1.0.debian.rapids,base_functional.txt,specific_rapids.txt,nvidia,Dockerfile.5.1.0.debian.requirements,Rapids 23.08 (5.1.1)
+escu-cpu,python:3.9.13-bullseye,Dockerfile.5.1.0.debian.escu,base_functional.txt,specific_escu.txt,none,Dockerfile.5.1.0.debian.requirements,ESCU (5.1.1)
