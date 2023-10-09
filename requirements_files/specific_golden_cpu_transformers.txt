@@ -12,7 +12,6 @@ scikit-learn
 networkx
 
 datashader 
-jupyter-tensorboard 
 dask-xgboost 
 mlflow==2.7.0
 
