@@ -19,9 +19,9 @@ else
 fi
 
 # Read the first column values (excluding header) using awk
-awk -F, 'NR>1 {print $1}' $tag_file | while read line; do
+awk -F, 'NR>1 {print $1}' $tag_file | while read tag; do
     # $line now contains the value from the first column
-    echo "Processing: $line"
-    
-    ./compile_image_python_requirements.sh $line >> bulk_compile.log
+    echo "Processing: $tag"
+
+    #./compile_image_python_requirements.sh $line $requirements_image >> bulk_compile.log
 done

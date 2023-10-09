@@ -25,10 +25,6 @@ else
   tag="$1"
 fi
 
-if [ -n "$2" ]; then
-  dockerfile=$2
-fi
-
 echo "Compiling pip requirements for $tag"
 
 line=$(grep "^${tag}," tag_mapping.csv)
@@ -46,6 +42,7 @@ if [ "$line" != "" ]; then
     base_requirements=$(echo $line | cut -d',' -f4)
     specific_requirements=$(echo $line | cut -d',' -f5)
     runtime=$(echo $line | cut -d',' -f6) 
+    requirements_dockerfile=$(echo $line | cut -d',' -f7) 
 
     echo "Tag: $tag"
     echo "Base Image: $base_image"
@@ -53,20 +50,13 @@ if [ "$line" != "" ]; then
     echo "Base Requirements File: $base_requirements"
     echo "Specific Requirements File: $specific_requirements"
     echo "Runtime Options: $runtime"
+    echo "Requirements Dockerfile: $requirements_dockerfile"
 
     base_requirements="${base_requirements%.*}"
     specific_requirements="${specific_requirements%.*}"
 
-    echo $base_requirements
-    echo $specific_requirements
-
     compiled_requirements_id=compiled_${base_requirements}_${specific_requirements}_$tag
-
-    echo $compiled_requirements_id
-
     compiled_requirements_filename=./requirements_files/$compiled_requirements_id.in
-
-    echo $compiled_requirements_filename
 
     rm -f $compiled_requirements_filename
 
@@ -81,7 +71,7 @@ if [ "$line" != "" ]; then
         --build-arg BASE_IMAGE=$base_image \
         --build-arg TAG=$tag \
         --build-arg COMPILED_REQUIREMENTS_FILE=$compiled_requirements_id.in \
-        -f ./dockerfiles/$dockerfile\
+        -f ./dockerfiles/$requirements_dockerfile\
         .
 
     echo "Running container to copy compiled requirements"

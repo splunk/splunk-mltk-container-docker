@@ -7,8 +7,6 @@ pyopenssl
 
 # jupyter
 jupyterlab>4.0.0
-# due to https://github.com/jupyter/notebook/issues/6164
-#jupyter_client<7.0.0
 
 #interactive python dependancies
 ipywidgets
