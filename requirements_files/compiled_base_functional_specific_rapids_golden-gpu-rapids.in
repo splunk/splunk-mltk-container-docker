@@ -6,9 +6,7 @@ aiofiles
 pyopenssl 
 
 # jupyter
-jupyterlab
-# due to https://github.com/jupyter/notebook/issues/6164
-jupyter_client<7.0.0
+jupyterlab>4.0.0
 
 #interactive python dependancies
 ipywidgets
@@ -31,8 +29,7 @@ seaborn
 dask-ml
 dask-labextension
 jupyterlab-nvdashboard
-jupyterlab_nvdashboard
-mlflow
+mlflow==2.7.0
 
 # Python data science basics
 graphistry[all]

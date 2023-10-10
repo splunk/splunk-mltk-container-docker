@@ -6,32 +6,25 @@
 #
 --extra-index-url https://download.pytorch.org/whl/cpu
 
-absl-py==1.4.0
+absl-py==2.0.0
     # via
     #   tensorboard
     #   tensorflow-cpu
-aiofiles==22.1.0
-    # via
-    #   -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
-    #   ypy-websocket
-aiohttp==3.8.5
+aiofiles==23.2.1
+    # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
+aiohttp==3.8.6
     # via jupyter-server-proxy
 aiosignal==1.3.1
     # via aiohttp
-aiosqlite==0.19.0
-    # via ypy-websocket
 alembic==1.12.0
     # via mlflow
-anyio==3.7.1
+anyio==4.0.0
     # via jupyter-server
 argon2-cffi==23.1.0
-    # via
-    #   jupyter-server
-    #   nbclassic
-    #   notebook
+    # via jupyter-server
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
-arrow==1.2.3
+arrow==1.3.0
     # via isoduration
 arviz==0.16.1
     # via pymc3
@@ -43,6 +36,8 @@ asttokens==2.4.0
     # via stack-data
 astunparse==1.6.3
     # via tensorflow-cpu
+async-lru==2.0.4
+    # via jupyterlab
 async-timeout==4.0.3
     # via aiohttp
 attrs==23.1.0
@@ -50,7 +45,7 @@ attrs==23.1.0
     #   aiohttp
     #   jsonschema
     #   referencing
-babel==2.12.1
+babel==2.13.0
     # via jupyterlab-server
 backcall==0.2.0
     # via ipython
@@ -58,9 +53,9 @@ backoff==2.2.1
     # via opentelemetry-exporter-otlp-proto-grpc
 beautifulsoup4==4.12.2
     # via nbconvert
-bleach==6.0.0
+bleach==6.1.0
     # via nbconvert
-blinker==1.6.2
+blinker==1.6.3
     # via flask
 blis==0.4.1
     # via
@@ -79,12 +74,14 @@ catalogue==1.0.2
     #   spacy
     #   thinc
 certifi==2023.7.22
-    # via requests
-cffi==1.15.1
+    # via
+    #   minio
+    #   requests
+cffi==1.16.0
     # via
     #   argon2-cffi-bindings
     #   cryptography
-charset-normalizer==3.2.0
+charset-normalizer==3.3.0
     # via
     #   aiohttp
     #   requests
@@ -104,7 +101,7 @@ cloudpickle==2.2.1
     #   distributed
     #   mlflow
     #   shap
-cmdstanpy==1.1.0
+cmdstanpy==1.2.0
     # via prophet
 colorama==0.4.6
     # via nbdime
@@ -116,37 +113,37 @@ comm==0.1.4
     # via
     #   ipykernel
     #   ipywidgets
-contourpy==1.1.0
+contourpy==1.1.1
     # via
     #   bokeh
     #   matplotlib
 convertdate==2.4.0
     # via prophet
-cryptography==41.0.3
+cryptography==41.0.4
     # via pyopenssl
-cycler==0.11.0
+cycler==0.12.1
     # via matplotlib
-cymem==2.0.7
+cymem==2.0.8
     # via
     #   preshed
     #   spacy
     #   thinc
-dask[array,dataframe]==2023.9.1
+dask[array,dataframe]==2023.9.3
     # via
     #   dask-glm
     #   dask-ml
     #   dask-xgboost
     #   datashader
     #   distributed
-dask-glm==0.2.0
+dask-glm==0.3.0
     # via dask-ml
-dask-labextension==6.2.0
+dask-labextension==7.0.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 dask-ml==2023.3.24
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 dask-xgboost==0.2.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
-databricks-cli==0.17.7
+databricks-cli==0.18.0
     # via mlflow
 datashader==0.15.2
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
@@ -164,8 +161,9 @@ deprecated==1.2.14
     #   opentelemetry-propagator-b3
 dill==0.3.7
     # via pymc3
-distributed==2023.9.1
+distributed==2023.9.3
     # via
+    #   dask-glm
     #   dask-labextension
     #   dask-ml
     #   dask-xgboost
@@ -175,17 +173,17 @@ entrypoints==0.4
     # via mlflow
 environs==9.5.0
     # via pymilvus
-ephem==4.1.4
+ephem==4.1.5
     # via lunarcalendar
 exceptiongroup==1.1.3
     # via
     #   anyio
     #   ipython
-executing==1.2.0
+executing==2.0.0
     # via stack-data
 fastapi==0.68.2
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
-fastjsonschema==2.18.0
+fastjsonschema==2.18.1
     # via nbformat
 fastprogress==1.0.3
     # via pymc3
@@ -197,7 +195,7 @@ flask==2.3.3
     # via mlflow
 flatbuffers==23.5.26
     # via tensorflow-cpu
-fonttools==4.42.1
+fonttools==4.43.1
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
@@ -205,17 +203,19 @@ frozenlist==1.4.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2023.9.0
-    # via dask
-gast==0.4.0
+fsspec==2023.9.2
+    # via
+    #   dask
+    #   torch
+gast==0.5.4
     # via tensorflow-cpu
 gitdb==4.0.10
     # via gitpython
-gitpython==3.1.36
+gitpython==3.1.37
     # via
     #   mlflow
     #   nbdime
-google-auth==2.23.0
+google-auth==2.23.2
     # via
     #   google-auth-oauthlib
     #   tensorboard
@@ -225,9 +225,9 @@ google-pasta==0.2.0
     # via tensorflow-cpu
 googleapis-common-protos==1.60.0
     # via opentelemetry-exporter-otlp-proto-grpc
-greenlet==2.0.2
+greenlet==3.0.0
     # via sqlalchemy
-grpcio==1.56.0
+grpcio==1.58.0
     # via
     #   opentelemetry-exporter-otlp-proto-grpc
     #   pymilvus
@@ -243,7 +243,7 @@ h5py==3.9.0
     # via
     #   h5netcdf
     #   tensorflow-cpu
-holidays==0.32
+holidays==0.34
     # via prophet
 idna==3.4
     # via
@@ -251,7 +251,7 @@ idna==3.4
     #   jsonschema
     #   requests
     #   yarl
-imageio==2.31.3
+imageio==2.31.5
     # via scikit-image
 imbalanced-learn==0.11.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
@@ -259,37 +259,31 @@ importlib-metadata==6.8.0
     # via
     #   dask
     #   flask
+    #   jupyter-client
+    #   jupyter-lsp
     #   jupyter-server-proxy
-    #   jupyter-ydoc
+    #   jupyterlab
     #   jupyterlab-server
     #   markdown
     #   mlflow
     #   nbconvert
-importlib-resources==6.0.1
+importlib-resources==6.1.0
     # via
     #   matplotlib
     #   prophet
 ipykernel==6.25.2
-    # via
-    #   jupyterlab
-    #   nbclassic
-    #   notebook
-ipython==8.15.0
+    # via jupyterlab
+ipython==8.16.1
     # via
     #   ipykernel
     #   ipywidgets
-    #   jupyterlab
-ipython-genutils==0.2.0
-    # via
-    #   nbclassic
-    #   notebook
 ipywidgets==8.1.1
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 isoduration==20.11.0
     # via jsonschema
 itsdangerous==2.1.2
     # via flask
-jedi==0.19.0
+jedi==0.19.1
     # via ipython
 jinja2==3.1.2
     # via
@@ -300,10 +294,8 @@ jinja2==3.1.2
     #   jupyterlab
     #   jupyterlab-server
     #   mlflow
-    #   nbclassic
     #   nbconvert
     #   nbdime
-    #   notebook
     #   torch
 joblib==1.3.2
     # via
@@ -320,62 +312,52 @@ json5==0.9.14
     # via jupyterlab-server
 jsonpointer==2.4
     # via jsonschema
-jsonschema[format-nongpl]==4.19.0
+jsonschema[format-nongpl]==4.19.1
     # via
     #   jupyter-events
     #   jupyterlab-server
     #   nbformat
 jsonschema-specifications==2023.7.1
     # via jsonschema
-jupyter-client==6.1.12
+jupyter-client==8.3.1
     # via
-    #   -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
     #   ipykernel
     #   jupyter-server
-    #   nbclassic
     #   nbclient
-    #   notebook
-jupyter-core==5.3.1
+jupyter-core==5.3.2
     # via
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
     #   jupyterlab
-    #   nbclassic
     #   nbclient
     #   nbconvert
     #   nbformat
-    #   notebook
 jupyter-events==0.7.0
-    # via jupyter-server-fileid
-jupyter-server==1.24.0
+    # via jupyter-server
+jupyter-lsp==2.2.0
+    # via jupyterlab
+jupyter-server==2.7.3
     # via
-    #   jupyter-server-fileid
+    #   jupyter-lsp
     #   jupyter-server-mathjax
     #   jupyter-server-proxy
     #   jupyterlab
     #   jupyterlab-git
     #   jupyterlab-server
-    #   nbclassic
     #   nbdime
     #   notebook-shim
-jupyter-server-fileid==0.9.0
-    # via jupyter-server-ydoc
 jupyter-server-mathjax==0.2.6
     # via nbdime
-jupyter-server-proxy==4.0.0
+jupyter-server-proxy==4.1.0
     # via dask-labextension
-jupyter-server-ydoc==0.8.0
-    # via jupyterlab
-jupyter-ydoc==0.2.5
-    # via
-    #   jupyter-server-ydoc
-    #   jupyterlab
-jupyterlab==3.6.5
+jupyter-server-terminals==0.4.4
+    # via jupyter-server
+jupyterlab==4.0.6
     # via
     #   -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
     #   dask-labextension
-jupyterlab-git==0.42.0
+jupyterlab-git==0.43.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 jupyterlab-pygments==0.2.2
     # via nbconvert
@@ -383,7 +365,7 @@ jupyterlab-server==2.25.0
     # via jupyterlab
 jupyterlab-widgets==3.0.9
     # via ipywidgets
-keras==2.13.1
+keras==2.14.0
     # via tensorflow-cpu
 kiwisolver==1.4.5
     # via matplotlib
@@ -395,7 +377,7 @@ libclang==16.0.6
     # via tensorflow-cpu
 lime==0.2.0.1
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
-llvmlite==0.40.1
+llvmlite==0.41.0
     # via
     #   numba
     #   pynndescent
@@ -407,7 +389,7 @@ lunarcalendar==0.0.9
     # via prophet
 mako==1.2.4
     # via alembic
-markdown==3.4.4
+markdown==3.5
     # via
     #   mlflow
     #   tensorboard
@@ -419,7 +401,7 @@ markupsafe==2.1.3
     #   werkzeug
 marshmallow==3.20.1
     # via environs
-matplotlib==3.7.3
+matplotlib==3.8.0
     # via
     #   -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
     #   arviz
@@ -435,13 +417,17 @@ matplotlib-inline==0.1.6
     # via
     #   ipykernel
     #   ipython
-mistune==3.0.1
+minio==7.1.17
+    # via pymilvus
+mistune==3.0.2
     # via nbconvert
+ml-dtypes==0.2.0
+    # via tensorflow-cpu
 mlflow==2.7.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 mpmath==1.3.0
     # via sympy
-msgpack==1.0.5
+msgpack==1.0.7
     # via distributed
 multidict==6.0.4
     # via
@@ -452,38 +438,26 @@ multipledispatch==1.0.0
     #   dask-glm
     #   dask-ml
     #   datashape
-murmurhash==1.0.9
+murmurhash==1.0.10
     # via
     #   preshed
     #   spacy
     #   thinc
-nbclassic==1.0.0
-    # via
-    #   jupyterlab
-    #   notebook
 nbclient==0.8.0
     # via nbconvert
-nbconvert==7.8.0
-    # via
-    #   jupyter-server
-    #   nbclassic
-    #   notebook
+nbconvert==7.9.2
+    # via jupyter-server
 nbdime==3.2.1
     # via jupyterlab-git
 nbformat==5.9.2
     # via
     #   jupyter-server
     #   jupyterlab-git
-    #   nbclassic
     #   nbclient
     #   nbconvert
     #   nbdime
-    #   notebook
-nest-asyncio==1.5.7
-    # via
-    #   ipykernel
-    #   nbclassic
-    #   notebook
+nest-asyncio==1.5.8
+    # via ipykernel
 networkx==3.1
     # via
     #   -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
@@ -491,13 +465,9 @@ networkx==3.1
     #   torch
 nltk==3.8.1
     # via textblob
-notebook==6.5.5
-    # via jupyterlab
 notebook-shim==0.2.3
-    # via
-    #   jupyterlab
-    #   nbclassic
-numba==0.57.1
+    # via jupyterlab
+numba==0.58.0
     # via
     #   combo
     #   dask-ml
@@ -505,10 +475,11 @@ numba==0.57.1
     #   pynndescent
     #   pyod
     #   shap
+    #   sparse
     #   stumpy
     #   tslearn
     #   umap-learn
-numpy==1.24.3
+numpy==1.25.2
     # via
     #   -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
     #   arviz
@@ -528,6 +499,7 @@ numpy==1.24.3
     #   kmodes
     #   lime
     #   matplotlib
+    #   ml-dtypes
     #   mlflow
     #   numba
     #   opt-einsum
@@ -537,7 +509,6 @@ numpy==1.24.3
     #   pyarrow
     #   pymc3
     #   pyod
-    #   pywavelets
     #   rrcf
     #   scikit-image
     #   scikit-learn
@@ -545,6 +516,8 @@ numpy==1.24.3
     #   seaborn
     #   shap
     #   spacy
+    #   sparse
+    #   stanio
     #   stumpy
     #   suod
     #   tensorboard
@@ -605,7 +578,9 @@ opentelemetry-util-http==0.33b0
     #   opentelemetry-instrumentation-fastapi
 opt-einsum==3.3.0
     # via tensorflow-cpu
-packaging==23.1
+overrides==7.4.0
+    # via jupyter-server
+packaging==23.2
     # via
     #   arviz
     #   bokeh
@@ -628,7 +603,7 @@ packaging==23.1
     #   shap
     #   tensorflow-cpu
     #   xarray
-pandas==2.1.0
+pandas==2.1.1
     # via
     #   -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
     #   arviz
@@ -654,7 +629,7 @@ param==1.13.0
     #   pyct
 parso==0.8.3
     # via jedi
-partd==1.4.0
+partd==1.4.1
     # via dask
 patsy==0.5.3
     # via pymc3
@@ -664,7 +639,7 @@ pexpect==4.8.0
     #   jupyterlab-git
 pickleshare==0.7.5
     # via ipython
-pillow==10.0.0
+pillow==10.0.1
     # via
     #   bokeh
     #   datashader
@@ -675,17 +650,14 @@ plac==1.1.3
     # via
     #   spacy
     #   thinc
-platformdirs==3.10.0
+platformdirs==3.11.0
     # via jupyter-core
-preshed==3.0.8
+preshed==3.0.9
     # via
     #   spacy
     #   thinc
 prometheus-client==0.17.1
-    # via
-    #   jupyter-server
-    #   nbclassic
-    #   notebook
+    # via jupyter-server
 prompt-toolkit==3.0.39
     # via ipython
 prophet==1.1.4
@@ -723,7 +695,7 @@ pyct==0.5.0
     # via
     #   colorcet
     #   datashader
-pydantic==1.10.12
+pydantic==1.10.13
     # via
     #   -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
     #   fastapi
@@ -738,7 +710,7 @@ pymc3==3.11.4
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 pymeeus==0.5.12
     # via convertdate
-pymilvus==2.3.0
+pymilvus==2.3.1
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 pynndescent==0.5.10
     # via umap-learn
@@ -770,8 +742,6 @@ pytz==2023.3.post1
     #   lunarcalendar
     #   mlflow
     #   pandas
-pywavelets==1.4.1
-    # via scikit-image
 pyyaml==6.0.1
     # via
     #   bokeh
@@ -779,13 +749,11 @@ pyyaml==6.0.1
     #   distributed
     #   jupyter-events
     #   mlflow
-pyzmq==24.0.1
+pyzmq==25.1.1
     # via
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
-    #   nbclassic
-    #   notebook
 querystring-parser==1.2.4
     # via mlflow
 referencing==0.30.2
@@ -793,7 +761,7 @@ referencing==0.30.2
     #   jsonschema
     #   jsonschema-specifications
     #   jupyter-events
-regex==2023.8.8
+regex==2023.10.3
     # via nltk
 requests==2.31.0
     # via
@@ -803,6 +771,7 @@ requests==2.31.0
     #   jupyterlab-server
     #   mlflow
     #   nbdime
+    #   pymilvus
     #   requests-oauthlib
     #   spacy
     #   tensorboard
@@ -816,7 +785,7 @@ rfc3986-validator==0.1.1
     # via
     #   jsonschema
     #   jupyter-events
-rpds-py==0.10.3
+rpds-py==0.10.4
     # via
     #   jsonschema
     #   referencing
@@ -824,9 +793,9 @@ rrcf==0.4.4
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 rsa==4.9
     # via google-auth
-scikit-image==0.21.0
+scikit-image==0.22.0
     # via lime
-scikit-learn==1.3.0
+scikit-learn==1.3.1
     # via
     #   -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
     #   combo
@@ -842,7 +811,7 @@ scikit-learn==1.3.0
     #   suod
     #   tslearn
     #   umap-learn
-scipy==1.11.2
+scipy==1.11.3
     # via
     #   -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
     #   arviz
@@ -861,6 +830,7 @@ scipy==1.11.2
     #   scikit-image
     #   scikit-learn
     #   shap
+    #   sparse
     #   stumpy
     #   suod
     #   theano-pymc
@@ -868,15 +838,12 @@ scipy==1.11.2
     #   umap-learn
     #   xarray-einstats
     #   xgboost
-seaborn==0.12.2
+seaborn==0.13.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 semver==3.0.1
     # via pymc3
 send2trash==1.8.2
-    # via
-    #   jupyter-server
-    #   nbclassic
-    #   notebook
+    # via jupyter-server
 shap==0.42.1
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 simpervisor==1.0.0
@@ -893,11 +860,12 @@ six==1.16.0
     #   python-dateutil
     #   querystring-parser
     #   rfc3339-validator
+    #   tensorboard
     #   tensorflow-cpu
     #   thrift
 slicer==0.0.7
     # via shap
-smmap==5.0.0
+smmap==5.0.1
     # via gitdb
 sniffio==1.3.0
     # via anyio
@@ -911,11 +879,13 @@ spacy==2.3.2
     #   spacytextblob
 spacytextblob==0.1.7
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
+sparse==0.14.0
+    # via dask-glm
 splunk-opentelemetry[all]==1.8.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 splunk-sdk==1.7.4
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
-sqlalchemy==2.0.20
+sqlalchemy==2.0.21
     # via
     #   alembic
     #   mlflow
@@ -925,8 +895,10 @@ srsly==1.0.7
     # via
     #   spacy
     #   thinc
-stack-data==0.6.2
+stack-data==0.6.3
     # via ipython
+stanio==0.3.0
+    # via cmdstanpy
 starlette==0.14.2
     # via fastapi
 stumpy==1.12.0
@@ -937,15 +909,17 @@ sympy==1.12
     # via torch
 tabulate==0.9.0
     # via databricks-cli
+tbb==2021.10.0
+    # via umap-learn
 tblib==2.0.0
     # via distributed
-tensorboard==2.13.0
+tensorboard==2.14.1
     # via tensorflow-cpu
 tensorboard-data-server==0.7.1
     # via tensorboard
-tensorflow-cpu==2.13.0
+tensorflow-cpu==2.14.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
-tensorflow-estimator==2.13.0
+tensorflow-estimator==2.14.0
     # via tensorflow-cpu
 tensorflow-io-gcs-filesystem==0.34.0
     # via tensorflow-cpu
@@ -954,8 +928,7 @@ termcolor==2.3.0
 terminado==0.17.1
     # via
     #   jupyter-server
-    #   nbclassic
-    #   notebook
+    #   jupyter-server-terminals
 textblob==0.15.3
     # via spacytextblob
 theano-pymc==1.1.2
@@ -968,7 +941,7 @@ threadpoolctl==3.2.0
     #   scikit-learn
 thrift==0.16.0
     # via opentelemetry-exporter-jaeger-thrift
-tifffile==2023.8.30
+tifffile==2023.9.26
     # via scikit-image
 tinycss2==1.2.1
     # via nbconvert
@@ -980,7 +953,7 @@ toolz==0.12.0
     #   datashader
     #   distributed
     #   partd
-torch==2.0.1+cpu
+torch==2.1.0+cpu
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 tornado==6.3.3
     # via
@@ -990,9 +963,7 @@ tornado==6.3.3
     #   jupyter-client
     #   jupyter-server
     #   jupyterlab
-    #   nbclassic
     #   nbdime
-    #   notebook
     #   terminado
 tqdm==4.66.1
     # via
@@ -1005,7 +976,7 @@ tqdm==4.66.1
     #   spacy
     #   thinc
     #   umap-learn
-traitlets==5.10.0
+traitlets==5.11.2
     # via
     #   comm
     #   ipykernel
@@ -1018,18 +989,19 @@ traitlets==5.10.0
     #   jupyterlab
     #   jupyterlab-git
     #   matplotlib-inline
-    #   nbclassic
     #   nbclient
     #   nbconvert
     #   nbformat
-    #   notebook
 tslearn==0.6.2
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
-typing-extensions==4.5.0
+types-python-dateutil==2.8.19.14
+    # via arrow
+typing-extensions==4.8.0
     # via
     #   alembic
     #   arviz
     #   asgiref
+    #   async-lru
     #   ipython
     #   opentelemetry-sdk
     #   pydantic
@@ -1041,16 +1013,16 @@ tzdata==2023.3
     # via pandas
 ujson==5.8.0
     # via pymilvus
-umap-learn==0.5.3
+umap-learn==0.5.4
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 uri-template==1.3.0
     # via jsonschema
-urllib3==1.26.16
+urllib3==2.0.6
     # via
     #   databricks-cli
     #   distributed
     #   docker
-    #   google-auth
+    #   minio
     #   requests
 uvicorn==0.15.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
@@ -1058,7 +1030,7 @@ wasabi==0.10.1
     # via
     #   spacy
     #   thinc
-wcwidth==0.2.6
+wcwidth==0.2.8
     # via prompt-toolkit
 webcolors==1.13
     # via jsonschema
@@ -1066,28 +1038,26 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
-websocket-client==1.6.3
+websocket-client==1.6.4
     # via
     #   docker
     #   jupyter-server
-werkzeug==2.3.7
+werkzeug==3.0.0
     # via
     #   flask
     #   tensorboard
 wheel==0.41.2
-    # via
-    #   astunparse
-    #   tensorboard
+    # via astunparse
 widgetsnbextension==4.0.9
     # via
     #   -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
     #   ipywidgets
-wrapt==1.15.0
+wrapt==1.14.1
     # via
     #   deprecated
     #   opentelemetry-instrumentation
     #   tensorflow-cpu
-xarray==2023.8.0
+xarray==2023.9.0
     # via
     #   arviz
     #   datashader
@@ -1096,19 +1066,13 @@ xarray-einstats==0.6.0
     # via arviz
 xgboost==0.90
     # via dask-xgboost
-xyzservices==2023.7.0
+xyzservices==2023.10.0
     # via bokeh
-y-py==0.6.0
-    # via
-    #   jupyter-ydoc
-    #   ypy-websocket
 yarl==1.9.2
     # via aiohttp
-ypy-websocket==0.8.4
-    # via jupyter-server-ydoc
 zict==3.0.0
     # via distributed
-zipp==3.16.2
+zipp==3.17.0
     # via
     #   importlib-metadata
     #   importlib-resources

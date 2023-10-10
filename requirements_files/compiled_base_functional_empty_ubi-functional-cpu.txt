@@ -4,22 +4,15 @@
 #
 #    pip-compile /temp/compiled_base_functional_empty_ubi-functional-cpu.in
 #
-aiofiles==22.1.0
-    # via
-    #   -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
-    #   ypy-websocket
-aiosqlite==0.19.0
-    # via ypy-websocket
-anyio==3.7.1
+aiofiles==23.2.1
+    # via -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
+anyio==4.0.0
     # via jupyter-server
 argon2-cffi==23.1.0
-    # via
-    #   jupyter-server
-    #   nbclassic
-    #   notebook
+    # via jupyter-server
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
-arrow==1.2.3
+arrow==1.3.0
     # via isoduration
 asgiref==3.7.2
     # via
@@ -27,11 +20,13 @@ asgiref==3.7.2
     #   uvicorn
 asttokens==2.4.0
     # via stack-data
+async-lru==2.0.4
+    # via jupyterlab
 attrs==23.1.0
     # via
     #   jsonschema
     #   referencing
-babel==2.12.1
+babel==2.13.0
     # via jupyterlab-server
 backcall==0.2.0
     # via ipython
@@ -39,15 +34,15 @@ backoff==2.2.1
     # via opentelemetry-exporter-otlp-proto-grpc
 beautifulsoup4==4.12.2
     # via nbconvert
-bleach==6.0.0
+bleach==6.1.0
     # via nbconvert
 certifi==2023.7.22
     # via requests
-cffi==1.15.1
+cffi==1.16.0
     # via
     #   argon2-cffi-bindings
     #   cryptography
-charset-normalizer==3.2.0
+charset-normalizer==3.3.0
     # via requests
 click==8.1.7
     # via uvicorn
@@ -57,13 +52,13 @@ comm==0.1.4
     # via
     #   ipykernel
     #   ipywidgets
-contourpy==1.1.0
+contourpy==1.1.1
     # via matplotlib
-cryptography==41.0.3
+cryptography==41.0.4
     # via pyopenssl
-cycler==0.11.0
+cycler==0.12.1
     # via matplotlib
-debugpy==1.6.7.post1
+debugpy==1.8.0
     # via ipykernel
 decorator==5.1.1
     # via ipython
@@ -77,23 +72,23 @@ exceptiongroup==1.1.3
     # via
     #   anyio
     #   ipython
-executing==1.2.0
+executing==2.0.0
     # via stack-data
 fastapi==0.68.2
     # via -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
-fastjsonschema==2.18.0
+fastjsonschema==2.18.1
     # via nbformat
-fonttools==4.42.1
+fonttools==4.43.1
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
 gitdb==4.0.10
     # via gitpython
-gitpython==3.1.34
+gitpython==3.1.37
     # via nbdime
 googleapis-common-protos==1.60.0
     # via opentelemetry-exporter-otlp-proto-grpc
-grpcio==1.57.0
+grpcio==1.59.0
     # via opentelemetry-exporter-otlp-proto-grpc
 h11==0.14.0
     # via uvicorn
@@ -104,102 +99,83 @@ idna==3.4
     #   requests
 importlib-metadata==6.8.0
     # via
-    #   jupyter-ydoc
+    #   jupyter-client
+    #   jupyter-lsp
     #   jupyterlab
     #   jupyterlab-server
     #   nbconvert
-importlib-resources==6.0.1
+importlib-resources==6.1.0
     # via matplotlib
 ipykernel==6.25.2
-    # via
-    #   jupyterlab
-    #   nbclassic
-    #   notebook
-ipython==8.15.0
+    # via jupyterlab
+ipython==8.16.1
     # via
     #   ipykernel
     #   ipywidgets
-    #   jupyterlab
-ipython-genutils==0.2.0
-    # via
-    #   nbclassic
-    #   notebook
-ipywidgets==8.1.0
+ipywidgets==8.1.1
     # via -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
 isoduration==20.11.0
     # via jsonschema
-jedi==0.19.0
+jedi==0.19.1
     # via ipython
 jinja2==3.1.2
     # via
     #   jupyter-server
     #   jupyterlab
     #   jupyterlab-server
-    #   nbclassic
     #   nbconvert
     #   nbdime
-    #   notebook
 json5==0.9.14
     # via jupyterlab-server
 jsonpointer==2.4
     # via jsonschema
-jsonschema[format-nongpl]==4.19.0
+jsonschema[format-nongpl]==4.19.1
     # via
     #   jupyter-events
     #   jupyterlab-server
     #   nbformat
 jsonschema-specifications==2023.7.1
     # via jsonschema
-jupyter-client==6.1.12
+jupyter-client==8.3.1
     # via
-    #   -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
     #   ipykernel
     #   jupyter-server
-    #   nbclassic
     #   nbclient
-    #   notebook
-jupyter-core==5.3.1
+jupyter-core==5.3.2
     # via
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
     #   jupyterlab
-    #   nbclassic
     #   nbclient
     #   nbconvert
     #   nbformat
-    #   notebook
 jupyter-events==0.7.0
-    # via jupyter-server-fileid
-jupyter-server==1.24.0
+    # via jupyter-server
+jupyter-lsp==2.2.0
+    # via jupyterlab
+jupyter-server==2.7.3
     # via
-    #   jupyter-server-fileid
+    #   jupyter-lsp
     #   jupyter-server-mathjax
     #   jupyterlab
     #   jupyterlab-git
     #   jupyterlab-server
-    #   nbclassic
     #   nbdime
     #   notebook-shim
-jupyter-server-fileid==0.9.0
-    # via jupyter-server-ydoc
 jupyter-server-mathjax==0.2.6
     # via nbdime
-jupyter-server-ydoc==0.8.0
-    # via jupyterlab
-jupyter-ydoc==0.2.5
-    # via
-    #   jupyter-server-ydoc
-    #   jupyterlab
-jupyterlab==3.6.5
+jupyter-server-terminals==0.4.4
+    # via jupyter-server
+jupyterlab==4.0.6
     # via -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
-jupyterlab-git==0.42.0
+jupyterlab-git==0.43.0
     # via -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
 jupyterlab-pygments==0.2.2
     # via nbconvert
-jupyterlab-server==2.24.0
+jupyterlab-server==2.25.0
     # via jupyterlab
-jupyterlab-widgets==3.0.8
+jupyterlab-widgets==3.0.9
     # via ipywidgets
 kiwisolver==1.4.5
     # via matplotlib
@@ -207,48 +183,32 @@ markupsafe==2.1.3
     # via
     #   jinja2
     #   nbconvert
-matplotlib==3.7.2
+matplotlib==3.8.0
     # via -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
 matplotlib-inline==0.1.6
     # via
     #   ipykernel
     #   ipython
-mistune==3.0.1
+mistune==3.0.2
     # via nbconvert
-nbclassic==1.0.0
-    # via
-    #   jupyterlab
-    #   notebook
 nbclient==0.8.0
     # via nbconvert
-nbconvert==7.8.0
-    # via
-    #   jupyter-server
-    #   nbclassic
-    #   notebook
+nbconvert==7.9.2
+    # via jupyter-server
 nbdime==3.2.1
     # via jupyterlab-git
 nbformat==5.9.2
     # via
     #   jupyter-server
     #   jupyterlab-git
-    #   nbclassic
     #   nbclient
     #   nbconvert
     #   nbdime
-    #   notebook
-nest-asyncio==1.5.7
-    # via
-    #   ipykernel
-    #   nbclassic
-    #   notebook
-notebook==6.5.5
-    # via jupyterlab
+nest-asyncio==1.5.8
+    # via ipykernel
 notebook-shim==0.2.3
-    # via
-    #   jupyterlab
-    #   nbclassic
-numpy==1.25.2
+    # via jupyterlab
+numpy==1.26.0
     # via
     #   -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
     #   contourpy
@@ -296,7 +256,9 @@ opentelemetry-util-http==0.33b0
     # via
     #   opentelemetry-instrumentation-asgi
     #   opentelemetry-instrumentation-fastapi
-packaging==23.1
+overrides==7.4.0
+    # via jupyter-server
+packaging==23.2
     # via
     #   ipykernel
     #   jupyter-server
@@ -305,7 +267,7 @@ packaging==23.1
     #   jupyterlab-server
     #   matplotlib
     #   nbconvert
-pandas==2.1.0
+pandas==2.1.1
     # via -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
 pandocfilters==1.5.0
     # via nbconvert
@@ -317,15 +279,12 @@ pexpect==4.8.0
     #   jupyterlab-git
 pickleshare==0.7.5
     # via ipython
-pillow==10.0.0
+pillow==10.0.1
     # via matplotlib
-platformdirs==3.10.0
+platformdirs==3.11.0
     # via jupyter-core
 prometheus-client==0.17.1
-    # via
-    #   jupyter-server
-    #   nbclassic
-    #   notebook
+    # via jupyter-server
 prompt-toolkit==3.0.39
     # via ipython
 protobuf==3.20.3
@@ -342,7 +301,7 @@ pure-eval==0.2.2
     # via stack-data
 pycparser==2.21
     # via cffi
-pydantic==1.10.12
+pydantic==1.10.13
     # via
     #   -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
     #   fastapi
@@ -353,7 +312,7 @@ pygments==2.16.1
     #   nbdime
 pyopenssl==23.2.0
     # via -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
-pyparsing==3.0.9
+pyparsing==3.1.1
     # via matplotlib
 python-dateutil==2.8.2
     # via
@@ -367,13 +326,11 @@ pytz==2023.3.post1
     # via pandas
 pyyaml==6.0.1
     # via jupyter-events
-pyzmq==24.0.1
+pyzmq==25.1.1
     # via
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
-    #   nbclassic
-    #   notebook
 referencing==0.30.2
     # via
     #   jsonschema
@@ -391,15 +348,12 @@ rfc3986-validator==0.1.1
     # via
     #   jsonschema
     #   jupyter-events
-rpds-py==0.10.2
+rpds-py==0.10.4
     # via
     #   jsonschema
     #   referencing
 send2trash==1.8.2
-    # via
-    #   jupyter-server
-    #   nbclassic
-    #   notebook
+    # via jupyter-server
 six==1.16.0
     # via
     #   asttokens
@@ -407,7 +361,7 @@ six==1.16.0
     #   python-dateutil
     #   rfc3339-validator
     #   thrift
-smmap==5.0.0
+smmap==5.0.1
     # via gitdb
 sniffio==1.3.0
     # via anyio
@@ -417,15 +371,14 @@ splunk-opentelemetry[all]==1.8.0
     # via -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
 splunk-sdk==1.7.4
     # via -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
-stack-data==0.6.2
+stack-data==0.6.3
     # via ipython
 starlette==0.14.2
     # via fastapi
 terminado==0.17.1
     # via
     #   jupyter-server
-    #   nbclassic
-    #   notebook
+    #   jupyter-server-terminals
 thrift==0.16.0
     # via opentelemetry-exporter-jaeger-thrift
 tinycss2==1.2.1
@@ -438,11 +391,9 @@ tornado==6.3.3
     #   jupyter-client
     #   jupyter-server
     #   jupyterlab
-    #   nbclassic
     #   nbdime
-    #   notebook
     #   terminado
-traitlets==5.9.0
+traitlets==5.11.2
     # via
     #   comm
     #   ipykernel
@@ -455,14 +406,15 @@ traitlets==5.9.0
     #   jupyterlab
     #   jupyterlab-git
     #   matplotlib-inline
-    #   nbclassic
     #   nbclient
     #   nbconvert
     #   nbformat
-    #   notebook
-typing-extensions==4.7.1
+types-python-dateutil==2.8.19.14
+    # via arrow
+typing-extensions==4.8.0
     # via
     #   asgiref
+    #   async-lru
     #   ipython
     #   opentelemetry-sdk
     #   pydantic
@@ -470,11 +422,11 @@ tzdata==2023.3
     # via pandas
 uri-template==1.3.0
     # via jsonschema
-urllib3==2.0.4
+urllib3==2.0.6
     # via requests
 uvicorn==0.15.0
     # via -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
-wcwidth==0.2.6
+wcwidth==0.2.8
     # via prompt-toolkit
 webcolors==1.13
     # via jsonschema
@@ -482,9 +434,9 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
-websocket-client==1.6.2
+websocket-client==1.6.4
     # via jupyter-server
-widgetsnbextension==4.0.8
+widgetsnbextension==4.0.9
     # via
     #   -r /temp/compiled_base_functional_empty_ubi-functional-cpu.in
     #   ipywidgets
@@ -492,13 +444,7 @@ wrapt==1.15.0
     # via
     #   deprecated
     #   opentelemetry-instrumentation
-y-py==0.6.0
-    # via
-    #   jupyter-ydoc
-    #   ypy-websocket
-ypy-websocket==0.8.4
-    # via jupyter-server-ydoc
-zipp==3.16.2
+zipp==3.17.0
     # via
     #   importlib-metadata
     #   importlib-resources

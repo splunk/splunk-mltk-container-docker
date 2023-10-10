@@ -23,18 +23,19 @@ opentelemetry-instrumentation-fastapi==0.33b0
 pandas
 numpy
 
-
 datashader
 seaborn
 
 dask-ml
 dask-labextension
 
+mlflow
+
 scipy
 scikit-learn
 networkx
 
-tensorflow-cpu
+datashader 
 dask-xgboost 
 mlflow==2.7.0
 
@@ -55,7 +56,22 @@ pymc3
 spacy==2.3.2
 spacytextblob==0.1.7
 
-pymilvus
+# other dependencies
+tensorflow==2.8.0
+keras==2.8.0
+numpy==1.22.1
+numexpr==2.7.3
 
- --extra-index-url https://download.pytorch.org/whl/cpu
- torch
+# libraries
+transformers
+sentencepiece
+sumeval
+janome
+fugashi
+ipadic
+nltk
+
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchmetrics
+
