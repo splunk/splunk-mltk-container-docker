@@ -37,7 +37,7 @@ for file in $files; do
   echo $file
   echo $container_tag
 
-  if grep -q "$container_tag" "$file"; then
+  if grep -Fxq "$container_tag" "$file"; then
     test_name=$(basename "$file")
     pytest ./testing/test_$test_name.py -q --containername "$title" -v
     found_match=true
