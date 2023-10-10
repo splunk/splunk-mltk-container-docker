@@ -11,11 +11,12 @@ scikit-learn
 networkx
 
 tensorflow-cpu
-dask-xgboost 
+#dask-xgboost 
 mlflow==2.7.0
 
-prophet 
-shap 
+prophet
+xgboost
+shap
 lime 
 umap-learn 
 tslearn 

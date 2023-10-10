@@ -63,7 +63,7 @@ blis==0.4.1
     #   thinc
 bocd==0.1.2
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
-bokeh==3.2.2
+bokeh==3.3.0
     # via dask-labextension
 cachetools==5.3.1
     # via
@@ -117,8 +117,6 @@ contourpy==1.1.1
     # via
     #   bokeh
     #   matplotlib
-convertdate==2.4.0
-    # via prophet
 cryptography==41.0.4
     # via pyopenssl
 cycler==0.12.1
@@ -132,7 +130,6 @@ dask[array,dataframe]==2023.9.3
     # via
     #   dask-glm
     #   dask-ml
-    #   dask-xgboost
     #   datashader
     #   distributed
 dask-glm==0.3.0
@@ -140,8 +137,6 @@ dask-glm==0.3.0
 dask-labextension==7.0.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 dask-ml==2023.3.24
-    # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
-dask-xgboost==0.2.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 databricks-cli==0.18.0
     # via mlflow
@@ -166,15 +161,12 @@ distributed==2023.9.3
     #   dask-glm
     #   dask-labextension
     #   dask-ml
-    #   dask-xgboost
 docker==6.1.3
     # via mlflow
 entrypoints==0.4
     # via mlflow
 environs==9.5.0
     # via pymilvus
-ephem==4.1.5
-    # via lunarcalendar
 exceptiongroup==1.1.3
     # via
     #   anyio
@@ -215,7 +207,7 @@ gitpython==3.1.37
     # via
     #   mlflow
     #   nbdime
-google-auth==2.23.2
+google-auth==2.23.3
     # via
     #   google-auth-oauthlib
     #   tensorboard
@@ -239,7 +231,7 @@ h11==0.14.0
     # via uvicorn
 h5netcdf==1.2.0
     # via arviz
-h5py==3.9.0
+h5py==3.10.0
     # via
     #   h5netcdf
     #   tensorflow-cpu
@@ -324,7 +316,7 @@ jupyter-client==8.3.1
     #   ipykernel
     #   jupyter-server
     #   nbclient
-jupyter-core==5.3.2
+jupyter-core==5.4.0
     # via
     #   ipykernel
     #   jupyter-client
@@ -385,8 +377,6 @@ locket==1.0.0
     # via
     #   distributed
     #   partd
-lunarcalendar==0.0.9
-    # via prophet
 mako==1.2.4
     # via alembic
 markdown==3.5
@@ -660,7 +650,7 @@ prometheus-client==0.17.1
     # via jupyter-server
 prompt-toolkit==3.0.39
     # via ipython
-prophet==1.1.4
+prophet==1.1.5
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 protobuf==3.20.3
     # via
@@ -708,8 +698,6 @@ pyjwt==2.8.0
     # via databricks-cli
 pymc3==3.11.4
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
-pymeeus==0.5.12
-    # via convertdate
 pymilvus==2.3.1
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 pynndescent==0.5.10
@@ -729,17 +717,14 @@ python-dateutil==2.8.2
     #   datashape
     #   holidays
     #   jupyter-client
-    #   lunarcalendar
     #   matplotlib
     #   pandas
-    #   prophet
 python-dotenv==1.0.0
     # via environs
 python-json-logger==2.0.7
     # via jupyter-events
 pytz==2023.3.post1
     # via
-    #   lunarcalendar
     #   mlflow
     #   pandas
 pyyaml==6.0.1
@@ -840,11 +825,11 @@ scipy==1.11.3
     #   xgboost
 seaborn==0.13.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
-semver==3.0.1
+semver==3.0.2
     # via pymc3
 send2trash==1.8.2
     # via jupyter-server
-shap==0.42.1
+shap==0.43.0
     # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 simpervisor==1.0.0
     # via jupyter-server-proxy
@@ -1064,8 +1049,8 @@ xarray==2023.9.0
     #   xarray-einstats
 xarray-einstats==0.6.0
     # via arviz
-xgboost==0.90
-    # via dask-xgboost
+xgboost==2.0.0
+    # via -r /temp/compiled_base_functional_specific_golden_cpu_golden-cpu.in
 xyzservices==2023.10.0
     # via bokeh
 yarl==1.9.2
