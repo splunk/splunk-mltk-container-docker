@@ -112,3 +112,8 @@ images_conf_files/*.conf
 testing/config.yaml
 
 .code-workspace
+
+# custom certificates
+certificates/*.key
+certificates/*.pem
+
