@@ -1,9 +1,9 @@
 pandas==1.5.3
 
-datashader
+#datashader
 seaborn
-dask-ml
-dask-labextension
+#dask-ml
+#dask-labextension
 jupyterlab-nvdashboard
 mlflow==2.7.0
 
