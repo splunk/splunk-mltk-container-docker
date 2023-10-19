@@ -1,0 +1,47 @@
+# DSDL Data Science Environment: Docker Compose Configuation
+# This notebooks deploys a "static" DSDL environment in docker with no dynamic control needed from the DSDL app
+# It contains a DSDL dev container, as well as optional Milvus and DGraph supporting services
+version: '1.0'
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+
+# Define all services:
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+services:
+# ------------------------------------------------------------------------------------------------------------------------ #
+  # DSDL Dev Container - not optional, required for DSDL operation
+  dsdl-dev:
+    extends:
+      file: dsdl-base.yml
+      service: dsdl-base
+    container_name: dsdl-dev
+    image: phdrieger/mltk-container-golden-image-cpu:5.1.0
+    ports:
+     - 8888:8888 # Jupyter
+     - 6000:6000
+     - 4040:4040
+     - 6006:6006 # Tensorboard
+    environment:
+     - MODE_DEV_PROD=DEV
+
+## ------------------------------------------------------------------------------------------------------------------------ #
+#  # DSDL Model Container - Template, create one of these for each of your production models
+#  dsdl-model-template:
+#    extends:
+#      file: dsdl-base.yml
+#      service: dsdl-base
+#    container_name: dsdl-model-template
+#    environment:
+#     - MODE_DEV_PROD=PROD
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+volumes:
+  mltk-container-data:
+  mltk-container-app:
+  mltk-container-notebooks:
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+networks:
+  default:
+    name: dsenv-network
