@@ -1,0 +1,82 @@
+# DSDL Data Science Environment: Docker Compose Configuation
+# This notebooks deploys a "static" DSDL environment in docker with no dynamic control needed from the DSDL app
+# It contains a DSDL dev container, as well as optional Milvus supporting services
+version: '1.0'
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+
+# Define all services: Milvus, DSDL Dev
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+services:
+# ------------------------------------------------------------------------------------------------------------------------ #
+  # Milvus Containers - optional, only needed if using Milvus notebooks.
+  milvus-etcd:
+    container_name: milvus-etcd
+    image: quay.io/coreos/etcd:v3.5.5
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/etcd:/etcd
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+
+  milvus-minio:
+    container_name: milvus-minio
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/minio:/minio_data
+    command: minio server /minio_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  milvus-milvus:
+    container_name: milvus-standalone
+    image: milvusdb/milvus:v2.2.9
+    command: ["milvus", "run", "standalone"]
+    environment:
+      ETCD_ENDPOINTS: milvus-etcd:2379
+      MINIO_ADDRESS: milvus-minio:9000
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/milvus:/var/lib/milvus
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    depends_on:
+      - "milvus-etcd"
+      - "milvus-minio"
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+  # DSDL Dev Container - not optional, required for DSDL operation
+  dsdl-dev:
+    extends:
+      file: dsdl-base.yml
+      service: dsdl-base
+    container_name: dsdl-dev
+    image: local/mltk-container-milvus:latest
+    ports:
+     - 8888:8888 # Jupyter
+     - 6000:6000
+     - 4040:4040
+     - 6006:6006 # Tensorboard
+    environment:
+     - MODE_DEV_PROD=DEV
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+volumes:
+  mltk-container-data:
+  mltk-container-app:
+  mltk-container-notebooks:
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+networks:
+  default:
+    name: dsenv-network

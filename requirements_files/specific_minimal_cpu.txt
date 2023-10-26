@@ -1,0 +1,11 @@
+datashader
+seaborn
+
+dask-ml
+dask-labextension
+
+mlflow==2.7.0
+
+scipy
+scikit-learn
+networkx

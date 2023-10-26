@@ -1,0 +1,75 @@
+<form version="1.1">
+  <label>Hashing Encoder Dashboard: Clustering</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="vector_length">
+      <label>Encoded Vector Length</label>
+      <choice value="2">2</choice>
+      <choice value="4">4</choice>
+      <choice value="8">8</choice>
+      <choice value="16">16</choice>
+      <choice value="32">32</choice>
+      <choice value="64">64</choice>
+      <choice value="128">128</choice>
+      <choice value="256">256</choice>
+      <choice value="512">512</choice>
+      <default>32</default>
+      <initialValue>32</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>UMAP Of Encoded User Agents</title>
+      <chart>
+        <search>
+          <query>source="whatismybrowser-user-agent-database.csv" host="wimb_sample" index="dsdl_testing_josh" sourcetype="wimb_csv"
+| head 10000
+| table user_agent
+| fit MLTKContainer algo=hashing_encoder vector_length=$vector_length$ user_agent
+| rename predicted_* as encoded_*
+| fit MLTKContainer algo=umap encoded_*
+| rename predicted_* as embedded_*
+| fields - encoded_*
+| fit DBSCAN eps=1 embedded_*
+| eval label=cluster, size=0.2
+| table label embedded_* size</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">bubble</option>
+        <option name="charting.chart.bubbleMaximumSize">2</option>
+        <option name="charting.chart.bubbleMinimumSize">1</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.markerSize">1</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">768</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+</form>

@@ -1,0 +1,12 @@
+pandas==1.5.3
+
+#datashader
+seaborn
+#dask-ml
+#dask-labextension
+jupyterlab-nvdashboard
+mlflow==2.7.0
+
+# Python data science basics
+graphistry[all]
+neo4j

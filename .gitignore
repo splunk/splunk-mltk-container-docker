@@ -13,7 +13,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+# dist/
 downloads/
 eggs/
 .eggs/
@@ -105,3 +105,15 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+images_conf_files/*.txt
+images_conf_files/*.conf
+
+testing/config.yaml
+
+.code-workspace
+
+# custom certificates
+certificates/*.key
+certificates/*.pem
+

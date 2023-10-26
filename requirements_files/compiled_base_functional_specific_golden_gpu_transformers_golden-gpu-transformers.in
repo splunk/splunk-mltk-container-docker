@@ -1,0 +1,74 @@
+# FastAPI stack
+fastapi>=0.68.0,<0.69.0
+pydantic>=1.8.0,<2.0.0
+uvicorn>=0.15.0,<0.16.0
+aiofiles
+pyopenssl 
+
+# jupyter
+jupyterlab>4.0.0
+
+#interactive python dependancies
+ipywidgets
+jupyterlab-git
+widgetsnbextension
+matplotlib
+
+# splunk functionality dependancies
+splunk-sdk
+splunk-opentelemetry[all]
+opentelemetry-instrumentation-fastapi==0.33b0
+
+# basic data-science libraries
+pandas
+numpy
+datashader
+seaborn
+
+dask-ml
+dask-labextension
+
+jupyterlab-nvdashboard
+
+scipy
+scikit-learn
+networkx
+
+dask-xgboost 
+mlflow==2.7.0
+
+prophet 
+shap 
+lime 
+umap-learn 
+tslearn 
+kmodes 
+imbalanced-learn 
+stumpy 
+tqdm 
+bocd 
+rrcf 
+pyod 
+suod
+pymc3
+spacy==2.3.2
+spacytextblob==0.1.7
+
+# other dependencies
+tensorflow==2.8.0
+keras==2.8.0
+numpy==1.22.1
+numexpr==2.7.3
+
+# libraries
+transformers
+sentencepiece
+sumeval
+janome
+fugashi
+ipadic
+nltk
+torch==1.9.*
+torchmetrics
+
+protobuf==3.20.*
