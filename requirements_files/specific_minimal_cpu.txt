@@ -9,3 +9,5 @@ mlflow==2.7.0
 scipy
 scikit-learn
 networkx
+
+keras_preprocessing
