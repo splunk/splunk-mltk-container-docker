@@ -1,6 +1,5 @@
 import base64
-import io 
-import os
+import io
 
 #todo
 # path should incorporate model name, algo name and cell metadata?
@@ -30,5 +29,5 @@ def SplunkGenerateGraphicsObjects(model,key,plot,graphics_path="/srv/app/graphic
     model["graphics"][key]["base64"]=pic_base64
     model["graphics"][key]["container_local_path"]=path
     model["graphics"][key]["external_relative_path"]="graphics/"+key+".png"
-        
+
     return model
