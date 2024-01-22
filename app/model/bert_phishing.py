@@ -114,7 +114,7 @@ def apply(model,df,param):
 
     # Load fine-tuned model file
     MODEL_DIRECTORY = "/srv/app/model/data/classification/en/bert_phishing"
-    model_par.load_state_dict(torch.load(os.path.join(MODEL_DIRECTORY, "pytorch_model.pt"), map_location=torch.device(device)))
+    model_par.load_state_dict(torch.load(os.path.join(MODEL_DIRECTORY, "pytorch_model.pt"), map_location=torch.device(device)),strict=False)
     state_dict = model_par.module.state_dict()
 
     model = BERT_Arch(bert)
