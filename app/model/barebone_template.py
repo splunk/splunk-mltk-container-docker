@@ -10,6 +10,7 @@
 import json
 import numpy as np
 import pandas as pd
+import os
 # ...
 # global constants
 MODEL_DIRECTORY = "/srv/app/model/data/"
@@ -21,8 +22,13 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
 
-   
-# In[5]:
+
+
+
+
+
+    
+# In[6]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -44,7 +50,7 @@ def stage(name):
 
 
     
-# In[9]:
+# In[10]:
 
 
 # initialize your model
@@ -62,7 +68,7 @@ def init(df,param):
 
 
     
-# In[11]:
+# In[12]:
 
 
 # train your model
@@ -79,7 +85,7 @@ def fit(model,df,param):
 
 
     
-# In[13]:
+# In[14]:
 
 
 # apply your model
@@ -96,7 +102,7 @@ def apply(model,df,param):
 
 
     
-# In[15]:
+# In[16]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>"
@@ -110,7 +116,7 @@ def save(model,name):
 
 
     
-# In[16]:
+# In[17]:
 
 
 # load model from name in expected convention "<algo_name>_<model_name>"
@@ -125,7 +131,7 @@ def load(name):
 
 
     
-# In[17]:
+# In[18]:
 
 
 # return a model summary
