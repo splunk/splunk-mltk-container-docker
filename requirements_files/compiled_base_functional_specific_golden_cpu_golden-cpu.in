@@ -1,7 +1,10 @@
 # FastAPI stack
-fastapi>=0.68.0,<0.69.0
-pydantic>=1.8.0,<2.0.0
-uvicorn>=0.15.0,<0.16.0
+#fastapi>=0.68.0,<0.69.0
+fastapi>=0.109.1
+#pydantic>=1.8.0,<2.0.0
+pydantic
+#uvicorn>=0.15.0,<0.16.0
+uvicorn
 aiofiles
 pyopenssl 
 
@@ -29,6 +32,8 @@ seaborn
 
 dask-ml
 dask-labextension
+pyarrow>=14.0.1
+#dask-expr
 
 scipy
 scikit-learn
@@ -36,7 +41,7 @@ networkx
 
 tensorflow-cpu
 #dask-xgboost 
-mlflow==2.7.0
+mlflow>=2.9.2
 
 prophet
 xgboost
@@ -60,3 +65,13 @@ pymilvus
 
  --extra-index-url https://download.pytorch.org/whl/cpu
  torch
+
+onnx
+tf2onnx
+skl2onnx
+Levenshtein
+imagehash
+plotly
+boto3
+pomegranate
+statsmodels

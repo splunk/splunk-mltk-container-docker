@@ -2,7 +2,7 @@ Tags:,base_image,dockerfile,base_requirements,specific_requirements,runtime,requ
 minimal-cpu,python:3.9.13-bullseye,Dockerfile.debian,base_functional.txt,specific_minimal_cpu.txt,none,Dockerfile.debian.requirements,Minimal CPU (5.1.2)
 minimal-gpu,nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04,Dockerfile.debian,base_functional.txt,specific_minimal_gpu.txt,nvidia,Dockerfile.debian.requirements,Minimal GPU (5.1.2)
 golden-cpu,python:3.9.13-bullseye,Dockerfile.debian,base_functional.txt,specific_golden_cpu.txt,none,Dockerfile.debian.requirements,Golden Image CPU (5.1.2)
-golden-gpu,nvidia/cuda:11.3.1-cudnn8-runtime-ubuntu20.04,Dockerfile.debian,base_functional.txt,specific_golden_gpu.txt,nvidia,Dockerfile.debian.requirements,Golden Image GPU (5.1.2)
+golden-gpu,nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu20.04,Dockerfile.debian,base_functional.txt,specific_golden_gpu.txt,nvidia,Dockerfile.debian.requirements,Golden Image GPU (5.1.2)
 ubi-functional-cpu,redhat/ubi9,Dockerfile.redhat,base_functional.txt,empty.txt,none,Dockerfile.redhat.requirements,Red Hat UBI Functional CPU (5.1.2)
 ubi-minimal-cpu,redhat/ubi9,Dockerfile.redhat,base_functional.txt,specific_minimal_cpu.txt,none,Dockerfile.redhat.requirements,Red Hat UBI Minimal CPU (5.1.2)
 ubi-golden-cpu,redhat/ubi9,Dockerfile.redhat,base_functional.txt,specific_golden_cpu_redhat.txt,none,Dockerfile.redhat.requirements,Red Hat UBI Golden CPU (5.1.2)
