@@ -120,15 +120,17 @@ def fit(model,df,param):
 
 
 
+
+
     
-# In[9]:
+# In[15]:
 
 
 # mltkc_stage_create_model_apply
 def apply(model,df,param):
     X = df[param['feature_variables']]
     reconstruction = model.predict(x = X)
-    intermediate_layer_model = keras.Model(inputs=model.input, outputs=model.layers[0].output)
+    intermediate_layer_model = keras.Model(inputs=model.inputs, outputs=model.layers[0].output)
     hidden = intermediate_layer_model.predict(x = X)
     y_hat = pd.concat([pd.DataFrame(reconstruction).add_prefix("reconstruction_"), pd.DataFrame(hidden).add_prefix("hidden_")], axis=1)
     return y_hat
