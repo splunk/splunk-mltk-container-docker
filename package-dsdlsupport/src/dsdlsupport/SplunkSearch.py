@@ -1,10 +1,12 @@
 import os
 import time
-import pandas as pd
+
 import ipywidgets as widgets
-from IPython.display import display
-import splunklib.results as splunk_results
+import pandas as pd
 import splunklib.client as splunk_client
+import splunklib.results as splunk_results
+from IPython.display import display
+
 
 class SplunkSearch(object):
     def __init__(self,
@@ -21,7 +23,7 @@ class SplunkSearch(object):
         self.host = host
         self.port = port
         self.token = token
-        
+
         if "splunk_access_enabled" in os.environ:
             access_enabled = os.environ["splunk_access_enabled"]
             if access_enabled=="1":
@@ -70,22 +72,22 @@ class SplunkSearch(object):
             layout=widgets.Layout(width='100%'),
             disabled=True
         )
-        
+
         # generate the widgets in a box layout
         self.widgets = widgets.VBox([
             widgets.HBox([ui['spl'], widgets.VBox([ui['button'], ui['earliest'], ui['latest']], layout=widgets.Layout(width='20%'))]),
-            ui['progress1'], 
+            ui['progress1'],
             ui['progress2'],
             ui['resultinfo']
         ])
 
-        # keep the reference to the UI widgets 
+        # keep the reference to the UI widgets
         self.ui = ui
 
         # display the UI
         display(self.widgets)
-        
-        
+
+
     def search_button_clicked(self, button_event):
         self.ui['button'].disabled = True
         self.ui['progress1'].description = "search"
@@ -99,10 +101,10 @@ class SplunkSearch(object):
         )
         self.ui['button'].disabled = False
         self._results = resultset
-        
+
     @property
     def service(self):
-        if self._service != None:
+        if self._service is not None:
             return self._service
         self._service = splunk_client.connect(host=self.host, port=self.port, token=self.token)
         return self._service
@@ -116,7 +118,7 @@ class SplunkSearch(object):
         elif query_cleaned[0]=='|':
             # assume a generating search command and do nothing
             pass
-        elif query_cleaned.startswith("search "):
+        elif query_cleaned.startswith("search ") or query_cleaned.startswith("search\n"):
             # assume the search keyword is already there
             pass
         else:
@@ -128,9 +130,9 @@ class SplunkSearch(object):
         try:
             # create a search job in splunk
             job = self.service.jobs.create(
-                    query_cleaned, 
-                    earliest_time=earliest, 
-                    latest_time=latest, 
+                    query_cleaned,
+                    earliest_time=earliest,
+                    latest_time=latest,
                     adhoc_search_level="smart",
                     search_mode="normal")
             self._job = job
@@ -162,7 +164,7 @@ class SplunkSearch(object):
                         #print(result)
                     processed += 1
                     self.ui['progress2'].value = float(processed)
-                offset = processed            
+                offset = processed
             self.ui['progress2'].value = self.ui['progress2'].max
             self.ui['progress2'].description = "loading done"
 
@@ -179,7 +181,7 @@ class SplunkSearch(object):
         return resultset
 
     def search_logs(self):
-        if self._job != None:
+        if self._job is not None:
             for line in self._job.searchlog():
                 print(str(line))
 
