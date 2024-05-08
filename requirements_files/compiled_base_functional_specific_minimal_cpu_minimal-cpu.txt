@@ -6,7 +6,7 @@
 #
 aiofiles==23.2.1
     # via -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
-aiohttp==3.9.3
+aiohttp==3.9.5
     # via jupyter-server-proxy
 aiosignal==1.3.1
     # via aiohttp
@@ -48,9 +48,9 @@ beautifulsoup4==4.12.3
     # via nbconvert
 bleach==6.1.0
     # via nbconvert
-blinker==1.7.0
+blinker==1.8.1
     # via flask
-bokeh==3.4.0
+bokeh==3.4.1
     # via dask-labextension
 certifi==2024.2.2
     # via
@@ -92,14 +92,14 @@ cryptography==42.0.5
     # via pyopenssl
 cycler==0.12.1
     # via matplotlib
-dask[array,dataframe]==2024.4.1
+dask[array,dataframe]==2024.4.2
     # via
     #   dask-expr
     #   dask-glm
     #   dask-ml
     #   datashader
     #   distributed
-dask-expr==1.0.11
+dask-expr==1.0.14
     # via dask
 dask-glm==0.3.2
     # via dask-ml
@@ -107,7 +107,7 @@ dask-labextension==7.0.0
     # via -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
 dask-ml==2024.4.4
     # via -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
-datashader==0.16.0
+datashader==0.16.1
     # via -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
 debugpy==1.8.1
     # via ipykernel
@@ -121,7 +121,7 @@ deprecated==1.2.14
     #   opentelemetry-propagator-b3
 deprecation==2.1.0
     # via splunk-sdk
-distributed==2024.4.1
+distributed==2024.4.2
     # via
     #   dask-glm
     #   dask-labextension
@@ -130,13 +130,13 @@ docker==7.0.0
     # via mlflow
 entrypoints==0.4
     # via mlflow
-exceptiongroup==1.2.0
+exceptiongroup==1.2.1
     # via
     #   anyio
     #   ipython
 executing==2.0.1
     # via stack-data
-fastapi==0.110.1
+fastapi==0.110.3
     # via -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
 fastjsonschema==2.19.1
     # via nbformat
@@ -170,7 +170,7 @@ graphql-relay==3.2.0
     # via graphene
 greenlet==3.0.3
     # via sqlalchemy
-grpcio==1.62.1
+grpcio==1.63.0
     # via opentelemetry-exporter-otlp-proto-grpc
 gunicorn==21.2.0
     # via mlflow
@@ -182,7 +182,7 @@ httpcore==1.0.5
     # via httpx
 httpx==0.27.0
     # via jupyterlab
-idna==3.6
+idna==3.7
     # via
     #   anyio
     #   httpx
@@ -213,7 +213,7 @@ ipywidgets==8.1.2
     # via -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
 isoduration==20.11.0
     # via jsonschema
-itsdangerous==2.1.2
+itsdangerous==2.2.0
     # via flask
 jedi==0.19.1
     # via ipython
@@ -228,13 +228,13 @@ jinja2==3.1.3
     #   mlflow
     #   nbconvert
     #   nbdime
-joblib==1.4.0
+joblib==1.4.2
     # via scikit-learn
-json5==0.9.24
+json5==0.9.25
     # via jupyterlab-server
 jsonpointer==2.4
     # via jsonschema
-jsonschema[format-nongpl]==4.21.1
+jsonschema[format-nongpl]==4.22.0
     # via
     #   jupyter-events
     #   jupyterlab-server
@@ -259,7 +259,7 @@ jupyter-events==0.10.0
     # via jupyter-server
 jupyter-lsp==2.2.5
     # via jupyterlab
-jupyter-server==2.13.0
+jupyter-server==2.14.0
     # via
     #   jupyter-lsp
     #   jupyter-server-mathjax
@@ -275,7 +275,7 @@ jupyter-server-proxy==4.1.2
     # via dask-labextension
 jupyter-server-terminals==0.5.3
     # via jupyter-server
-jupyterlab==4.1.6
+jupyterlab==4.1.8
     # via
     #   -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
     #   dask-labextension
@@ -283,7 +283,7 @@ jupyterlab-git==0.50.0
     # via -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
 jupyterlab-pygments==0.3.0
     # via nbconvert
-jupyterlab-server==2.26.0
+jupyterlab-server==2.27.1
     # via jupyterlab
 jupyterlab-widgets==3.0.10
     # via ipywidgets
@@ -295,7 +295,7 @@ locket==1.0.0
     # via
     #   distributed
     #   partd
-mako==1.3.2
+mako==1.3.3
     # via alembic
 markdown==3.6
     # via mlflow
@@ -310,13 +310,13 @@ matplotlib==3.8.4
     #   -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
     #   mlflow
     #   seaborn
-matplotlib-inline==0.1.6
+matplotlib-inline==0.1.7
     # via
     #   ipykernel
     #   ipython
 mistune==3.0.2
     # via nbconvert
-mlflow==2.11.3
+mlflow==2.12.1
     # via -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
 msgpack==1.0.8
     # via distributed
@@ -331,7 +331,7 @@ multipledispatch==1.0.0
     #   datashader
 nbclient==0.10.0
     # via nbconvert
-nbconvert==7.16.3
+nbconvert==7.16.4
     # via jupyter-server
 nbdime==4.0.1
     # via jupyterlab-git
@@ -415,7 +415,7 @@ opentelemetry-util-http==0.33b0
     #   opentelemetry-instrumentation-fastapi
 overrides==7.7.0
     # via jupyter-server
-packaging==23.2
+packaging==24.0
     # via
     #   bokeh
     #   dask
@@ -433,7 +433,7 @@ packaging==23.2
     #   mlflow
     #   nbconvert
     #   xarray
-pandas==2.2.1
+pandas==2.2.2
     # via
     #   -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
     #   bokeh
@@ -463,7 +463,7 @@ pillow==10.3.0
     #   bokeh
     #   datashader
     #   matplotlib
-platformdirs==4.2.0
+platformdirs==4.2.1
     # via jupyter-core
 prometheus-client==0.20.0
     # via jupyter-server
@@ -492,11 +492,11 @@ pycparser==2.22
     # via cffi
 pyct==0.5.0
     # via datashader
-pydantic==2.6.4
+pydantic==2.7.1
     # via
     #   -r /temp/compiled_base_functional_specific_minimal_cpu_minimal-cpu.in
     #   fastapi
-pydantic-core==2.16.3
+pydantic-core==2.18.2
     # via pydantic
 pygments==2.17.2
     # via
@@ -526,14 +526,14 @@ pyyaml==6.0.1
     #   distributed
     #   jupyter-events
     #   mlflow
-pyzmq==25.1.2
+pyzmq==26.0.3
     # via
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
 querystring-parser==1.2.4
     # via mlflow
-referencing==0.34.0
+referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
@@ -606,7 +606,7 @@ sqlalchemy==2.0.29
     # via
     #   alembic
     #   mlflow
-sqlparse==0.4.4
+sqlparse==0.5.0
     # via mlflow
 stack-data==0.6.3
     # via ipython
@@ -618,11 +618,11 @@ terminado==0.18.1
     # via
     #   jupyter-server
     #   jupyter-server-terminals
-threadpoolctl==3.4.0
+threadpoolctl==3.5.0
     # via scikit-learn
 thrift==0.20.0
     # via opentelemetry-exporter-jaeger-thrift
-tinycss2==1.2.1
+tinycss2==1.3.0
     # via nbconvert
 tomli==2.0.1
     # via jupyterlab
@@ -643,7 +643,7 @@ tornado==6.4
     #   jupyterlab
     #   nbdime
     #   terminado
-traitlets==5.14.2
+traitlets==5.14.3
     # via
     #   comm
     #   ipykernel
@@ -695,7 +695,7 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
-websocket-client==1.7.0
+websocket-client==1.8.0
     # via jupyter-server
 werkzeug==3.0.2
     # via flask
