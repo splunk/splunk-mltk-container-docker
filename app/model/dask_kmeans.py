@@ -3,7 +3,7 @@
 
 
     
-# In[1]:
+# In[ ]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
@@ -26,7 +26,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[3]:
+# In[ ]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -44,7 +44,7 @@ def stage(name):
 
 
     
-# In[5]:
+# In[ ]:
 
 
 # initialize your model
@@ -66,7 +66,7 @@ def init(df,param):
 
 
     
-# In[18]:
+# In[ ]:
 
 
 # train your model
@@ -88,7 +88,7 @@ def fit(model,df,param):
 
 
     
-# In[20]:
+# In[ ]:
 
 
 # apply your model
@@ -108,7 +108,7 @@ def apply(model,df,param):
 
 
     
-# In[11]:
+# In[ ]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>"
@@ -124,7 +124,7 @@ def save(model,name):
 
 
     
-# In[13]:
+# In[ ]:
 
 
 # load model from name in expected convention "<algo_name>_<model_name>"
@@ -140,7 +140,7 @@ def load(name):
 
 
     
-# In[15]:
+# In[ ]:
 
 
 # return a model summary

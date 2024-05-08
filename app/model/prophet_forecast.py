@@ -3,14 +3,14 @@
 
 
     
-# In[ ]:
+# In[3]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
 import json
 import numpy as np
 import pandas as pd
-from fbprophet import Prophet
+import prophet
 # ...
 # global constants
 MODEL_DIRECTORY = "/srv/app/model/data/"
@@ -22,7 +22,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[ ]:
+# In[14]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -40,16 +40,14 @@ def stage(name):
 
 
     
-# In[ ]:
+# In[16]:
 
 
 # initialize your model
 # available inputs: data and parameters
 # returns the model object which will be used as a reference to call fit, apply and summary subsequently
 def init(df,param):
-    #X = df[param['feature_variables']]
-    #Y = df[param['target_variables']]
-    model = Prophet()
+    model = prophet.Prophet()
     return model
 
 
@@ -59,7 +57,7 @@ def init(df,param):
 
 
     
-# In[ ]:
+# In[18]:
 
 
 # train your model
@@ -79,7 +77,7 @@ def fit(model,df,param):
 
 
     
-# In[ ]:
+# In[20]:
 
 
 # apply your model
@@ -99,7 +97,7 @@ def apply(model,df,param):
 
 
     
-# In[ ]:
+# In[22]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>"
@@ -112,7 +110,7 @@ def save(model,name):
 
 
     
-# In[ ]:
+# In[23]:
 
 
 # load model from name in expected convention "<algo_name>_<model_name>"
@@ -125,7 +123,7 @@ def load(name):
 
 
     
-# In[ ]:
+# In[24]:
 
 
 # return a model summary

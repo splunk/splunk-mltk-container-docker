@@ -12,7 +12,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 # global constants
 MODEL_DIRECTORY = "/srv/app/model/data/"
@@ -24,7 +24,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[3]:
+# In[5]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -42,7 +42,7 @@ def stage(name):
 
 
     
-# In[5]:
+# In[7]:
 
 
 # initialize the model
@@ -80,7 +80,7 @@ def init(df,param):
 
 
     
-# In[7]:
+# In[9]:
 
 
 # returns a fit info json object
@@ -152,7 +152,7 @@ def fit(model,df,param):
 
 
     
-# In[9]:
+# In[11]:
 
 
 def apply(model,df,param):
@@ -197,14 +197,13 @@ def apply(model,df,param):
 
 
     
-# In[ ]:
+# In[13]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>.h5"
 def save(model,name):
-    # save keras model to hdf5 file
-    # https://www.tensorflow.org/beta/tutorials/keras/save_and_restore_models
-    model.save(MODEL_DIRECTORY + name + ".h5")
+    # save keras model to keras file
+    model.save(MODEL_DIRECTORY + name + ".keras")
     return model
 
 
@@ -212,12 +211,12 @@ def save(model,name):
 
 
     
-# In[ ]:
+# In[14]:
 
 
 # load model from name in expected convention "<algo_name>_<model_name>.h5"
 def load(name):
-    model = keras.models.load_model(MODEL_DIRECTORY + name + ".h5")
+    model = keras.models.load_model(MODEL_DIRECTORY + name + ".keras")
     return model
 
 
@@ -225,7 +224,7 @@ def load(name):
 
 
     
-# In[ ]:
+# In[15]:
 
 
 # return model summary

@@ -13,9 +13,11 @@ import datetime
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tensorflow import keras
+#from tensorflow import keras
+import keras
 from tensorflow import feature_column
-from tensorflow.keras import layers
+#from tensorflow.keras import layers
+from keras import layers
 from sklearn.model_selection import train_test_split
 import shap
 
@@ -57,7 +59,7 @@ def df_to_dataset_apply(dataframe, batch_size=32):
 
 
     
-# In[9]:
+# In[3]:
 
 
 # mltkc_stage
@@ -76,7 +78,7 @@ def stage(name):
 
 
     
-# In[12]:
+# In[5]:
 
 
 # mltkc_init
@@ -167,7 +169,7 @@ def init(df,param):
 
 
     
-# In[15]:
+# In[8]:
 
 
 # mltkc_stage_create_model_fit
@@ -221,7 +223,7 @@ def fit(model,df,param):
 
 
     
-# In[17]:
+# In[10]:
 
 
 # mltkc_stage_create_model_apply
@@ -245,7 +247,7 @@ def apply(model,df,param):
 
 
     
-# In[19]:
+# In[12]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>.h5"

@@ -3,7 +3,7 @@
 
 
     
-# In[2]:
+# In[1]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
@@ -23,7 +23,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[4]:
+# In[3]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -41,7 +41,7 @@ def stage(name):
 
 
     
-# In[6]:
+# In[5]:
 
 
 # initialize your model
@@ -58,7 +58,7 @@ def init(df,param):
 
 
     
-# In[8]:
+# In[7]:
 
 
 # train your model
@@ -75,7 +75,7 @@ def fit(model,df,param):
 
 
     
-# In[10]:
+# In[18]:
 
 
 # apply your model
@@ -106,7 +106,8 @@ def plot_correlationmatrix_as_base64(corr):
     # Set up the matplotlib figure
     f, ax = plt.subplots(figsize=(15, 15))
     # Generate a mask for the upper triangle
-    mask = np.triu(np.ones_like(corr, dtype=np.bool))
+    mask = np.triu(np.ones_like(corr, dtype=np.bool_))
+    print(mask)
     # Generate a custom diverging colormap
     cmap = sns.diverging_palette(250, 10, as_cmap=True)
     # Draw the heatmap with the mask and correct aspect ratio
@@ -138,7 +139,7 @@ def apply(model,df,param):
 
 
     
-# In[12]:
+# In[20]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>"
@@ -154,7 +155,7 @@ def save(model,name):
 
 
     
-# In[14]:
+# In[22]:
 
 
 # load model from name in expected convention "<algo_name>_<model_name>"
@@ -171,13 +172,15 @@ def load(name):
 
 
     
-# In[19]:
+# In[24]:
 
 
 # return a model summary
 def summary(model=None):
     returns = {"version": {"numpy": np.__version__, "pandas": pd.__version__} }
     return returns
+
+
 
 
 

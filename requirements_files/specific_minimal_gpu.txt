@@ -6,7 +6,7 @@ dask-labextension
 
 jupyterlab-nvdashboard
 
-mlflow==2.7.0
+mlflow>=2.9.2
 
 scipy
 scikit-learn

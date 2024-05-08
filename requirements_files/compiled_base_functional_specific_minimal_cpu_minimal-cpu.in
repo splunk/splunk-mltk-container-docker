@@ -1,7 +1,10 @@
 # FastAPI stack
-fastapi>=0.68.0,<0.69.0
-pydantic>=1.8.0,<2.0.0
-uvicorn>=0.15.0,<0.16.0
+#fastapi>=0.68.0,<0.69.0
+fastapi>=0.109.1
+#pydantic>=1.8.0,<2.0.0
+pydantic
+#uvicorn>=0.15.0,<0.16.0
+uvicorn
 aiofiles
 pyopenssl 
 
@@ -28,7 +31,7 @@ seaborn
 dask-ml
 dask-labextension
 
-mlflow==2.7.0
+mlflow>=2.9.2
 
 scipy
 scikit-learn

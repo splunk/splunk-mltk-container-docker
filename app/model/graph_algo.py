@@ -3,7 +3,7 @@
 
 
     
-# In[3]:
+# In[1]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
@@ -22,7 +22,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[7]:
+# In[5]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -40,7 +40,7 @@ def stage(name):
 
 
     
-# In[9]:
+# In[7]:
 
 
 # initialize your model
@@ -57,12 +57,13 @@ def init(df,param):
 
 
     
-# In[11]:
+# In[10]:
 
 
 # train your model
 # returns a fit info json object and may modify the model object
 def fit(model,df,param):
+
     model.clear()
     src_dest_name = param['feature_variables']
     dfg = df[src_dest_name]
@@ -76,10 +77,8 @@ def fit(model,df,param):
 
 
 
-
-
     
-# In[14]:
+# In[12]:
 
 
 # apply your model
@@ -114,7 +113,7 @@ def apply(model,df,param):
 
 
     
-# In[16]:
+# In[14]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>"
@@ -128,7 +127,7 @@ def save(model,name):
 
 
     
-# In[17]:
+# In[15]:
 
 
 # load model from name in expected convention "<algo_name>_<model_name>"
@@ -143,15 +142,13 @@ def load(name):
 
 
     
-# In[18]:
+# In[16]:
 
 
 # return a model summary
 def summary(model=None):
     returns = {"version": {"numpy": np.__version__, "pandas": pd.__version__, "networkx": nx.__version__} }
     return returns
-
-
 
 
 

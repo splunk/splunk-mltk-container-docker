@@ -12,7 +12,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from tensorflow import keras
+import keras
 
 # global constants
 MODEL_DIRECTORY = "/srv/app/model/data/"
@@ -101,7 +101,7 @@ def fit(model,df,param):
     returns = {}
     
     # Collect variables from param file
-    model_epochs = 100
+    model_epochs = 10
     model_batch_size = 3
     holdback = 30
     if 'options' in param:
@@ -148,7 +148,7 @@ def fit(model,df,param):
 
 
     
-# In[11]:
+# In[9]:
 
 
 def apply(model,df,param):
@@ -193,14 +193,13 @@ def apply(model,df,param):
 
 
     
-# In[ ]:
+# In[11]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>.h5"
 def save(model,name):
-    # save keras model to hdf5 file
-    # https://www.tensorflow.org/beta/tutorials/keras/save_and_restore_models
-    model.save(MODEL_DIRECTORY + name + ".h5")
+    # save keras model to keras file
+    model.save(MODEL_DIRECTORY + name + ".keras")
     return model
 
 
@@ -208,12 +207,12 @@ def save(model,name):
 
 
     
-# In[ ]:
+# In[12]:
 
 
 # load model from name in expected convention "<algo_name>_<model_name>.h5"
 def load(name):
-    model = keras.models.load_model(MODEL_DIRECTORY + name + ".h5")
+    model = keras.models.load_model(MODEL_DIRECTORY + name + ".keras")
     return model
 
 
@@ -221,7 +220,7 @@ def load(name):
 
 
     
-# In[ ]:
+# In[13]:
 
 
 # return model summary
@@ -233,14 +232,6 @@ def summary(model=None):
         model.summary(print_fn=lambda x: s.append(x+'\n'))
         returns["summary"] = ''.join(s)
     return returns
-
-
-
-
-
-
-
-
 
 
 

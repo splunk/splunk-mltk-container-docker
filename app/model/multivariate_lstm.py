@@ -3,7 +3,7 @@
 
 
     
-# In[3]:
+# In[2]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
@@ -40,7 +40,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[5]:
+# In[8]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -58,7 +58,7 @@ def stage(name):
 
 
     
-# In[7]:
+# In[10]:
 
 
 # initialize your model
@@ -96,7 +96,7 @@ def init(df,param):
 
 
     
-# In[30]:
+# In[12]:
 
 
 # train your model
@@ -156,7 +156,7 @@ def fit(model,df,param):
 
 
     
-# In[32]:
+# In[14]:
 
 
 # apply your model
@@ -208,33 +208,37 @@ def apply(model,df,param):
 
 
     
-# In[ ]:
+# In[16]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>"
 def save(model,name):
-    model.save(MODEL_DIRECTORY + name + ".h5")
+    model.save(MODEL_DIRECTORY + name + ".keras")
     return model
 
 
 
 
 
+
+
     
-# In[ ]:
+# In[19]:
 
 
 # load model from name in expected convention "<algo_name>_<model_name>"
 def load(name):
-    model = load_model(MODEL_DIRECTORY + name + ".h5")
+    model = load_model(MODEL_DIRECTORY + name + ".keras")
     return model
 
 
 
 
 
+
+
     
-# In[ ]:
+# In[22]:
 
 
 # return a model summary

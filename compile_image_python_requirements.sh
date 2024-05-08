@@ -11,9 +11,9 @@
 # Simply run this script with the argument of an image tag in tag_mapping.csv
 # e.g. ./compile_image_python_requirements.sh ubi-minimal-cpu
 # A "Dockerfile.*.requirements" version must exist for the image tag's dockerfile. Please see 
-# dockerfiles/Dockerfile.5.1.0.redhat.requirements for an example.
+# dockerfiles/Dockerfile.redhat.requirements for an example.
 # For most of the images provided the requirements dockerfile will automatically be selected, if not
-# Dockerfile.5.1.0.debian.requirements or Dockerfile.5.1.0.redhat.requirements are likely to be appropriate
+# Dockerfile.debian.requirements or Dockerfile.redhat.requirements are likely to be appropriate
 # depending upon the specific OS base image used.
 
 if [ -z "$1" ]; then
