@@ -13,7 +13,7 @@ import pandas as pd
 import requests
 # ...
 # global constants
-ollama_url = "http://XXXX:11434"
+ollama_url = "http://ollama:11434"
 MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
