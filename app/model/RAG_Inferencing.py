@@ -99,6 +99,10 @@ def apply(model,df,param):
     # Example: 'all-MiniLM-L6-v2'
     X = df["query"].values.tolist()
     try:
+        model_name = param['options']['params']['model_name'].strip('\"')
+    except:
+        model_name = "llama3"
+    try:
         embedder_name = param['options']['params']['embedder_name'].strip('\"')
         embedder_dimension = param['options']['params']['embedder_dimension']
         collection_name = param['options']['params']['collection_name'].strip('\"')
@@ -109,9 +113,9 @@ def apply(model,df,param):
 
     # TODO: Check existence of collection
 
-    model="llama3"
+    model=model_name 
     url = "http://ollama:11434"
-    llm = Ollama(model=model, base_url=url)
+    llm = Ollama(model=model, base_url=url, request_timeout=6000.0)
     transformer_embedder = HuggingFaceEmbedding(model_name=embedder_name)
     service_context = ServiceContext.from_defaults(
         llm=llm, embed_model=transformer_embedder, chunk_size=1024
