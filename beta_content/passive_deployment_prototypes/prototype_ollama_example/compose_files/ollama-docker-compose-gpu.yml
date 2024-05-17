@@ -22,22 +22,6 @@ services:
             count: all
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/ollama:/root/.ollama
-    
-  # ------------------------------------------------------------------------------------------------------------------------ #
-  # DSDL Dev Container - not optional, required for DSDL operation
-  # dsdl-dev:
-  #   extends:
-  #     file: dsdl-base.yml
-  #     service: dsdl-base
-  #   container_name: dsdl-dev
-  #   image: phdrieger/mltk-container-golden-image-cpu:5.1.0
-  #   ports:
-  #    - 8888:8888 # Jupyter
-  #    - 6000:6000
-  #    - 4040:4040
-  #    - 6006:6006 # Tensorboard
-  #   environment:
-  #    - MODE_DEV_PROD=DEV
 
 # ------------------------------------------------------------------------------------------------------------------------ #
 volumes:
