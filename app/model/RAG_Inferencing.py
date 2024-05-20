@@ -126,12 +126,18 @@ def apply(model,df,param):
         )
     query_engine = index.as_query_engine()
     l = []
+    f = []
     for i in range(len(X)):
         r = query_engine.query(X[i])
         l.append(r.response)
+        files = ""
+        for node in r.source_nodes:
+            files += node.node.metadata['file_path']
+            files += " "
+        f.append(files)
     
 
-    cols = {"Response": l}
+    cols = {"Response": l, "References": f}
     result = pd.DataFrame(data=cols)
     return result
 

@@ -106,12 +106,18 @@ def apply(model,df,param):
         embedder_dimension = 384
         collection_name = "default-doc-collection"
     
+    try:
+        # send as 1
+        overwrite = param['options']['params']['overwrite'].strip('\"')
+    except:
+        overwrite = False
+    
     documents = SimpleDirectoryReader(data_path).load_data()
     transformer_embedder = HuggingFaceEmbedding(model_name=embedder_name)
     service_context = ServiceContext.from_defaults(
         llm=None, embed_model=transformer_embedder, chunk_size=1024
     )
-    vector_store = MilvusVectorStore(uri="http://milvus-standalone:19530", token="", collection_name=collection_name, dim=embedder_dimension, overwrite=True)
+    vector_store = MilvusVectorStore(uri="http://milvus-standalone:19530", token="", collection_name=collection_name, dim=embedder_dimension, overwrite=overwrite)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     index = VectorStoreIndex.from_documents(
         documents, storage_context=storage_context, service_context=service_context
