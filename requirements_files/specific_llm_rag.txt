@@ -38,6 +38,9 @@ sentence-transformers
 pydantic
 PyPDF2
 PyYAML
+docx2txt
+python-pptx 
+Pillow
 sentencepiece
 tf-keras
 
