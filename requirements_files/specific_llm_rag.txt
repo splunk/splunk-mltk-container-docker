@@ -34,6 +34,11 @@ llama-index-llms-ollama
 llama-index-vector-stores-milvus
 llama-index-embeddings-huggingface
 llama-index-embeddings-instructor
+llama-index-llms-azure-openai
+llama-index-embeddings-azure-openai
+llama-index-llms-bedrock
+llama-index-llms-openai
+llama-index-readers-file
 sentence-transformers
 pydantic
 PyPDF2
