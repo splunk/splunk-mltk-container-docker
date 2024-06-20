@@ -73,7 +73,7 @@ def init(df,param):
         n_dims = 384
     else:
         try:
-            n_dims=int(param['options']['params']['n_dims'])
+            n_dims=int(param['options']['params']['embedder_dimension'])
         except:
             n_dims=384
     

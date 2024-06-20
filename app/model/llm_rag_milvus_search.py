@@ -116,18 +116,18 @@ def fit(model,df,param):
 def apply(model,df,param):
     use_local= int(param['options']['params']['use_local'])
     try:
-        embedder=param['options']['params']['embedder'].strip('\"')
+        embedder_name=param['options']['params']['embedder_name'].strip('\"')
     except:
-        embedder = 'all-MiniLM-L6-v2'
+        embedder_name = 'all-MiniLM-L6-v2'
     if use_local:
-        embedder = f'/srv/app/model/data/{embedder}'
+        embedder_name = f'/srv/app/model/data/{embedder_name}'
         print("Using local embedding model checkpoints") 
-    transformer_embedder = HuggingFaceEmbedding(model_name=embedder)
+    transformer_embedder = HuggingFaceEmbedding(model_name=embedder_name)
     
     try:
-        n_neighbours=int(param['options']['params']['n_neighbours'])
+        top_k=int(param['options']['params']['top_k'])
     except:
-        n_neighbours=3
+        top_k=3
         
     try:
         splitter=param['options']['params']['splitter']
@@ -146,7 +146,7 @@ def apply(model,df,param):
     }
     output_fields = [item.name for item in model['collection'].schema.fields]
     output_fields.remove('embeddings')
-    results = model['collection'].search(data=vector_column, anns_field="embeddings", param=search_params, limit=n_neighbours, output_fields=output_fields)
+    results = model['collection'].search(data=vector_column, anns_field="embeddings", param=search_params, limit=top_k, output_fields=output_fields)
     l = []
     f = []
     output_fields.remove('label')

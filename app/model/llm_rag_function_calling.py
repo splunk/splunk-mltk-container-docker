@@ -205,7 +205,7 @@ def fit(model,df,param):
 # returns the calculated results
 def apply(model,df,param):
     # Example: 'all-MiniLM-L6-v2'
-    query = param['options']['params']['query'].strip('\"')
+    query = param['options']['params']['prompt'].strip('\"')
     # Case of only two functions
     try:
         func1 = int(param['options']['params']['func1'])

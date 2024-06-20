@@ -102,7 +102,7 @@ def apply(model,df,param):
         ]
         
         data = {
-            "model": param['options']['params']['model'].strip("\""),
+            "model": param['options']['params']['model_name'].strip("\""),
             "messages": messages,
             "stream": False,
         }

@@ -78,11 +78,11 @@ def fit(model,df,param):
 
 
 def apply(model,df,param):
-    manager = param['options']['params']['manager'].strip('\"')
+    manager = param['options']['params']['task'].strip('\"')
     if manager == "pull":
         # Download specified model
         try:
-            model_name = param['options']['params']['model'].strip('\"')
+            model_name = param['options']['params']['model_name'].strip('\"')
             uri = f"{ollama_url}/api/pull"
             data = {
                 "name": model_name
@@ -95,7 +95,7 @@ def apply(model,df,param):
         
     elif manager == "delete":
         # Delete specified model
-        model_name = param['options']['params']['model'].strip('\"')
+        model_name = param['options']['params']['model_name'].strip('\"')
         uri = f"{ollama_url}/api/delete"
         data = {
             "name": model_name
