@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<frontend>
+    <header>
+        <logo>Buttercup Games</logo>
+        <menu>
+            <item>About Us</item>
+            <item>Shop</item>
+            <item>Cart</item>
+            <item>Contact Us</item>
+        </menu>
+    </header>
+    <main>
+        <section id="featured-games">
+            <title>Featured Games</title>
+            <games>
+                <game>
+                    <name>Witchcraft & Sorcery - Game 04</name>
+                    <price>29.99</price>
+                    <image>wc-sh-g04.jpg</image>
+                    <description>A magical adventure awaits!</description>
+                </game>
+                <game>
+                    <name>Space Combat - Mega Game 10</name>
+                    <price>39.99</price>
+                    <image>sc-mg-g10.jpg</image>
+                    <description>Conquer the galaxy in epic battles!</description>
+                </game>
+                <!-- More game entries -->
+            </games>
+        </section>
+        <section id="new-releases">
+            <title>New Releases</title>
+            <games>
+                <game>
+                    <name>Dragon Battles - Strategy Game 01</name>
+                    <price>49.99</price>
+                    <image>db-sg-g01.jpg</image>
+                    <description>Battle mighty dragons in this strategic conquest!</description>
+                </game>
+                <game>
+                    <name>Sci-Fi Battleverse - Game 01</name>
+                    <price>34.99</price>
+                    <image>sf-bvs-g01.jpg</image>
+                    <description>Futuristic battles await in this action-packed game!</description>
+                </game>
+                <!-- More game entries -->
+            </games>
+        </section>
+        <!-- Additional sections like Best Sellers, Special Offers, etc. -->
+    </main>
+    <footer>
+        <section id="quick-links">
+            <title>Quick Links</title>
+            <links>
+                <link>About Us</link>
+                <link>Privacy Policy</link>
+                <link>Terms of Service</link>
+                <link>FAQ</link>
+            </links>
+        </section>
+        <section id="contact">
+            <title>Contact Us</title>
+            <address>
+                <street>123 Game Street</street>
+                <city>New Game City</city>
+                <country>GameLand</country>
+                <phone>+1234567890</phone>
+                <email>info@buttercupgames.com</email>
+            </address>
+        </section>
+    </footer>
+</frontend>

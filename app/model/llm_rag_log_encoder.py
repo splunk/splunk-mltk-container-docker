@@ -100,7 +100,7 @@ def init(df,param):
         fields = [
             FieldSchema(name="_key", is_primary=True, auto_id=True, dtype=DataType.INT64),
             FieldSchema(name="embeddings", dtype=embedding_type, dim=n_dims),
-            FieldSchema(name="label", dtype=DataType.VARCHAR, max_length=5000),
+            FieldSchema(name="label", dtype=DataType.VARCHAR, max_length=15000),
         ]
         # Additional schema setting
         if len(schema_fields) != 0: 
