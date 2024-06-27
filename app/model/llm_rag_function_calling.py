@@ -294,6 +294,43 @@ def summary(model=None):
     returns = {"version": {"numpy": np.__version__, "pandas": pd.__version__} }
     return returns
 
+def compute(model,df,param):
+    # Example: 'all-MiniLM-L6-v2'
+    query = param['params']['prompt'].strip('\"')
+    # Case of only two functions
+    try:
+        func1 = int(param['params']['func1'])
+        func2 = int(param['params']['func2'])
+    except:
+        func1 = 1
+        func2 = 1
+    tool_list = []
+
+    if func1:
+        tool_list.append(search_splunk_tool)
+    if func2:
+        tool_list.append(search_record_from_vector_db_tool)
+    
+    try:
+        model = param['params']['model_name'].strip('\"')
+    except:
+        model="mistral"
+    
+    url = "http://ollama:11434"
+    llm = Ollama(model=model, base_url=url, request_timeout=6000.0)
+
+    
+    worker = ReActAgentWorker.from_tools(tool_list, llm=llm)
+    agent = AgentRunner(worker)     
+    response = agent.chat(query)
+    
+    cols = {"Response": response.response}
+    for i in range(len(response.sources)):
+        if response.sources[i].tool_name != "unknown":
+            cols[response.sources[i].tool_name] = response.sources[i].content
+    result = [cols]
+    return result
+
 
 
 

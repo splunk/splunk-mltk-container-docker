@@ -169,6 +169,58 @@ def summary(model=None):
     returns = {"version": {"numpy": np.__version__, "pandas": pd.__version__} }
     return returns
 
+def compute(model,df,param):
+    # Manager task includes list_collections, delete_collection, show_schema and show_rows
+    task = param['params']['task']
+    try:
+        collection_name = param['params']['collection_name']
+    except:
+        collection_name = 'default_collection'
+        
+    client = MilvusClient(
+        uri=MILVUS_ENDPOINT,
+        token=""
+    )
+    connections.connect("default", host="milvus-standalone", port="19530")
+    
+    if task == "general":
+        collection_list = client.list_collections()
+        schemas = []
+        rows = []
+        for clt in collection_list:
+            collection = Collection(clt)
+            m1 = str([item.name for item in collection.schema.fields])
+            schemas.append(m1)
+            rows.append(collection.num_entities)
+        cols = {"Collections": "|".join(collection_list), "Fields": "|".join(schemas), "Number_of_rows": "|".join(rows)}
+            
+    elif task == "list_collections":
+        collection_list = "|".join(client.list_collections())
+        cols = {"Collections": collection_list, "Message": "No result", "Schema": "No result", "Number_of_rows": "No result"}
+    elif task == "delete_collection":
+        utility.drop_collection(collection_name)
+        m = f'Deleted collection {collection_name}'
+        cols = {"Collections": "No result", "Message": m, "Schema": "No result", "Number_of_rows": "No result"}
+    elif task == "show_schema":
+        try:
+            collection = Collection(collection_name)
+            s = str(collection.schema.fields)
+        except:
+            s = ''
+        cols = {"Collections": "No result", "Message": "No result", "Schema": s, "Number_of_rows": "No result"}
+    elif task == "show_rows":
+        try:
+            collection = Collection(collection_name)
+            n = str(collection.num_entities)
+        except:
+            n = ''
+        cols = {"Collections": "No result", "Message": "No result", "Schema": "No result", "Number_of_rows": n}
+    else:
+        cols = {"Collections": "No result", "Message": "No result", "Schema": "No result", "Number_of_rows": "No result"}
+
+    result = [cols]
+    return result
+
 
 
 

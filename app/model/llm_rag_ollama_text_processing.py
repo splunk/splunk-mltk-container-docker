@@ -166,6 +166,38 @@ def summary(model=None):
     returns = {"version": {"numpy": np.__version__, "pandas": pd.__version__} }
     return returns
 
+def compute(model,df,param):
+    uri = f"{ollama_url}/api/chat"
+    headers = {'Content-Type': 'application/json'}
+    cols = []
+    for i in range(len(df)):
+        col = {}
+        X = df[i]["text"]
+        messages = [
+            {"role": "user", "content": param['params']['prompt'].strip("\"")},
+            {"role": "user", "content": X}
+        ]
+        
+        data = {
+            "model": param['params']['model_name'].strip("\""),
+            "messages": messages,
+            "stream": False,
+        }
+        
+        data = json.dumps(data)
+        try:
+            response = requests.post(uri, headers=headers, data=data).json()
+            col['Result'] = response['message']['content']
+            duration = round(int(response['total_duration']) / 1000000000, 2)
+            duration = str(duration) + " s"
+            col['Duration'] = duration
+        except:
+            col['Result'] = "ERROR"
+            col['Duration'] = "ERROR"
+        cols.append(col)
+    returns=cols
+    return returns
+
 
 
 
