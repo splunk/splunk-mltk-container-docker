@@ -328,10 +328,10 @@ async def set_compute(request : Request):
 
         del(app.Model["data"])
         # memorize model name
-        app.Model["model_name"] = app.Model["meta"]['algo']
+        app.Model["algo"] = app.Model["meta"]['algo']
         #if "model_name" in app.Model["meta"]["options"]:
         #    app.Model["model_name"] = app.Model["meta"]["options"]["model_name"]
-        print("/compute: model name: " + app.Model["model_name"])
+        print("/compute: model name: " + app.Model["algo"])
 
     except Exception as e:
         response["message"] += 'unable to convert raw data to DictReader object. Ended with exception: ' + str(e)
