@@ -11,3 +11,4 @@ golden-cpu-transformers,python:3.9.13-bullseye,Dockerfile.debian.transformers,ba
 golden-gpu-rapids,rapidsai/base:23.08-cuda11.2-py3.9,Dockerfile.debian.rapids,base_functional.txt,specific_rapids.txt,nvidia,Dockerfile.debian.requirements,Rapids 23.08 (5.1.2)
 escu-cpu,python:3.9,Dockerfile.debian.escu,base_functional.txt,specific_escu.txt,none,Dockerfile.debian.requirements,ESCU (5.1.2)
 spark,jupyter/all-spark-notebook:spark-3.5.0,Dockerfile.debian.spark,base_functional.txt,specific_spark.txt,none,Dockerfile.debian.requirements,Spark 3.5.0 (5.1.2)
+golden-cpu-schiggy,python:3.9,Dockerfile.debian,base_functional.txt,specific_golden_cpu_schiggy.txt,none,Dockerfile.debian.requirements,Schiggy Image CPU (1.0.0)
