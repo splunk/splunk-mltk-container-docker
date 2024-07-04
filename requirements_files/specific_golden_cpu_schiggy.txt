@@ -1,6 +1,5 @@
 
 pmdarima
-statsmodels
 
 
 datashader
