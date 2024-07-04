@@ -300,7 +300,7 @@ async def set_compute(request : Request):
     response = {}
     response["status"] = "error"
     response["message"] = "/compute: ERROR: "
-
+    print("This is a new compute function")
     # 1. validate input POST data
     try:
         dp = await request.json()
@@ -328,18 +328,20 @@ async def set_compute(request : Request):
 
         del(app.Model["data"])
         # memorize model name
-        app.Model["model_name"] = "default"
+        app.Model["algo_name"] = app.Model["meta"]['algo']
+        app.Model["algo"] = import_module("app.model." + app.Model["algo_name"])
         #if "model_name" in app.Model["meta"]["options"]:
         #    app.Model["model_name"] = app.Model["meta"]["options"]["model_name"]
-        print("/compute: model name: " + app.Model["model_name"])
+        print("/compute: model name: " + app.Model["algo_name"])
 
     except Exception as e:
         response["message"] += 'unable to convert raw data to DictReader object. Ended with exception: ' + str(e)
         print("/compute: conversion error: " + str(e))
         return response
     
-    # simple index gen and pass through
-    response["results"] = json.dumps([{'predicted':i} for i, row in enumerate(app.Model["df"], start=1)])
+    df_result = app.Model["algo"].compute(None, app.Model["df"], app.Model["meta"])
+    print("Finished computation")
+    response["results"] = json.dumps(df_result)
     
     # end with a successful response
     response["status"] = "success"

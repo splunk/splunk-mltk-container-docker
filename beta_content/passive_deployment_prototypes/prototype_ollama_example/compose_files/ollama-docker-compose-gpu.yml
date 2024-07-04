@@ -1,0 +1,35 @@
+# DSDL Data Science Environment: Docker Compose Configuation
+# This notebooks deploys a "static" DSDL environment in docker with no dynamic control needed from the DSDL app
+# It contains a DSDL dev container, as well as optional Milvus supporting services
+version: '1.0'
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+
+# Define all services: Ollama, DSDL Dev
+
+services:
+  ollama:
+    container_name: ollama
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: ["gpu"]
+            count: all
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/ollama:/root/.ollama
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+volumes:
+  mltk-container-data:
+  mltk-container-app:
+  mltk-container-notebooks:
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+networks:
+  default:
+    name: dsenv-network
