@@ -17,6 +17,16 @@ RUN apt-get install curl -y
 RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash -
 RUN apt-get update --fix-missing && apt-get install -y wget bzip2 git ca-certificates nodejs build-essential
 
+# Schiggy:
+# This is necessary since creating a new docker image on a windows
+# machine uses windows-like line endings (\r\n).
+# This messes up the execution of the initializing script /dltk/bootstrap_fast.sh
+# Therefore we change all line endings to unix-like with dos2unix.
+# You can inspect the line endings of the image after its creation in PowerShell:
+# docker run -it --entrypoint /bin/bash gabriel3001/mltk-container-golden-cpu-schiggy:1.0.0
+# cat -v /dltk/bootstrap_fast.sh   ---> Make sure line endings are linux-like (no ^M should occur at the end of the lines)
+RUN apt-get install -y dos2unix
+
 # update everything
 RUN apt-get update && apt-get upgrade -y
 
@@ -50,6 +60,10 @@ RUN mkdir /dltk/.jupyter/; mv dltk.key /dltk/.jupyter/dltk.key; mv dltk.pem /dlt
 COPY ./bootstrap_scripts/bootstrap_fast.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
+
+# Schiggy:
+# Convert line endings
+RUN find /dltk/bootstrap_fast.sh -type f -exec dos2unix {} \;
 
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages
