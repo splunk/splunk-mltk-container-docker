@@ -191,7 +191,7 @@ def compute(model,df,param):
             collection = Collection(clt)
             m1 = str([item.name for item in collection.schema.fields])
             schemas.append(m1)
-            rows.append(collection.num_entities)
+            rows.append(str(collection.num_entities))
         cols = {"Collections": "|".join(collection_list), "Fields": "|".join(schemas), "Number_of_rows": "|".join(rows)}
             
     elif task == "list_collections":
