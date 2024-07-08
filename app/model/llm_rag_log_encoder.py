@@ -196,8 +196,27 @@ def apply(model,df,param):
             if len(schema_fields) != 0:
                 for i in range(len(schema_fields)):  
                     data.append(df[schema_fields[i]].astype(str).tolist())
+            # Cap at 16MB for each insertion, 1/4 of the 64MB limit
+            data_limit = 16000000
             try:
-                model['collection'].insert(data)
+                n_dims=int(param['options']['params']['embedder_dimension'])
+            except:
+                n_dims=384
+            print(f"Size of data is {len(data[0])}")
+            num_vectors = int(data_limit / (n_dims * 4))
+            print(f"Batch size is {num_vectors}")
+            num_sublists = len(data[0]) // num_vectors
+            print(f"Number of batches is {num_sublists}")
+            # Initialize the sublists
+            sublists = [[] for _ in range(num_sublists)]
+            # Iterate over each row in the data
+            for row in data:
+                for i in range(num_sublists):
+                    sublists[i].append(row[i * num_vectors:(i + 1) * num_vectors])
+            try:
+                for sub_data in sublists:
+                    model['collection'].insert(sub_data, timeout=None)
+                    print(f"Inserted data batch with length {len(sub_data[0])}")
                 m = "Success"
             except:
                 m = "Failed. Could not insert data to collection."
@@ -353,8 +372,21 @@ def compute(model,df,param):
                     for i in range(len(df)):
                         l.append(df[i][field])
                     data.append(l)
+            data_limit = 16000000
+            print(f"Size of data is {len(data[0])}")
+            num_vectors = int(data_limit / (n_dims * 4))
+            print(f"Batch size is {num_vectors}")
+            num_sublists = len(data[0]) // num_vectors
+            print(f"Number of batches is {num_sublists}")
+            # Initialize the sublists
+            sublists = [[] for _ in range(num_sublists)]
+            for row in data:
+                for i in range(num_sublists):
+                    sublists[i].append(row[i * num_vectors:(i + 1) * num_vectors])
             try:
-                model['collection'].insert(data, timeout=None)
+                for sub_data in sublists:
+                    model['collection'].insert(sub_data, timeout=None)
+                    print(f"Inserted data batch with length {len(sub_data[0])}")
                 m = {"Message": "Success"}
                 print(m)
             except:
