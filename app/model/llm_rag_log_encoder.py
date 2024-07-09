@@ -205,14 +205,20 @@ def apply(model,df,param):
             print(f"Size of data is {len(data[0])}")
             num_vectors = int(data_limit / (n_dims * 4))
             print(f"Batch size is {num_vectors}")
-            num_sublists = len(data[0]) // num_vectors
-            print(f"Number of batches is {num_sublists}")
-            # Initialize the sublists
-            sublists = [[] for _ in range(num_sublists)]
-            # Iterate over each row in the data
-            for row in data:
-                for i in range(num_sublists):
-                    sublists[i].append(row[i * num_vectors:(i + 1) * num_vectors])
+            if len(data[0]) > num_vectors:
+                num_sublists = len(data[0]) // num_vectors
+                if len(data[0]) % num_vectors != 0:
+                    num_sublists += 1
+                print(f"Number of batches is {num_sublists}")
+                # Initialize the sublists
+                sublists = [[] for _ in range(num_sublists)]
+                # Iterate over each row in the data
+                for row in data:
+                    for i in range(num_sublists-1):
+                        sublists[i].append(row[i * num_vectors:(i + 1) * num_vectors])
+                    sublists[num_sublists-1].append(row[(num_sublists-1) * num_vectors:])
+            else:
+                sublists = [data]
             try:
                 for sub_data in sublists:
                     model['collection'].insert(sub_data, timeout=None)
@@ -376,13 +382,20 @@ def compute(model,df,param):
             print(f"Size of data is {len(data[0])}")
             num_vectors = int(data_limit / (n_dims * 4))
             print(f"Batch size is {num_vectors}")
-            num_sublists = len(data[0]) // num_vectors
-            print(f"Number of batches is {num_sublists}")
-            # Initialize the sublists
-            sublists = [[] for _ in range(num_sublists)]
-            for row in data:
-                for i in range(num_sublists):
-                    sublists[i].append(row[i * num_vectors:(i + 1) * num_vectors])
+            if len(data[0]) > num_vectors:
+                num_sublists = len(data[0]) // num_vectors
+                if len(data[0]) % num_vectors != 0:
+                    num_sublists += 1
+                print(f"Number of batches is {num_sublists}")
+                # Initialize the sublists
+                sublists = [[] for _ in range(num_sublists)]
+                # Iterate over each row in the data
+                for row in data:
+                    for i in range(num_sublists-1):
+                        sublists[i].append(row[i * num_vectors:(i + 1) * num_vectors])
+                    sublists[num_sublists-1].append(row[(num_sublists-1) * num_vectors:])
+            else:
+                sublists = [data]
             try:
                 for sub_data in sublists:
                     model['collection'].insert(sub_data, timeout=None)
