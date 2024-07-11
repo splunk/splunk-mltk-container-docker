@@ -50,6 +50,13 @@ COPY ./bootstrap_scripts/bootstrap_fast.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
 
+# Install dos2unix, then convert windows-like line endings to linux-like
+# The bootstrap script won't run otherwise if the image was build on a windows machine
+# Finally, remove dos2unix again
+RUN apt-get update && apt-get install -y dos2unix
+RUN find /dltk/ -name 'bootstrap_*.sh' -type f -exec dos2unix {} \;
+RUN apt-get --purge remove -y dos2unix && rm -rf /var/lib/apt/lists/*
+
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages
 COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
