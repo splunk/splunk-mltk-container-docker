@@ -42,6 +42,7 @@ RUN mkdir /dltk/.jupyter/; mv dltk.key /dltk/.jupyter/dltk.key; mv dltk.pem /dlt
 
 # Copy bootstrap entry point script
 COPY ./bootstrap_scripts/bootstrap_transformers.sh /dltk/
+COPY ./bootstrap_scripts/bootstrap_backup.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
 
@@ -51,9 +52,16 @@ ADD basemodels/class_jp.tar.gz /dltk/app/model/data/classification/jp
 ADD basemodels/sum_en.tar.gz /dltk/app/model/data/summarization/en
 ADD basemodels/sum_jp.tar.gz /dltk/app/model/data/summarization/jp
 
-RUN ls -lah /dltk/app/model/data/classification/en/
+#RUN ls -lah /dltk/app/model/data/classification/en/
 RUN mkdir /dltk/app/model/data/classification/en/bert_phishing
 ADD basemodels/pytorch_model.tar.gz /dltk/app/model/data/classification/en/bert_phishing
+
+# Install dos2unix, then convert windows-like line endings to linux-like
+# The bootstrap script won't run otherwise if the image was build on a windows machine
+# Finally, remove dos2unix again
+RUN apt-get update && apt-get install -y dos2unix
+RUN find /dltk/ -name 'bootstrap_*.sh' -type f -exec dos2unix {} \;
+RUN apt-get --purge remove -y dos2unix && rm -rf /var/lib/apt/lists/*
 
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages
