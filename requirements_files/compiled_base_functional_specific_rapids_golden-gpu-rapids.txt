@@ -6,25 +6,24 @@
 #
 aenum==3.1.15
     # via gremlinpython
-aiofiles==23.2.1
+aiofiles==24.1.0
     # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
-aiohttp==3.9.3
-    # via
-    #   gremlinpython
-    #   jupyter-server-proxy
+aiohttp==3.9.5
+    # via gremlinpython
 aiosignal==1.3.1
     # via aiohttp
-alembic==1.13.1
+alembic==1.13.2
     # via mlflow
 aniso8601==9.0.1
     # via graphene
-annotated-types==0.6.0
+annotated-types==0.7.0
     # via pydantic
-anyio==4.3.0
+anyio==4.4.0
     # via
     #   httpx
     #   jupyter-server
     #   starlette
+    #   watchfiles
 argon2-cffi==23.1.0
     # via jupyter-server
 argon2-cffi-bindings==21.2.0
@@ -44,7 +43,7 @@ attrs==23.2.0
     #   aiohttp
     #   jsonschema
     #   referencing
-babel==2.14.0
+babel==2.15.0
     # via jupyterlab-server
 backoff==2.2.1
     # via opentelemetry-exporter-otlp-proto-grpc
@@ -52,11 +51,11 @@ beautifulsoup4==4.12.3
     # via nbconvert
 bleach==6.1.0
     # via nbconvert
-blinker==1.7.0
+blinker==1.8.2
     # via flask
-bokeh==3.4.0
-    # via jupyterlab-nvdashboard
-certifi==2024.2.2
+cachetools==5.4.0
+    # via mlflow
+certifi==2024.7.4
     # via
     #   httpcore
     #   httpx
@@ -71,6 +70,7 @@ click==8.1.7
     # via
     #   flask
     #   mlflow
+    #   typer
     #   uvicorn
 cloudpickle==3.0.0
     # via mlflow
@@ -81,14 +81,12 @@ comm==0.2.2
     #   ipykernel
     #   ipywidgets
 contourpy==1.2.1
-    # via
-    #   bokeh
-    #   matplotlib
-cryptography==42.0.5
+    # via matplotlib
+cryptography==43.0.0
     # via pyopenssl
 cycler==0.12.1
     # via matplotlib
-debugpy==1.8.1
+debugpy==1.8.2
     # via ipykernel
 decorator==5.1.1
     # via ipython
@@ -104,31 +102,37 @@ dgl==2.1.0
     # via graphistry
 dirty-cat==0.2.0
     # via graphistry
-docker==7.0.0
+dnspython==2.6.1
+    # via email-validator
+docker==7.1.0
     # via mlflow
+email-validator==2.2.0
+    # via fastapi
 entrypoints==0.4
     # via mlflow
 et-xmlfile==1.1.0
     # via openpyxl
-exceptiongroup==1.2.0
+exceptiongroup==1.2.2
     # via
     #   anyio
     #   ipython
 executing==2.0.1
     # via stack-data
-faiss-cpu==1.8.0
+faiss-cpu==1.8.0.post1
     # via graphistry
-fastapi==0.110.1
+fastapi==0.111.1
     # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
-fastjsonschema==2.19.1
+fastapi-cli==0.0.4
+    # via fastapi
+fastjsonschema==2.20.0
     # via nbformat
-filelock==3.13.4
+filelock==3.15.4
     # via
     #   huggingface-hub
     #   transformers
 flask==3.0.3
     # via mlflow
-fonttools==4.51.0
+fonttools==4.53.1
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
@@ -136,7 +140,7 @@ frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2024.3.1
+fsspec==2024.6.1
     # via huggingface-hub
 gitdb==4.0.11
     # via gitpython
@@ -144,11 +148,11 @@ gitpython==3.1.43
     # via
     #   mlflow
     #   nbdime
-googleapis-common-protos==1.63.0
+googleapis-common-protos==1.63.2
     # via opentelemetry-exporter-otlp-proto-grpc
 graphene==3.3
     # via mlflow
-graphistry[all]==0.33.7
+graphistry[all]==0.34.2
     # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
 graphql-core==3.2.3
     # via
@@ -158,11 +162,11 @@ graphql-relay==3.2.0
     # via graphene
 greenlet==3.0.3
     # via sqlalchemy
-gremlinpython==3.7.1
+gremlinpython==3.7.2
     # via graphistry
-grpcio==1.62.1
+grpcio==1.65.1
     # via opentelemetry-exporter-otlp-proto-grpc
-gunicorn==21.2.0
+gunicorn==22.0.0
     # via mlflow
 h11==0.14.0
     # via
@@ -170,28 +174,32 @@ h11==0.14.0
     #   uvicorn
 httpcore==1.0.5
     # via httpx
+httptools==0.6.1
+    # via uvicorn
 httpx==0.27.0
-    # via jupyterlab
-huggingface-hub==0.22.2
+    # via
+    #   fastapi
+    #   jupyterlab
+huggingface-hub==0.24.0
     # via
     #   sentence-transformers
     #   tokenizers
     #   transformers
-idna==3.6
+idna==3.7
     # via
     #   anyio
+    #   email-validator
     #   httpx
     #   jsonschema
     #   requests
     #   yarl
-igraph==0.11.4
+igraph==0.11.6
     # via graphistry
-importlib-metadata==7.1.0
+importlib-metadata==7.2.1
     # via
     #   flask
     #   jupyter-client
     #   jupyter-lsp
-    #   jupyter-server-proxy
     #   jupyterlab
     #   jupyterlab-server
     #   markdown
@@ -199,26 +207,26 @@ importlib-metadata==7.1.0
     #   nbconvert
 importlib-resources==6.4.0
     # via matplotlib
-ipykernel==6.29.4
+ipykernel==6.29.5
     # via jupyterlab
 ipython==8.18.1
     # via
     #   graphistry
     #   ipykernel
     #   ipywidgets
-ipywidgets==8.1.2
+ipywidgets==8.1.3
     # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
 isodate==0.6.1
     # via gremlinpython
 isoduration==20.11.0
     # via jsonschema
-itsdangerous==2.1.2
+itsdangerous==2.2.0
     # via flask
 jedi==0.19.1
     # via ipython
-jinja2==3.1.3
+jinja2==3.1.4
     # via
-    #   bokeh
+    #   fastapi
     #   flask
     #   jupyter-server
     #   jupyterlab
@@ -226,24 +234,24 @@ jinja2==3.1.3
     #   mlflow
     #   nbconvert
     #   nbdime
-joblib==1.4.0
+joblib==1.4.2
     # via
     #   dirty-cat
     #   graphistry
     #   pynndescent
     #   scikit-learn
-json5==0.9.24
+json5==0.9.25
     # via jupyterlab-server
-jsonpointer==2.4
+jsonpointer==3.0.0
     # via jsonschema
-jsonschema[format-nongpl]==4.21.1
+jsonschema[format-nongpl]==4.23.0
     # via
     #   jupyter-events
     #   jupyterlab-server
     #   nbformat
 jsonschema-specifications==2023.12.1
     # via jsonschema
-jupyter-client==8.6.1
+jupyter-client==8.6.2
     # via
     #   ipykernel
     #   jupyter-server
@@ -261,11 +269,10 @@ jupyter-events==0.10.0
     # via jupyter-server
 jupyter-lsp==2.2.5
     # via jupyterlab
-jupyter-server==2.13.0
+jupyter-server==2.14.2
     # via
     #   jupyter-lsp
     #   jupyter-server-mathjax
-    #   jupyter-server-proxy
     #   jupyterlab
     #   jupyterlab-git
     #   jupyterlab-server
@@ -273,50 +280,54 @@ jupyter-server==2.13.0
     #   notebook-shim
 jupyter-server-mathjax==0.2.6
     # via nbdime
-jupyter-server-proxy==4.1.2
-    # via jupyterlab-nvdashboard
 jupyter-server-terminals==0.5.3
     # via jupyter-server
-jupyterlab==4.1.6
+jupyterlab==4.2.4
+    # via
+    #   -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
+    #   jupyterlab-nvdashboard
+jupyterlab-git==0.50.1
     # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
-jupyterlab-git==0.50.0
-    # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
-jupyterlab-nvdashboard==0.5.0
+jupyterlab-nvdashboard==0.11.0
     # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
 jupyterlab-pygments==0.3.0
     # via nbconvert
-jupyterlab-server==2.26.0
+jupyterlab-server==2.27.3
     # via jupyterlab
-jupyterlab-widgets==3.0.10
+jupyterlab-widgets==3.0.11
     # via ipywidgets
 kiwisolver==1.4.5
     # via matplotlib
-llvmlite==0.42.0
+llvmlite==0.43.0
     # via
     #   numba
     #   pynndescent
-mako==1.3.2
+mako==1.3.5
     # via alembic
 markdown==3.6
     # via mlflow
+markdown-it-py==3.0.0
+    # via rich
 markupsafe==2.1.5
     # via
     #   jinja2
     #   mako
     #   nbconvert
     #   werkzeug
-matplotlib==3.8.4
+matplotlib==3.9.1
     # via
     #   -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
     #   mlflow
     #   seaborn
-matplotlib-inline==0.1.6
+matplotlib-inline==0.1.7
     # via
     #   ipykernel
     #   ipython
+mdurl==0.1.2
+    # via markdown-it-py
 mistune==3.0.2
     # via nbconvert
-mlflow==2.11.3
+mlflow==2.14.3
     # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
 multidict==6.0.5
     # via
@@ -324,7 +335,7 @@ multidict==6.0.5
     #   yarl
 nbclient==0.10.0
     # via nbconvert
-nbconvert==7.16.3
+nbconvert==7.16.4
     # via jupyter-server
 nbdime==4.0.1
     # via jupyterlab-git
@@ -335,7 +346,7 @@ nbformat==5.10.4
     #   nbclient
     #   nbconvert
     #   nbdime
-neo4j==5.19.0
+neo4j==5.22.0
     # via
     #   -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
     #   graphistry
@@ -351,14 +362,13 @@ networkx==3.2.1
     #   graphistry
 notebook-shim==0.2.4
     # via jupyterlab
-numba==0.59.1
+numba==0.60.0
     # via
     #   pynndescent
     #   umap-learn
 numpy==1.26.4
     # via
     #   -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
-    #   bokeh
     #   contourpy
     #   dgl
     #   dirty-cat
@@ -389,6 +399,7 @@ openpyxl==3.1.0
     # via graphistry
 opentelemetry-api==1.12.0
     # via
+    #   mlflow
     #   opentelemetry-exporter-jaeger-thrift
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-instrumentation
@@ -416,6 +427,7 @@ opentelemetry-proto==1.12.0
     # via opentelemetry-exporter-otlp-proto-grpc
 opentelemetry-sdk==1.12.0
     # via
+    #   mlflow
     #   opentelemetry-exporter-jaeger-thrift
     #   opentelemetry-exporter-otlp-proto-grpc
     #   splunk-opentelemetry
@@ -431,11 +443,10 @@ opentelemetry-util-http==0.33b0
     #   opentelemetry-instrumentation-fastapi
 overrides==7.7.0
     # via jupyter-server
-packaging==23.2
+packaging==24.1
     # via
-    #   bokeh
     #   deprecation
-    #   docker
+    #   faiss-cpu
     #   graphistry
     #   gunicorn
     #   huggingface-hub
@@ -453,7 +464,6 @@ palettable==3.3.3
 pandas==1.5.3
     # via
     #   -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
-    #   bokeh
     #   dirty-cat
     #   graphistry
     #   mlflow
@@ -466,25 +476,24 @@ pexpect==4.9.0
     # via
     #   ipython
     #   jupyterlab-git
-pillow==10.3.0
+pillow==10.4.0
     # via
-    #   bokeh
     #   matplotlib
     #   sentence-transformers
-platformdirs==4.2.0
+platformdirs==4.2.2
     # via jupyter-core
-portalocker==2.8.2
+portalocker==2.10.1
     # via torchdata
 prometheus-client==0.20.0
     # via jupyter-server
-prompt-toolkit==3.0.43
+prompt-toolkit==3.0.47
     # via ipython
 protobuf==3.20.3
     # via
     #   googleapis-common-protos
     #   mlflow
     #   opentelemetry-proto
-psutil==5.9.8
+psutil==6.0.0
     # via
     #   dgl
     #   ipykernel
@@ -493,7 +502,7 @@ ptyprocess==0.7.0
     # via
     #   pexpect
     #   terminado
-pure-eval==0.2.2
+pure-eval==0.2.3
     # via stack-data
 pyarrow==15.0.2
     # via
@@ -501,22 +510,23 @@ pyarrow==15.0.2
     #   mlflow
 pycparser==2.22
     # via cffi
-pydantic==2.6.4
+pydantic==2.8.2
     # via
     #   -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
     #   fastapi
-pydantic-core==2.16.3
+pydantic-core==2.20.1
     # via pydantic
-pygments==2.17.2
+pygments==2.18.0
     # via
     #   ipython
     #   nbconvert
     #   nbdime
-pynndescent==0.5.12
+    #   rich
+pynndescent==0.5.13
     # via umap-learn
-pynvml==11.5.0
+pynvml==11.5.3
     # via jupyterlab-nvdashboard
-pyopenssl==24.1.0
+pyopenssl==24.2.1
     # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
 pyparsing==3.1.2
     # via matplotlib
@@ -526,8 +536,12 @@ python-dateutil==2.9.0.post0
     #   jupyter-client
     #   matplotlib
     #   pandas
+python-dotenv==1.0.1
+    # via uvicorn
 python-json-logger==2.0.7
     # via jupyter-events
+python-multipart==0.0.9
+    # via fastapi
 pytz==2024.1
     # via
     #   mlflow
@@ -536,26 +550,26 @@ pytz==2024.1
     #   pandas
 pyyaml==6.0.1
     # via
-    #   bokeh
     #   huggingface-hub
     #   jupyter-events
     #   mlflow
     #   transformers
-pyzmq==25.1.2
+    #   uvicorn
+pyzmq==26.0.3
     # via
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
 querystring-parser==1.2.4
     # via mlflow
-referencing==0.34.0
+referencing==0.35.1
     # via
     #   jsonschema
     #   jsonschema-specifications
     #   jupyter-events
-regex==2023.12.25
+regex==2024.5.15
     # via transformers
-requests==2.31.0
+requests==2.32.3
     # via
     #   dgl
     #   dirty-cat
@@ -575,13 +589,15 @@ rfc3986-validator==0.1.1
     # via
     #   jsonschema
     #   jupyter-events
-rpds-py==0.18.0
+rich==13.7.1
+    # via typer
+rpds-py==0.19.0
     # via
     #   jsonschema
     #   referencing
-safetensors==0.4.2
+safetensors==0.4.3
     # via transformers
-scikit-learn==1.4.2
+scikit-learn==1.5.1
     # via
     #   dirty-cat
     #   graphistry
@@ -589,7 +605,7 @@ scikit-learn==1.4.2
     #   pynndescent
     #   sentence-transformers
     #   umap-learn
-scipy==1.13.0
+scipy==1.13.1
     # via
     #   dgl
     #   dirty-cat
@@ -603,10 +619,10 @@ seaborn==0.13.2
     # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
 send2trash==1.8.3
     # via jupyter-server
-sentence-transformers==2.6.1
+sentence-transformers==3.0.1
     # via graphistry
-simpervisor==1.0.0
-    # via jupyter-server-proxy
+shellingham==1.5.4
+    # via typer
 six==1.16.0
     # via
     #   asttokens
@@ -628,15 +644,15 @@ soupsieve==2.5
     # via beautifulsoup4
 splunk-opentelemetry[all]==1.8.0
     # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
-splunk-sdk==2.0.1
+splunk-sdk==2.0.2
     # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
-sqlalchemy==2.0.29
+sqlalchemy==2.0.31
     # via
     #   alembic
     #   mlflow
-sqlparse==0.4.4
+sqlparse==0.5.1
     # via mlflow
-squarify==0.4.3
+squarify==0.4.4
     # via graphistry
 stack-data==0.6.3
     # via ipython
@@ -648,13 +664,13 @@ terminado==0.18.1
     #   jupyter-server-terminals
 texttable==1.7.0
     # via igraph
-threadpoolctl==3.4.0
+threadpoolctl==3.5.0
     # via scikit-learn
 thrift==0.20.0
     # via opentelemetry-exporter-jaeger-thrift
-tinycss2==1.2.1
+tinycss2==1.3.0
     # via nbconvert
-tokenizers==0.15.2
+tokenizers==0.19.1
     # via transformers
 tomli==2.0.1
     # via jupyterlab
@@ -665,24 +681,22 @@ torch==1.13.1
     #   torchdata
 torchdata==0.5.1
     # via dgl
-tornado==6.4
+tornado==6.4.1
     # via
-    #   bokeh
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
-    #   jupyter-server-proxy
     #   jupyterlab
     #   nbdime
     #   terminado
-tqdm==4.66.2
+tqdm==4.66.4
     # via
     #   dgl
     #   huggingface-hub
     #   sentence-transformers
     #   transformers
     #   umap-learn
-traitlets==5.14.2
+traitlets==5.14.3
     # via
     #   comm
     #   ipykernel
@@ -692,18 +706,19 @@ traitlets==5.14.2
     #   jupyter-core
     #   jupyter-events
     #   jupyter-server
-    #   jupyter-server-proxy
     #   jupyterlab
     #   jupyterlab-git
     #   matplotlib-inline
     #   nbclient
     #   nbconvert
     #   nbformat
-transformers==4.39.3
+transformers==4.42.4
     # via sentence-transformers
+typer==0.12.3
+    # via fastapi-cli
 types-python-dateutil==2.9.0.20240316
     # via arrow
-typing-extensions==4.11.0
+typing-extensions==4.12.2
     # via
     #   alembic
     #   anyio
@@ -719,35 +734,44 @@ typing-extensions==4.11.0
     #   sqlalchemy
     #   starlette
     #   torch
+    #   typer
     #   uvicorn
 umap-learn==0.5.6
     # via graphistry
 uri-template==1.3.0
     # via jsonschema
-urllib3==2.2.1
+urllib3==2.2.2
     # via
     #   docker
     #   requests
     #   torchdata
-uvicorn==0.29.0
-    # via -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
+uvicorn[standard]==0.30.3
+    # via
+    #   -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
+    #   fastapi
+uvloop==0.19.0
+    # via uvicorn
+watchfiles==0.22.0
+    # via uvicorn
 wcwidth==0.2.13
     # via prompt-toolkit
-webcolors==1.13
+webcolors==24.6.0
     # via jsonschema
 webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
-websocket-client==1.7.0
+websocket-client==1.8.0
     # via jupyter-server
-werkzeug==3.0.2
+websockets==12.0
+    # via uvicorn
+werkzeug==3.0.3
     # via flask
 wheel==0.43.0
     # via
     #   nvidia-cublas-cu11
     #   nvidia-cuda-runtime-cu11
-widgetsnbextension==4.0.10
+widgetsnbextension==4.0.11
     # via
     #   -r /temp/compiled_base_functional_specific_rapids_golden-gpu-rapids.in
     #   ipywidgets
@@ -757,11 +781,9 @@ wrapt==1.16.0
     #   opentelemetry-instrumentation
 xlrd==2.0.1
     # via graphistry
-xyzservices==2024.4.0
-    # via bokeh
 yarl==1.9.4
     # via aiohttp
-zipp==3.18.1
+zipp==3.19.2
     # via
     #   importlib-metadata
     #   importlib-resources
