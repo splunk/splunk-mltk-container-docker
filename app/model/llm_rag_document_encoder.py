@@ -126,7 +126,7 @@ def apply(model,df,param):
         # Create document dataloader - recursively find data from sub-directories
         # Add desired file extensions in required_exts. For example: required_exts=[".csv", ".xml", ".pdf", ".docx", ".ipynb"]
         documents = SimpleDirectoryReader(
-            input_dir=data_path, recursive=True, file_extractor=file_extractor, required_exts=[".ipynb", ".csv", ".xml", ".pdf", ".txt"]
+            input_dir=data_path, recursive=True, file_extractor=file_extractor, required_exts=[".ipynb", ".csv", ".xml", ".pdf", ".txt", ".docx"]
         ).load_data()
     except:
         documents = None

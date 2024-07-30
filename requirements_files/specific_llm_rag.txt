@@ -38,6 +38,7 @@ llama-index-llms-azure-openai
 llama-index-embeddings-azure-openai
 llama-index-llms-bedrock
 llama-index-llms-openai
+llama-index-llms-gemini
 llama-index-readers-file
 sentence-transformers
 pydantic
