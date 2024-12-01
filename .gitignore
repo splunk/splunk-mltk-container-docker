@@ -117,3 +117,7 @@ testing/config.yaml
 certificates/*.key
 certificates/*.pem
 
+# prototype deployment files
+beta_content/passive_deployment_prototypes/prototype_ollama_example/compose_files/volumes/
+beta_content/passive_deployment_prototypes/prototype_ollama_example/volumes/
+beta_content/passive_deployment_prototypes/prototype_ollama_example/conf_files/containers.conf

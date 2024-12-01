@@ -10,7 +10,7 @@ if [ -z "$external_address" ]; then
   read -p "External Address - Enter the address of your container/environment/ingress relative to your users: " external_address
 fi
 
-docker compose -f ./compose_files/ollama-docker-compose.yml up --detach
+docker compose -f ./compose_files/full-rag-docker-compose.yml up --detach
 
 # Timeout
 timeout=10

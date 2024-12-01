@@ -1,0 +1,1 @@
+docker compose -f ./compose_files/infra-rag-docker-compose.yml up --detach
