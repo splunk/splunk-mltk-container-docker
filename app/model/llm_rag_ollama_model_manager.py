@@ -90,15 +90,20 @@ def apply(model,df,param):
         # embedder model
         if manager == "pull":
             model_name = param['options']['params']['model_name'].strip('\"').strip('\'')
-            modelPath = os.path.join("/srv/app/model/data", model_name)
-            try:
-                os.makedirs(modelPath)
-            except:
-                print("path already exists")
-            model = SentenceTransformer(model_name)
-            model.save(modelPath)
-            l = model_name
-            m = f"Downloaded embedder model {model_name}"
+            if model_name == "all-MiniLM-L6-v2" or model_name == "intfloat/multilingual-e5-large":
+                modelPath = os.path.join("/srv/app/model/data", model_name)
+                try:
+                    os.makedirs(modelPath)
+                except:
+                    print("path already exists")
+                model = SentenceTransformer(model_name)
+                model.save(modelPath)
+                l = model_name
+                m = f"Downloaded embedder model {model_name}"
+            else:
+                print("Model Not supported")
+                l = "None"
+                m = "Not supported model"
         else:
             print("Not supported")
             l = "None"
