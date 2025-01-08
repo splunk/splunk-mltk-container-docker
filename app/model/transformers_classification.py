@@ -128,14 +128,14 @@ def init(df,param):
         print(tag + "Model file in " + MODEL_NAME)
         model = BertClassifier(BERT_MODEL, l)
         model = model.to(device)
-        model.load_state_dict(torch.load(os.path.join(MODEL_NAME, "pytorch_model.pt"), map_location=torch.device(device)))
+        model.load_state_dict(torch.load(os.path.join(MODEL_NAME, "pytorch_model.pt"), map_location=torch.device(device)), strict=False)
     else:
         MODEL_NAME = os.path.join(MODEL_NAME, param['options']['params']['lang'], param['options']['params']['base_model'])
         BERT_MODEL = "/srv/app/model/data/classification/jp/bert_classification_jp"
         print(tag + "Model file in " + MODEL_NAME)
         model = BertClassifier(BERT_MODEL, l)
         model = model.to(device)
-        model.load_state_dict(torch.load(os.path.join(MODEL_NAME, "pytorch_model.pt"), map_location=torch.device(device)))
+        model.load_state_dict(torch.load(os.path.join(MODEL_NAME, "pytorch_model.pt"), map_location=torch.device(device)), strict=False)
         
 
     print(tag + "Model Initialization: successfully finished")
@@ -447,7 +447,7 @@ def apply(model,df,param):
     else:
         model = BertClassifier("/srv/app/model/data/classification/jp/bert_classification_jp",l)
     model = model.to(device)
-    model.load_state_dict(torch.load(os.path.join(MODEL_DIRECTORY, "pytorch_model.pt"), map_location=torch.device(device)))
+    model.load_state_dict(torch.load(os.path.join(MODEL_DIRECTORY, "pytorch_model.pt"), map_location=torch.device(device)), strict=False)
     print(tag + "Fine-tuned model reloaded.")
     model.eval()
     

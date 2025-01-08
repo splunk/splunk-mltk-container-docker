@@ -43,6 +43,7 @@ RUN /bin/bash -c "source activate base && pip install --no-cache-dir --upgrade -
 
 # creating new self signed certs
 RUN openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout dltk.key -out dltk.pem -subj="/CN=dsdl"
+COPY certificates .
 RUN mkdir /dltk/.jupyter/; mv dltk.key /dltk/.jupyter/dltk.key; mv dltk.pem /dltk/.jupyter/dltk.pem
 
 # Copy bootstrap entry point script
