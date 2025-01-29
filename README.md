@@ -1,8 +1,8 @@
 # Splunk App for Data Science and Deep Learning
 
 Splunk App for Data Science and Deep Learning (DSDL) 5.2.0
-formerly known as Deep Learning Toolkit for Splunk (DLTK) versions 2.3.0 - 3.9.0 and (DSDL) 5.0.0 - 5.2.0 published on [splunkbase](https://splunkbase.splunk.com/app/4607/)
-and DLTK version 4.x open sourced on [GitHub](https://github.com/splunk/deep-learning-toolkit)
+formerly known as Deep Learning Toolkit for Splunk (DLTK) versions 2.3.0 - 3.9.0 and (DSDL) 5.0.0 - 5.2.0 published on [splunkbase](https://splunkbase.splunk.com/app/4607/).
+There is also a prior DLTK version 4.x which was open sourced on [GitHub](https://github.com/splunk/deep-learning-toolkit) but is not actively maintained. Please make use of the latest version 5.2.0
 
 Copyright (C) 2005-2025 Splunk Inc. All rights reserved.  
 Author: [Philipp Drieger]()
@@ -12,7 +12,7 @@ Contributors: [Josh Cowling](https://www.linkedin.com/in/josh-cowling/), [Huaibo
 This repository contains the collection of resources, scripts, and testing frameworks that are used build and deploy the default container images used by the DSDL app. It can be used to modify, secure, update and change these containers and their build process to meet the needs of your enterprise environment.
 
 ## Resources
-This repository contains the container endpoint (`./app`), jupyter notebook configuration (`./config`) and examples (`./notebooks`), build scripts and the main Dockerfiles to create the [existing pre-built container images](https://hub.docker.com/u/phdrieger) for TensorFlow, PyTorch, NLP libraries and many other data science libraries for CPU and GPU.
+This repository contains the container endpoint (`./app`), jupyter notebook configuration (`./config`) and examples (`./notebooks`), build scripts and the main Dockerfiles to create the [existing pre-built container images](https://hub.docker.com/u/splunk?page=1&search=mltk-container) for TensorFlow, PyTorch, NLP libraries and many other data science libraries for CPU and GPU.
 
 ### Building containers 
 You can  your own containers with the `build.sh` script.
@@ -93,4 +93,4 @@ For development purposes the container images create self-signed certificates fo
 You can run your container locally, e.g. with `docker run -it --rm --name mltk-container-golden-image-cpu -p 5000:5000 -p 8888:8888 -p 6006:6006 -v mltk-container-data:/srv phdrieger/mltk-container-golden-image-cpu:5.0.0`
 
 ## Further documentation and usage
-Please find further information and documentation on splunkbase: [Download and install the Splunk App for Data Science and Deep Learning](https://splunkbase.splunk.com/app/4607/)
+Please find further information and documentation on splunkbase: [Download and install the Splunk App for Data Science and Deep Learning](https://splunkbase.splunk.com/app/4607/) and refer to the [official documentation pages](https://docs.splunk.com/Documentation/DSDL) on how to install and use the app.
