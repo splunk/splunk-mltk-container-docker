@@ -27,7 +27,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[5]:
+# In[3]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -45,7 +45,7 @@ def stage(name):
 
 
     
-# In[13]:
+# In[7]:
 
 
 # initialize the model
@@ -54,8 +54,9 @@ def stage(name):
 def init(df,param):
     # Load English parser and text blob (for sentiment analysis)
     model = spacy.load('en_core_web_sm')
-    spacy_text_blob = SpacyTextBlob()
-    model.add_pipe(spacy_text_blob)
+    #spacy_text_blob = SpacyTextBlob()
+    #model.add_pipe(spacy_text_blob)
+    model.add_pipe('spacytextblob')
     return model
 
 
@@ -65,7 +66,7 @@ def init(df,param):
 
 
     
-# In[15]:
+# In[9]:
 
 
 # returns a fit info json object
@@ -78,7 +79,7 @@ def fit(model,df,param):
 
 
     
-# In[36]:
+# In[14]:
 
 
 def apply(model,df,param):
@@ -87,9 +88,9 @@ def apply(model,df,param):
     
     for i in range(len(X)):
         doc = model(str(X[i]))
-        polarity=doc._.sentiment.polarity
-        subjectivity=doc._.sentiment.subjectivity
-        assessments=doc._.sentiment.assessments
+        polarity=doc._.blob.polarity
+        subjectivity=doc._.blob.subjectivity
+        assessments=doc._.blob.sentiment_assessments.assessments
         temp_data.append([polarity,subjectivity,assessments])
         
     column_names=["polarity","subjectivity","assessments"]
@@ -104,7 +105,7 @@ def apply(model,df,param):
 
 
     
-# In[ ]:
+# In[16]:
 
 
 # save model to name in expected convention "<algo_name>_<model_name>.h5"
@@ -119,7 +120,7 @@ def save(model,name):
 
 
     
-# In[ ]:
+# In[17]:
 
 
 # load model from name in expected convention "<algo_name>_<model_name>.h5"
@@ -132,7 +133,7 @@ def load(name):
 
 
     
-# In[ ]:
+# In[18]:
 
 
 # return model summary

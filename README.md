@@ -1,6 +1,6 @@
 # Splunk App for Data Science and Deep Learning
 
-Splunk App for Data Science and Deep Learning (DSDL) 5.1.2
+Splunk App for Data Science and Deep Learning (DSDL) 5.2.0
 formerly known as Deep Learning Toolkit for Splunk (DLTK) versions 2.3.0 - 3.9.0 and DSDL 5.0.0 - 5.1.2 published on [splunkbase](https://splunkbase.splunk.com/app/4607/)
 and DLTK version 4.x open sourced on [GitHub](https://github.com/splunk/deep-learning-toolkit)
 

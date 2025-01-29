@@ -1,30 +1,3 @@
-# FastAPI stack
-#fastapi>=0.68.0,<0.69.0
-fastapi>=0.109.1
-#pydantic>=1.8.0,<2.0.0
-pydantic
-#uvicorn>=0.15.0,<0.16.0
-uvicorn
-aiofiles
-pyopenssl 
-
-# jupyter
-jupyterlab>4.0.0
-
-#interactive python dependancies
-ipywidgets
-jupyterlab-git
-widgetsnbextension
-matplotlib
-
-# splunk functionality dependancies
-splunk-sdk
-splunk-opentelemetry[all]
-opentelemetry-instrumentation-fastapi==0.33b0
-
-# basic data-science libraries
-pandas
-numpy
 
 
 datashader
@@ -62,6 +35,17 @@ spacy==2.3.2
 spacytextblob==0.1.7
 
 pymilvus
+llama-index
+llama-index-llms-ollama
+llama-index-vector-stores-milvus
+llama-index-embeddings-huggingface
+llama-index-embeddings-instructor
+sentence-transformers
+pydantic
+PyPDF2
+PyYAML
+
+
 
  --extra-index-url https://download.pytorch.org/whl/cpu
  torch

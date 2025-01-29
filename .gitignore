@@ -117,3 +117,5 @@ testing/config.yaml
 certificates/*.key
 certificates/*.pem
 
+# generated volumes folders
+beta_content/passive_deployment_prototypes/prototype_ollama_example/compose_files/volumes/*

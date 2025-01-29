@@ -6,18 +6,16 @@ seaborn
 dask-ml
 dask-labextension
 pyarrow>=14.0.1
-#dask-expr
 
 scipy
 scikit-learn
 networkx
 
 tensorflow-cpu
-#dask-xgboost 
 mlflow>=2.9.2
 
 prophet
-xgboost
+xgboost>=2.1.0
 shap
 lime 
 umap-learn 
@@ -40,6 +38,8 @@ pymilvus
  torch
 
 onnx
+onnxscript
+onnxruntime
 tf2onnx
 skl2onnx
 Levenshtein

@@ -10,6 +10,7 @@ ENV PATH /dltk/.local/bin:/dltk/.local/lib/python3.9/site-packages/:$PATH
 ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC 
 
 # curl not installed in some images :(
+# RUN apt-get clean && apt-get update --allow-unauthenticated
 RUN apt-get update
 RUN apt-get install curl -y
 
@@ -43,12 +44,21 @@ RUN if pip3 freeze | grep -q spacy;\
 
 # creating new self signed certs
 RUN openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout dltk.key -out dltk.pem -subj="/CN=dsdl"
+COPY certificates .
 RUN mkdir /dltk/.jupyter/; mv dltk.key /dltk/.jupyter/dltk.key; mv dltk.pem /dltk/.jupyter/dltk.pem
 
 # Copy bootstrap entry point script
 COPY ./bootstrap_scripts/bootstrap_fast.sh /dltk/
+COPY ./bootstrap_scripts/bootstrap_backup.sh /dltk/
 COPY app /dltk/app
 COPY notebooks /dltk/notebooks
+
+# Install dos2unix, then convert windows-like line endings to linux-like
+# The bootstrap script won't run otherwise if the image was build on a windows machine
+# Finally, remove dos2unix again
+RUN apt-get update && apt-get install -y dos2unix
+RUN find /dltk/ -name 'bootstrap_*.sh' -type f -exec dos2unix {} \;
+RUN apt-get --purge remove -y dos2unix && rm -rf /var/lib/apt/lists/*
 
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages

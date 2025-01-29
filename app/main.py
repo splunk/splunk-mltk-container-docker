@@ -1,10 +1,12 @@
-# Deep Learning Toolkit for Splunk 5.0.0
-# Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2022
+# Deep Learning Toolkit for Splunk 5.2.0
+# Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2024
 # -------------------------------------------------------------------------------
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Header
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
+
+from fastapi import HTTPException, status
 
 from importlib import import_module, reload
 import pandas as pd
@@ -44,6 +46,41 @@ app.mount("/graphics", StaticFiles(directory=app.graphics_path), name="graphics"
 # helper function: clean param
 def get_clean_param(p):
     return p.lstrip('\"').rstrip('\"')
+
+# perform token validation
+def validate_token(header):
+    token = ''
+    # check if token is setup and defined correctly
+    if header==None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No header with token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    # check if token is setup and defined correctly
+    if not 'api_token' in os.environ:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No token setup",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    token = os.environ['api_token']
+    if len(token)==0:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No token defined",
+            headers={"WWW-Authenticate": "Bearer"},
+        )    
+    # check if token is matching
+    if not token in header:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    # success if we did not fail and raise exceptions on the steps before
+    return True
+
 # -------------------------------------------------------------------------------
 # MAIN APP enpoint definitions
 # -------------------------------------------------------------------------------
@@ -55,22 +92,24 @@ async def favicon():
 # -------------------------------------------------------------------------------
 # get general information
 @app.get('/')
-def get_root():
-    return get_summary()
+def get_root(authorization: str = Header(None)):
+    return get_summary(authorization)
 
 # -------------------------------------------------------------------------------
 # get model summary
 @app.get('/summary')
-def get_summary():
+def get_summary(authorization: str = Header(None)):
     return_object = {
         'app': 'Splunk App for Data Science and Deep Learning',
-        'version': '5.0.0',
+        'version': '5.2.0',
         'model': 'no model exists'
     }
-    if "model" in app.Model:
-        return_object["model"] = str(app.Model["model"])
-        if "algo" in app.Model:
-            return_object["model_summary"] = app.Model["algo"].summary(app.Model["model"])
+    if validate_token(authorization):
+        return_object["token"] = "valid"
+        if "model" in app.Model:
+            return_object["model"] = str(app.Model["model"])
+            if "algo" in app.Model:
+                return_object["model_summary"] = app.Model["algo"].summary(app.Model["model"])
     return json.dumps(return_object)
 
 
@@ -78,11 +117,16 @@ def get_summary():
 # fit endpoint 
 # expects json object { 'data' : '<string of csv serialized pandas dataframe>', 'meta' : {<json dict object for parameters>}}
 @app.post('/fit')
-async def set_fit(request : Request):
+async def set_fit(request : Request, authorization: str = Header(None)):
     # prepare a return object
     response = {}
     response['status'] = 'error'
     response['message'] = '/fit: ERROR: '
+    # 0. validate endpoint security token
+    if not validate_token(authorization):
+        response["message"] += 'unauthorized: invalid or missing token'
+        return response
+
     # 1. validate input POST data
     try:
         dp = await request.json()
@@ -215,11 +259,15 @@ async def set_fit(request : Request):
 # fit routine 
 # expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
 @app.post('/apply')
-async def set_apply(request : Request):
+async def set_apply(request : Request, authorization: str = Header(None)):
     # prepare a return object
     response = {}
     response["status"] = "error"
     response["message"] = "/apply: ERROR: "
+    # 0. validate endpoint security token
+    if not validate_token(authorization):
+        response["message"] += 'unauthorized: invalid or missing token'
+        return response
 
     # 1. validate input POST data
     try:
@@ -300,7 +348,7 @@ async def set_compute(request : Request):
     response = {}
     response["status"] = "error"
     response["message"] = "/compute: ERROR: "
-
+    #print("This is a new compute function")
     # 1. validate input POST data
     try:
         dp = await request.json()
@@ -328,80 +376,23 @@ async def set_compute(request : Request):
 
         del(app.Model["data"])
         # memorize model name
-        app.Model["model_name"] = "default"
+        app.Model["algo_name"] = app.Model["meta"]['algo']
+        app.Model["algo"] = import_module("app.model." + app.Model["algo_name"])
         #if "model_name" in app.Model["meta"]["options"]:
         #    app.Model["model_name"] = app.Model["meta"]["options"]["model_name"]
-        print("/compute: model name: " + app.Model["model_name"])
+        print("/compute: model name: " + app.Model["algo_name"])
 
     except Exception as e:
         response["message"] += 'unable to convert raw data to DictReader object. Ended with exception: ' + str(e)
         print("/compute: conversion error: " + str(e))
         return response
     
-    # simple index gen and pass through
-    response["results"] = json.dumps([{'predicted':i} for i, row in enumerate(app.Model["df"], start=1)])
+    df_result = app.Model["algo"].compute(None, app.Model["df"], app.Model["meta"])
+    #print("Finished computation")
+    response["results"] = json.dumps(df_result)
     
     # end with a successful response
     response["status"] = "success"
     response["message"] = "/compute done successfully"
     return response
 
-# -------------------------------------------------------------------------------
-# stream routine (experimental)
-# expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
-@app.post('/stream')
-async def set_stream(request : Request):
-    # prepare a return object
-    response = {}
-    response["status"] = "error"
-    response["message"] = "/stream: ERROR: "
-    
-    # 1. validate input POST data
-    try:
-        dp = await request.json()
-        #print("/stream: raw data: ", str(dp))
-        streamed_data = dp["data"]
-        print("/stream: raw data size: ", len(str(streamed_data)))
-        streamed_meta = dp["meta"]
-        print("/stream: meta info: ", str(streamed_meta))
-
-    except Exception as e:
-        response["message"] += 'unable to parse json from POST data. Provide a JSON object with structure { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}. Ended with exception: ' + str(e)
-        print("/stream: data input error: " + str(e))
-        return response
-    
-    # 2. convert to dataframe 
-    try:
-        streamed_path = os.path.join(app.data_path, streamed_meta['splunk_sid'])
-        print("/stream: path: " + streamed_path)
-        if not os.path.exists(streamed_path):
-            os.path.mkdir(streamed_path)
-        streamed_filename = 'chunk'.str(len(str(streamed_data)))
-        streamed_destination = os.path.join(streamed_path, streamed_filename)
-        with open(streamed_destination, 'wb') as buf:
-            buf.write(streamed_data)
-            
-        print("/stream: written to: " + streamed_destination)
-
-    except Exception as e:
-        response["message"] += 'unable to convert raw data to stream destination. Ended with exception: ' + str(e)
-        print("/stream: conversion error: " + str(e))
-        return response
-    
-    # simple index gen and pass through
-    response["results"] = json.dumps({'stream_destination':streamed_destination, 'stream_chunk_size':str(len(str(streamed_data)))})
-    
-    # end with a successful response
-    response["status"] = "success"
-    response["message"] = "/stream done successfully"
-    return response
-
-# -------------------------------------------------------------------------------
-# python entry point to run the fastapi via uvicorn
-#if __name__ == "__main__":
-#    kwargs = {}
-#    if os.getenv('ENABLE_HTTPS', 'true').lower() == 'true':
-#        # add certificate if HTTPS is enabled
-#        kwargs['ssl_keyfile'] = os.getenv('API_SSL_KEY', '/dltk/.jupyter/dltk.key')
-#        kwargs['ssl_certfile'] = os.getenv('API_SSL_CERT', '/dltk/.jupyter/dltk.pem')
-#    uvicorn.run('app.main:app', host='0.0.0.0', port=int(os.getenv('API_PORT', 5000)), log_level='info', **kwargs)
