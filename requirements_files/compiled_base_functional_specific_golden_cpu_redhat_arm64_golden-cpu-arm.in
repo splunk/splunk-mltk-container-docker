@@ -1,0 +1,74 @@
+# FastAPI stack
+fastapi>=0.109.1
+pydantic
+uvicorn
+aiofiles
+pyopenssl 
+
+# jupyter
+jupyterlab>4.0.0
+
+#interactive python dependancies
+ipywidgets
+jupyterlab-git
+widgetsnbextension
+matplotlib
+
+# splunk functionality dependancies
+splunk-sdk
+splunk-opentelemetry[all]
+opentelemetry-instrumentation-fastapi==0.33b0
+
+# basic data-science libraries
+pandas
+numpy
+datashader
+seaborn
+
+mlflow>=2.9.2
+
+scipy
+scikit-learn
+networkx
+tensorflow
+
+prophet 
+xgboost
+shap 
+lime 
+umap-learn 
+tslearn 
+kmodes 
+imbalanced-learn 
+stumpy 
+tqdm 
+bocd 
+rrcf 
+pyod 
+suod
+#pymc3
+
+#Spacy does not compile in ubi9 because of blis and thinc
+#spacy==2.3.2
+#spacytextblob==0.1.7
+#spacy
+#spacytextblob
+
+onnx
+onnxscript
+onnxruntime
+tf2onnx
+skl2onnx
+Levenshtein
+imagehash
+plotly
+boto3
+pomegranate
+statsmodels
+
+# CPU version of pytorch seems to fail to install on redhat, may be a server side issue?
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torch_geometric
+pygod
+pytorch_tabular

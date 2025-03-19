@@ -7,3 +7,4 @@ golden-gpu-rapids,rapidsai/base:24.04-cuda12.2-py3.9,Dockerfile.debian.rapids,ba
 ubi-llm-rag,redhat/ubi9,Dockerfile.redhat,base_functional.txt,specific_llm_rag.txt,none,Dockerfile.redhat.requirements,Red Hat LLM RAG CPU (5.2.0)
 escu-cpu,python:3.9.19-slim-bullseye,Dockerfile.debian.escu,base_functional.txt,specific_escu.txt,none,Dockerfile.debian.requirements,ESCU (5.2.0)
 spark,quay.io/jupyter/all-spark-notebook:spark-3.5.1,Dockerfile.debian.spark,base_functional.txt,specific_spark.txt,none,Dockerfile.debian.requirements,Spark 3.5.0 (5.2.0)
+golden-cpu-arm,redhat/ubi9,Dockerfile.redhat,base_functional.txt,specific_golden_cpu_redhat_arm64.txt,none,Dockerfile.redhat.requirements,Red Hat UBI Golden CPU ARM (5.2.1)
