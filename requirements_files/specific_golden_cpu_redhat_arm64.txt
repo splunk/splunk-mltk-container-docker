@@ -46,5 +46,14 @@ statsmodels
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch
 torch_geometric
+#pyg-lib
+#pyg-lib -f https://data.pyg.org/whl/torch-2.5.0+cpu.html
+#torch-sparse
 pygod
 pytorch_tabular
+
+# graph database drivers
+neo4j
+pydgraph
+protobuf
+grpcio
