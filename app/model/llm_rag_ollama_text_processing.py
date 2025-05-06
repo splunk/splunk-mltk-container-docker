@@ -3,7 +3,7 @@
 
 
     
-# In[2]:
+# In[1]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
@@ -11,6 +11,9 @@ import json
 import numpy as np
 import pandas as pd
 import requests
+import time
+from llama_index.core.llms import ChatMessage
+from app.model.llm_utils import create_llm, create_embedding_model
 # ...
 # global constants
 ollama_url = "http://ollama:11434"
@@ -75,14 +78,8 @@ def fit(model,df,param):
 
 
 
-
-
-
-
-
-
     
-# In[ ]:
+# In[12]:
 
 
 # from fit command, we will pass parameters model and prompt.
@@ -90,32 +87,60 @@ def fit(model,df,param):
 #                Only output **Phishing** if the content is phishing. 
 #                Only output **Legit** if the email is legitimate. Do not give extra information.
 def apply(model,df,param):
-    X = df["text"].values.tolist()
-    uri = f"{ollama_url}/api/chat"
-    headers = {'Content-Type': 'application/json'}
+    try:
+        X = df["text"].values.tolist()
+    except:
+        cols={'Result': ["ERROR: Please make sure you have a field in the search result named \'text\'"], 'Duration': ["ERROR"]}
+        returns=pd.DataFrame(data=cols)
+        return returns
+
+    try:
+        prompt = param['options']['params']['prompt'].strip("\"")
+    except:
+        cols={'Result': ["ERROR: Please make sure you set the parameter \'prompt\'"], 'Duration': ["ERROR"]}
+        returns=pd.DataFrame(data=cols)
+        return returns
+
+    try:
+        service = param['options']['params']['llm_service'].strip("\"")
+        print(f"Using {service} LLM service.")
+    except:
+        service = "ollama"
+        print("Using default Ollama LLM service.")
+        
+    try:
+        model_name = param['options']['params']['model_name'].strip("\"")
+    except:
+        model_name = None
+        print("No model name specified")
+
+    llm, m = create_llm(service=service, model=model_name)
+
+    if llm is None:
+        cols={'Result': [m], 'Duration': ["ERROR"]}
+        returns=pd.DataFrame(data=cols)
+        return returns
+
     outputs_label = []
     outputs_duration = []
+
+    
     for i in range(len(X)):
         messages = [
-            {"role": "user", "content": param['options']['params']['prompt'].strip("\"")},
-            {"role": "user", "content": X[i]}
+            ChatMessage(role="user", content=X[i]),
+            ChatMessage(role="user", content=param['options']['params']['prompt'].strip("\"")),
         ]
-        
-        data = {
-            "model": param['options']['params']['model_name'].strip("\""),
-            "messages": messages,
-            "stream": False,
-        }
-        
-        data = json.dumps(data)
+        start_time = time.time()
+
         try:
-            response = requests.post(uri, headers=headers, data=data).json()
-            outputs_label.append(response['message']['content'])
-            duration = round(int(response['total_duration']) / 1000000000, 2)
+            response = llm.chat(messages)
+            end_time = time.time()
+            outputs_label.append(response)
+            duration = round(end_time - start_time,2)
             duration = str(duration) + " s"
             outputs_duration.append(duration)
-        except:
-            outputs_label.append("ERROR")
+        except Exception as e:
+            outputs_label.append(f"ERROR at LLM generation: {e}")
             outputs_duration.append("ERROR")
         
     cols={'Result': outputs_label, 'Duration': outputs_duration}
@@ -158,7 +183,7 @@ def load(name):
 
 
     
-# In[ ]:
+# In[21]:
 
 
 # return a model summary
@@ -167,35 +192,64 @@ def summary(model=None):
     return returns
 
 def compute(model,df,param):
-    uri = f"{ollama_url}/api/chat"
-    headers = {'Content-Type': 'application/json'}
-    cols = []
-    for i in range(len(df)):
-        col = {}
-        X = df[i]["text"]
+    try:
+        X = df["text"].values.tolist()
+    except:
+        cols={'Result': ["ERROR: Please make sure you have a field in the search result named \'text\'"], 'Duration': ["ERROR"]}
+        returns=pd.DataFrame(data=cols)
+        return returns
+
+    try:
+        prompt = param['options']['params']['prompt'].strip("\"")
+    except:
+        cols={'Result': ["ERROR: Please make sure you set the parameter \'prompt\'"], 'Duration': ["ERROR"]}
+        returns=pd.DataFrame(data=cols)
+        return returns
+
+    try:
+        service = param['options']['params']['llm_service'].strip("\"")
+        print(f"Using {service} LLM service.")
+    except:
+        service = "ollama"
+        print("Using default Ollama LLM service.")
+        
+    try:
+        model_name = param['options']['params']['model_name'].strip("\"")
+    except:
+        model_name = None
+        print("No model name specified")
+
+    llm, m = create_llm(service=service, model=model_name)
+
+    if llm is None:
+        cols={'Result': [m], 'Duration': ["ERROR"]}
+        returns=pd.DataFrame(data=cols)
+        return returns
+
+    outputs_label = []
+    outputs_duration = []
+
+    
+    for i in range(len(X)):
         messages = [
-            {"role": "user", "content": param['params']['prompt'].strip("\"")},
-            {"role": "user", "content": X}
+            ChatMessage(role="user", content=X[i]),
+            ChatMessage(role="user", content=param['options']['params']['prompt'].strip("\"")),
         ]
-        
-        data = {
-            "model": param['params']['model_name'].strip("\""),
-            "messages": messages,
-            "stream": False,
-        }
-        
-        data = json.dumps(data)
+        start_time = time.time()
+
         try:
-            response = requests.post(uri, headers=headers, data=data).json()
-            col['Result'] = response['message']['content']
-            duration = round(int(response['total_duration']) / 1000000000, 2)
+            response = llm.chat(messages)
+            end_time = time.time()
+            outputs_label.append(response)
+            duration = round(end_time - start_time,2)
             duration = str(duration) + " s"
-            col['Duration'] = duration
-        except:
-            col['Result'] = "ERROR"
-            col['Duration'] = "ERROR"
-        cols.append(col)
-    returns=cols
+            outputs_duration.append(duration)
+        except Exception as e:
+            outputs_label.append(f"ERROR at LLM generation: {e}")
+            outputs_duration.append("ERROR")
+        
+    cols={'Result': outputs_label, 'Duration': outputs_duration}
+    returns=pd.DataFrame(data=cols)
     return returns
 
 

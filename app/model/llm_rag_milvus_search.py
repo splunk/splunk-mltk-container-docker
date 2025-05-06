@@ -12,14 +12,12 @@ import numpy as np
 import pandas as pd
 import os
 import time
-import pymilvus
-from pymilvus import (
-    connections,
-    utility,
-    FieldSchema, CollectionSchema, DataType,
-    Collection,
-)
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.core import VectorStoreIndex, ServiceContext, Settings
+from llama_index.vector_stores.milvus import MilvusVectorStore
+from llama_index.core.vector_stores import ExactMatchFilter, MetadataFilter
+from llama_index.core.bridge.pydantic import BaseModel, StrictFloat, StrictInt, StrictStr
+from llama_index.core.schema import BaseComponent, BaseNode, TextNode
+from app.model.llm_utils import create_llm, create_embedding_model, create_vector_db
 # ...
 # global constants
 MODEL_DIRECTORY = "/srv/app/model/data/"
@@ -31,7 +29,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[3]:
+# In[2]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -49,7 +47,7 @@ def stage(name):
 
 
     
-# In[6]:
+# In[4]:
 
 
 # initialize your model
@@ -57,31 +55,6 @@ def stage(name):
 # returns the model object which will be used as a reference to call fit, apply and summary subsequently
 def init(df,param):
     model = {}
-        
-    pk_type=DataType.VARCHAR        
-    embedding_type=DataType.FLOAT_VECTOR
-    
-    try:
-        collection_name=param['options']['params']['collection_name'].strip('\"')
-    except:
-        collection_name="default_collection"
-    
-    print("start connecting to Milvus")
-    # this hostname may need changing to a specific local docker network ip address depending on docker configuration
-    connections.connect("default", host="milvus-standalone", port="19530")
-
-    collection_exists = utility.has_collection(collection_name)
-    
-    if collection_exists:
-        print(f"The collection {collection_name} already exists")
-        collection = Collection(collection_name)
-        collection.load()
-    else:
-        print(f"The collection {collection_name} does not exist")
-        raise Exception("The collection {collection_name} does not exist. Create it by sending data to a collection with that name using the push_to_milvus algo.")
-    
-    model['collection']=collection
-    model['collection_name']=collection_name
     return model
 
 
@@ -108,69 +81,113 @@ def fit(model,df,param):
 
 
     
-# In[14]:
+# In[9]:
 
 
-# apply your model
-# returns the calculated results
 def apply(model,df,param):
-    use_local= int(param['options']['params']['use_local'])
+    try:
+        vec_service = param['options']['params']['vectordb_service'].strip('\"')
+        print(f"Using {vec_service} vector database service")
+    except:
+        vec_service = "milvus"
+        print("Using default Milvus vector database service")
+        
+    try:
+        service = param['options']['params']['embedder_service'].strip('\"')
+        print(f"Using {service} embedding service")
+    except:
+        service = "huggingface"
+        print("Using default Huggingface embedding service")
+
+    try:
+        use_local= int(param['options']['params']['use_local'])
+    except:
+        use_local = 0
+        print("Not using local model") 
+            
     try:
         embedder_name=param['options']['params']['embedder_name'].strip('\"')
     except:
-        embedder_name = 'all-MiniLM-L6-v2'
-    if use_local:
-        embedder_name = f'/srv/app/model/data/{embedder_name}'
-        print("Using local embedding model checkpoints") 
-    transformer_embedder = HuggingFaceEmbedding(model_name=embedder_name)
+        embedder_name = None
+        print("Model name not specified") 
     
     try:
-        top_k=int(param['options']['params']['top_k'])
+        embedder_dimension=int(param['options']['params']['embedder_dimension'])
     except:
-        top_k=3
+        embedder_dimension=None
+        print("Model dimension not specified") 
+
+    try:
+        embedder, output_dims, m = create_embedding_model(service=service, model=embedder_name, use_local=use_local)
+
+        if embedder is not None:
+            print(m)
+        else:
+            cols = {"Results": [f"ERROR in embedding model loading: {m}. "]}
+            returns = pd.DataFrame(data=cols)
+            return returns
+        if output_dims:
+            embedder_dimension = output_dims 
+    except Exception as e:
+        cols = {"Results": [f"Failed to initiate embedding model. ERROR: {e}"]}
+        returns = pd.DataFrame(data=cols)
+        return returns
+
+    try:
+        collection_name = param['options']['params']['collection_name'].strip('\"')
+    except:
+        cols = {"Results": ["Please specify a collection_name parameter as the vector search target"]}
+        returns = pd.DataFrame(data=cols)
+        return returns
+        
+    try:
+       top_k=int(param['options']['params']['top_k'])
+    except:
+        top_k=5
+        print("Using top 5 results by default")
         
     try:
         splitter=param['options']['params']['splitter']
     except:
         splitter="|"
-    
-    text_column = df['text'].astype(str).tolist()
 
-    vector_column = []
-    for text in text_column:
-        vector_column.append(transformer_embedder.get_text_embedding(text))
+    try:
+        Settings.llm = None
+        Settings.embed_model = embedder
+        vector_store, v_m = create_vector_db(service=vec_service, collection_name=collection_name, dim=embedder_dimension)
+        if vector_store is None:
+            cols = {"Results": [f"Could not connect to vectordb. ERROR: {v_m}"]}
+            result = pd.DataFrame(data=cols)
+            return result
+        index = VectorStoreIndex.from_vector_store(
+           vector_store=vector_store
+        )
+        retriever = index.as_retriever(similarity_top_k=top_k)
+    except Exception as e:
+        cols = {"Results": [f"Could not load collection. ERROR: {e}"]}
+        result = pd.DataFrame(data=cols)
+        return result
     
-    search_params = {
-        "metric_type": "L2",
-        "params": {"nprobe": 10},
-    }
-    output_fields = [item.name for item in model['collection'].schema.fields]
-    output_fields.remove('embeddings')
-    results = model['collection'].search(data=vector_column, anns_field="embeddings", param=search_params, limit=top_k, output_fields=output_fields)
-    l = []
-    f = []
-    output_fields.remove('label')
-    for result in results:
-        x = ''
-        y = ''
-        for r in result:
-            t = {}
-            # t['data'] = r.entity.get('label')
-            for field in output_fields:
-                t[field] = r.entity.get(field)
-            x += str(t)
-            x += splitter
-            y += r.entity.get('label')
-            y += splitter
-        xs = x.rstrip(splitter)
-        ys = y.rstrip(splitter)
-        l.append(ys) 
-        f.append(xs)
+    try:
+        query = df['text'].astype(str).tolist()[0]
+    except Exception as e:
+        cols = {"Results": [f"Failed to read input data. ERROR: {e}. Make sure you have an input field called text"]}
+        returns = pd.DataFrame(data=cols)
+        return returns
+
+    retrieved_nodes = retriever.retrieve(query)
+    try:
+        result = pd.DataFrame([{"Score": node.score, "Results": node.text} for node in retrieved_nodes])
+        meta = pd.DataFrame([node.metadata for node in retrieved_nodes])
+        result[meta.columns] = meta
+    except Exception as e:
+        cols = {"Results": [f"ERROR: {e}"]}
+        return pd.DataFrame(data=cols)
+    if not len(result):
+        cols = {"Results": ["ERROR: No result returned"]}
+        return pd.DataFrame(data=cols)
     
-    
-    cols = {"Results": l, "Fields": f}
-    returns = pd.DataFrame(data=cols)
-    return returns
+    return result
 
 
 
@@ -217,89 +234,110 @@ def summary(model=None):
     returns = {"version": {"numpy": np.__version__, "pandas": pd.__version__} }
     return returns
 
-def compute(model, df,param):
-    model = {}
-        
-    pk_type=DataType.VARCHAR        
-    embedding_type=DataType.FLOAT_VECTOR
+def compute(model,df,param):
+    try:
+        vec_service = param['options']['params']['vectordb_service'].strip('\"')
+        print(f"Using {vec_service} vector database service")
+    except:
+        vec_service = "milvus"
+        print("Using default Milvus vector database service")
     
     try:
-        collection_name=param['params']['collection_name'].strip('\"')
+        service = param['options']['params']['embedder_service'].strip('\"')
+        print(f"Using {service} embedding service")
     except:
-        collection_name="default_collection"
-    
-    print("start connecting to Milvus")
-    # this hostname may need changing to a specific local docker network ip address depending on docker configuration
-    connections.connect("default", host="milvus-standalone", port="19530")
+        service = "huggingface"
+        print("Using default Huggingface embedding service")
 
-    collection_exists = utility.has_collection(collection_name)
-    
-    if collection_exists:
-        print(f"The collection {collection_name} already exists")
-        collection = Collection(collection_name)
-        collection.load()
-    else:
-        print(f"The collection {collection_name} does not exist")
-        raise Exception("The collection {collection_name} does not exist. Create it by sending data to a collection with that name using the push_to_milvus algo.")
-    
-    model['collection']=collection
-    model['collection_name']=collection_name
-    
-    use_local= int(param['params']['use_local'])
     try:
-        embedder_name=param['params']['embedder_name'].strip('\"')
+        use_local= int(param['options']['params']['use_local'])
     except:
-        embedder_name = 'all-MiniLM-L6-v2'
-    if use_local:
-        embedder_name = f'/srv/app/model/data/{embedder_name}'
-        print("Using local embedding model checkpoints") 
-    transformer_embedder = HuggingFaceEmbedding(model_name=embedder_name)
+        use_local = 0
+        print("Not using local model") 
+            
+    try:
+        embedder_name=param['options']['params']['embedder_name'].strip('\"')
+    except:
+        embedder_name = None
+        print("Model name not specified") 
     
     try:
-        top_k=int(param['params']['top_k'])
+        embedder_dimension=int(param['options']['params']['embedder_dimension'])
     except:
-        top_k=3
+        embedder_dimension=None
+        print("Model dimension not specified") 
+
+    try:
+        embedder, output_dims, m = create_embedding_model(service=service, model=embedder_name, use_local=use_local)
+
+        if embedder is not None:
+            print(m)
+        else:
+            cols = {"Results": [f"ERROR in embedding model loading: {m}. "]}
+            returns = pd.DataFrame(data=cols)
+            return returns
+        if output_dims:
+            embedder_dimension = output_dims 
+    except Exception as e:
+        cols = {"Results": [f"Failed to initiate embedding model. ERROR: {e}"]}
+        returns = pd.DataFrame(data=cols)
+        return returns
+
+    try:
+        collection_name = param['options']['params']['collection_name'].strip('\"')
+    except:
+        cols = {"Results": ["Please specify a collection_name parameter as the vector search target"]}
+        returns = pd.DataFrame(data=cols)
+        return returns
         
     try:
-        splitter=param['params']['splitter']
+       top_k=int(param['options']['params']['top_k'])
+    except:
+        top_k=5
+        print("Using top 5 results by default")
+        
+    try:
+        splitter=param['options']['params']['splitter']
     except:
         splitter="|"
-    
 
-    vector_column = []
-    for i in range(len(df)):
-        vector_column.append(transformer_embedder.get_text_embedding(df[i]['text']))
+    try:
+        Settings.llm = None
+        Settings.embed_model = embedder
+        vector_store, v_m = create_vector_db(service=vec_service, collection_name=collection_name, dim=embedder_dimension)
+        if vector_store is None:
+            cols = {"Results": [f"Could not connect to vectordb. ERROR: {v_m}"]}
+            result = pd.DataFrame(data=cols)
+            return result
+        index = VectorStoreIndex.from_vector_store(
+           vector_store=vector_store
+        )
+        retriever = index.as_retriever(similarity_top_k=top_k)
+    except Exception as e:
+        cols = {"Results": [f"Could not load collection. ERROR: {e}"]}
+        result = pd.DataFrame(data=cols)
+        return result
     
-    search_params = {
-        "metric_type": "L2",
-        "params": {"nprobe": 10},
-    }
-    output_fields = [item.name for item in model['collection'].schema.fields]
-    output_fields.remove('embeddings')
-    results = model['collection'].search(data=vector_column, anns_field="embeddings", param=search_params, limit=top_k, output_fields=output_fields)
+    try:
+        query = df['text'].astype(str).tolist()[0]
+    except Exception as e:
+        cols = {"Results": [f"Failed to read input data. ERROR: {e}. Make sure you have an input field called text"]}
+        returns = pd.DataFrame(data=cols)
+        return returns
 
-    output_fields.remove('label')
-    cols = []
-    for result in results:
-        col = {}
-        x = ''
-        y = ''
-        for r in result:
-            t = {}
-            # t['data'] = r.entity.get('label')
-            for field in output_fields:
-                t[field] = r.entity.get(field)
-            x += str(t)
-            x += splitter
-            y += r.entity.get('label')
-            y += splitter
-        xs = x.rstrip(splitter)
-        ys = y.rstrip(splitter)
-        col["Results"] = ys
-        col["Fields"] = xs
-        cols.append(col)
+    retrieved_nodes = retriever.retrieve(query)
+    try:
+        result = pd.DataFrame([{"Score": node.score, "Results": node.text} for node in retrieved_nodes])
+        meta = pd.DataFrame([node.metadata for node in retrieved_nodes])
+        result[meta.columns] = meta
+    except Exception as e:
+        cols = {"Results": [f"ERROR: {e}"]}
+        return pd.DataFrame(data=cols)
+    if not len(result):
+        cols = {"Results": ["ERROR: No result returned"]}
+        return pd.DataFrame(data=cols)
     
-    return cols
+    return result
 
 
 

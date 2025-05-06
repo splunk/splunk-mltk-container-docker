@@ -11,26 +11,17 @@ import json
 import numpy as np
 import pandas as pd
 import os
-import pymilvus
-from pymilvus import (
-    connections,
-    utility,
-    FieldSchema, CollectionSchema, DataType,
-    Collection,
-)
 import llama_index
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Document, StorageContext, ServiceContext
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Document, StorageContext, ServiceContext, Settings
 from llama_index.vector_stores.milvus import MilvusVectorStore
-from llama_index.llms.ollama import Ollama
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import textwrap
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core import ChatPromptTemplate
+from app.model.llm_utils import create_llm, create_embedding_model, create_vector_db
 
 # ...
 # global constants
 MODEL_DIRECTORY = "/srv/app/model/data/"
-LLM_ENDPOINT = "http://ollama:11434"
 
 
 
@@ -89,46 +80,97 @@ def fit(model,df,param):
 
 
     
-# In[1]:
+# In[20]:
 
 
-# apply your model
-# returns the calculated results
 def apply(model,df,param):
-    # "Documents" or "Logs"
-    try:
-        d_type = param['options']['params']['rag_type'].strip('\"')
-    except:
-        d_type = "Documents"
-    
     X = df["query"].values.tolist()
-    use_local= int(param['options']['params']['use_local'])
+
+    # In the previous version, Logs was used as d_type for data encoded via Pymilvus
+    # In this updated version, both document data and Splunk index data are encoded via llama-index. Therefore, the Logs option is legacy.
+    # Manually change d_type to Logs to utilize the legacy code remained in this notebook.
+    d_type = "Documents"
+
     try:
-        embedder_name = param['options']['params']['embedder_name'].strip('\"')
+        vec_service = param['options']['params']['vectordb_service'].strip('\"')
+        print(f"Using {vec_service} vector database service")
     except:
-        embedder_name = 'all-MiniLM-L6-v2'
+        vec_service = "milvus"
+        print("Using default Milvus vector database service")
+        
+    try:
+        embedder_service = param['options']['params']['embedder_service'].strip('\"')
+        print(f"Using {embedder_service} embedding service")
+    except:
+        embedder_service = "huggingface"
+        print("Using default Huggingface embedding service")
+
+    try:
+        llm_service = param['options']['params']['llm_service'].strip("\"")
+        print(f"Using {llm_service} LLM service.")
+    except:
+        llm_service = "ollama"
+        print("Using default Ollama LLM service.")
+
+    try:
+        use_local= int(param['options']['params']['use_local'])
+    except:
+        use_local = 0
+        print("Not using embedding local model") 
+            
+    try:
+        embedder_name=param['options']['params']['embedder_name'].strip('\"')
+    except:
+        embedder_name = None
+        print("Embedding model name not specified") 
+    
+    try:
+        embedder_dimension=int(param['options']['params']['embedder_dimension'])
+    except:
+        embedder_dimension=None
+        print("Embedding dimension not specified") 
+
+    try:
+        model_name = param['options']['params']['model_name'].strip("\"")
+    except:
+        model_name = None
+        print("LLM model name not specified")
+
+    try:
+        embedder, output_dims, m = create_embedding_model(service=embedder_service, model=embedder_name, use_local=use_local)
+        if embedder is not None:
+            print(m)
+        else:
+            cols = {"Results": [f"ERROR in embedding model loading: {m}. "]}
+            returns = pd.DataFrame(data=cols)
+            return returns
+        if output_dims:
+            embedder_dimension = output_dims
+    except Exception as e:
+        cols = {"Results": [f"Failed to initiate embedding model. ERROR: {e}"]}
+        returns = pd.DataFrame(data=cols)
+        return returns
+
+    
+    llm, m = create_llm(service=llm_service, model=model_name)
+
+    if llm is None:
+        cols={'Result': [m]}
+        returns=pd.DataFrame(data=cols)
+        return returns
 
     try:
         collection_name = param['options']['params']['collection_name'].strip('\"')
     except:
-        collection_name = "default-doc-collection"
-
-    if embedder_name == 'intfloat/multilingual-e5-large':
-        embedder_dimension = 1024
-    elif embedder_name == 'all-MiniLM-L6-v2':
-        embedder_dimension = 384
-    else:
-        try:
-            embedder_dimension = int(param['options']['params']['embedder_dimension'])
-        except:
-            embedder_dimension = 384
-    if use_local:
-        embedder_name = f'/srv/app/model/data/{embedder_name}'
-        print("Using local embedding model checkpoints")
+        cols = {"Response": ["ERROR: no collection specified. Please specify a vectorDB collection"], "References": ["None"]}
+        result = pd.DataFrame(data=cols)
+        return result
+    
     try:
         top_k = int(param['options']['params']['top_k'])
     except:
         top_k = 5
+        print("Using top 5 results by default")
         
     if d_type == "Documents":
         qa_prompt_str = (
@@ -165,57 +207,57 @@ def apply(model,df,param):
     
     text_qa_template = ChatPromptTemplate.from_messages(chat_text_qa_msgs)
 
+
     try:
-        model = param['options']['params']['model_name'].strip('\"')
-    except:
-        model="llama3"
-    try:
-        url = LLM_ENDPOINT
-        llm = Ollama(model=model, base_url=url, request_timeout=6000.0)
-    except:
-        cols = {"Response": ["ERROR: Could not load LLM"], "References": ["ERROR"]}
-        result = pd.DataFrame(data=cols)
-        return result
-    try:
-        transformer_embedder = HuggingFaceEmbedding(model_name=embedder_name)
-        service_context = ServiceContext.from_defaults(
-            llm=llm, embed_model=transformer_embedder, chunk_size=1024
-        )
-    except:
-        cols = {"Response": ["ERROR: Could not load embedder"], "References": ["ERROR"]}
+        Settings.llm = llm
+        Settings.embed_model = embedder
+        Settings.chunk_size = 1024
+    except Exception as e:
+        cols = {"Response": [f"Could not load LLM or embedder. ERROR: {e}"], "References": ["ERROR"]}
         result = pd.DataFrame(data=cols)
         return result
     try:
         if d_type == "Documents":
-            vector_store = MilvusVectorStore(uri="http://milvus-standalone:19530", token="", collection_name=collection_name, dim=embedder_dimension, overwrite=False)
+            vector_store, v_m = create_vector_db(service=vec_service, collection_name=collection_name, dim=embedder_dimension)
+            if vector_store is None:
+                cols = {"Response": [f"ERROR: Could not connect to vectordb. ERROR: {v_m}"], "References": ["ERROR"]}
+                result = pd.DataFrame(data=cols)
+                return result
         else:
-            vector_store = MilvusVectorStore(uri="http://milvus-standalone:19530", token="", collection_name=collection_name, embedding_field='embeddings', text_key='label', dim=embedder_dimension, overwrite=False)
+            vector_store = MilvusVectorStore(uri=MILVUS_ENDPOINT, token="", collection_name=collection_name, embedding_field='embeddings', text_key='label', dim=embedder_dimension, overwrite=False)
         index = VectorStoreIndex.from_vector_store(
-           vector_store=vector_store, service_context=service_context
+           vector_store=vector_store
         )
         query_engine = index.as_query_engine(similarity_top_k=top_k, text_qa_template=text_qa_template)
-    except:
-        cols = {"Response": ["ERROR: Could not load collection"], "References": ["ERROR"]}
+    except Exception as e:
+        cols = {"Response": [f"ERROR: Could not load collection. ERROR: {e}"], "References": ["ERROR"]}
         result = pd.DataFrame(data=cols)
         return result
         
     l = []
     f = []
-    for i in range(len(X)):
-        r = query_engine.query(X[i])
-        l.append(r.response)
-        if d_type == "Documents":
-            files = ""
-            for node in r.source_nodes:
-                files += node.node.metadata['file_path']
-                files += "\n"
-            f.append(files)
-        else:
-            logs = ""
-            for i in range(len(r.source_nodes)):
-                logs += r.source_nodes[0].text
-                logs += "\n"
-            f.append(logs)       
+    try:
+        for i in range(len(X)):
+            r = query_engine.query(X[i])
+            l.append(r.response)
+            if d_type == "Documents":
+                files = ""
+                for node in r.source_nodes:
+                    files += str(node.node.metadata)
+                    files += "\n"
+                    files += node.text
+                    files += "\n"
+                f.append(files)
+            else:
+                logs = ""
+                for i in range(len(r.source_nodes)):
+                    logs += r.source_nodes[0].text
+                    logs += "\n"
+                f.append(logs)  
+    except Exception as e:
+        cols = {"Response": [f"Failed at querying. ERROR: {e}. Please check if the knowledge type is correct"], "References": ["None"]}
+        result = pd.DataFrame(data=cols)
+        return result
     
     cols = {"Response": l, "References": f}
     result = pd.DataFrame(data=cols)
@@ -257,7 +299,7 @@ def load(name):
 
 
     
-# In[18]:
+# In[27]:
 
 
 # return a model summary
@@ -266,40 +308,93 @@ def summary(model=None):
     return returns
 
 def compute(model,df,param):
-    # "Documents" or "Logs"
+    X = df["query"].values.tolist()
+
+    # In the previous version, Logs was used as d_type for data encoded via Pymilvus
+    # In this updated version, both document data and Splunk index data are encoded via llama-index. Therefore, the Logs option is legacy.
+    # Manually change d_type to Logs to utilize the legacy code remained in this notebook.
+    d_type = "Documents"
+
     try:
-        d_type = param['params']['rag_type'].strip('\"')
+        vec_service = param['options']['params']['vectordb_service'].strip('\"')
+        print(f"Using {vec_service} vector database service")
     except:
-        d_type = "Documents"
+        vec_service = "milvus"
+        print("Using default Milvus vector database service")
+
+    try:
+        embedder_service = param['options']['params']['embedder_service'].strip('\"')
+        print(f"Using {embedder_service} embedding service")
+    except:
+        embedder_service = "huggingface"
+        print("Using default Huggingface embedding service")
+
+    try:
+        llm_service = param['options']['params']['llm_service'].strip("\"")
+        print(f"Using {llm_service} LLM service.")
+    except:
+        llm_service = "ollama"
+        print("Using default Ollama LLM service.")
+
+    try:
+        use_local= int(param['options']['params']['use_local'])
+    except:
+        use_local = 0
+        print("Not using embedding local model") 
+            
+    try:
+        embedder_name=param['options']['params']['embedder_name'].strip('\"')
+    except:
+        embedder_name = None
+        print("Embedding model name not specified") 
     
-    X = df[0]["query"]
-    use_local= int(param['params']['use_local'])
     try:
-        embedder_name = param['params']['embedder_name'].strip('\"')
+        embedder_dimension=int(param['options']['params']['embedder_dimension'])
     except:
-        embedder_name = 'all-MiniLM-L6-v2'
+        embedder_dimension=None
+        print("Embedding dimension not specified") 
 
     try:
-        collection_name = param['params']['collection_name'].strip('\"')
+        model_name = param['options']['params']['model_name'].strip("\"")
     except:
-        collection_name = "default-doc-collection"
+        model_name = None
+        print("LLM model name not specified")
 
-    if embedder_name == 'intfloat/multilingual-e5-large':
-        embedder_dimension = 1024
-    elif embedder_name == 'all-MiniLM-L6-v2':
-        embedder_dimension = 384
-    else:
-        try:
-            embedder_dimension = int(param['params']['embedder_dimension'])
-        except:
-            embedder_dimension = 384
-    if use_local:
-        embedder_name = f'/srv/app/model/data/{embedder_name}'
-        print("Using local embedding model checkpoints")
     try:
-        top_k = int(param['params']['top_k'])
+        embedder, output_dims, m = create_embedding_model(service=embedder_service, model=embedder_name, use_local=use_local)
+        if embedder is not None:
+            print(m)
+        else:
+            cols = {"Results": [f"ERROR in embedding model loading: {m}. "]}
+            returns = pd.DataFrame(data=cols)
+            return returns
+        if output_dims:
+            embedder_dimension = output_dims
+    except Exception as e:
+        cols = {"Results": [f"Failed to initiate embedding model. ERROR: {e}"]}
+        returns = pd.DataFrame(data=cols)
+        return returns
+
+    
+    llm, m = create_llm(service=llm_service, model=model_name)
+
+    if llm is None:
+        cols={'Result': [m]}
+        returns=pd.DataFrame(data=cols)
+        return returns
+
+    try:
+        collection_name = param['options']['params']['collection_name'].strip('\"')
+    except:
+        cols = {"Response": ["ERROR: no collection specified. Please specify a vectorDB collection"], "References": ["None"]}
+        result = pd.DataFrame(data=cols)
+        return result
+    
+    try:
+        top_k = int(param['options']['params']['top_k'])
     except:
         top_k = 5
+        print("Using top 5 results by default")
         
     if d_type == "Documents":
         qa_prompt_str = (
@@ -336,57 +431,60 @@ def compute(model,df,param):
     
     text_qa_template = ChatPromptTemplate.from_messages(chat_text_qa_msgs)
 
+
     try:
-        model = param['params']['model_name'].strip('\"')
-    except:
-        model="llama3"
-    try:
-        url = LLM_ENDPOINT
-        llm = Ollama(model=model, base_url=url, request_timeout=6000.0)
-    except:
-        cols = {"Response": "ERROR: Could not load LLM", "References": "ERROR"}
-        result = [cols]
-        return result
-    try:
-        transformer_embedder = HuggingFaceEmbedding(model_name=embedder_name)
-        service_context = ServiceContext.from_defaults(
-            llm=llm, embed_model=transformer_embedder, chunk_size=1024
-        )
-    except:
-        cols = {"Response": "ERROR: Could not load embedder", "References": "ERROR"}
-        result = [cols]
+        Settings.llm = llm
+        Settings.embed_model = embedder
+        Settings.chunk_size = 1024
+    except Exception as e:
+        cols = {"Response": [f"Could not load LLM or embedder. ERROR: {e}"], "References": ["ERROR"]}
+        result = pd.DataFrame(data=cols)
         return result
     try:
         if d_type == "Documents":
-            vector_store = MilvusVectorStore(uri="http://milvus-standalone:19530", token="", collection_name=collection_name, dim=embedder_dimension, overwrite=False)
+            vector_store, v_m = create_vector_db(service=vec_service, collection_name=collection_name, dim=embedder_dimension)
+            if vector_store is None:
+                cols = {"Response": [f"ERROR: Could not connect to vectordb. ERROR: {v_m}"], "References": ["ERROR"]}
+                result = pd.DataFrame(data=cols)
+                return result
         else:
-            vector_store = MilvusVectorStore(uri="http://milvus-standalone:19530", token="", collection_name=collection_name, embedding_field='embeddings', text_key='label', dim=embedder_dimension, overwrite=False)
+            vector_store = MilvusVectorStore(uri=MILVUS_ENDPOINT, token="", collection_name=collection_name, embedding_field='embeddings', text_key='label', dim=embedder_dimension, overwrite=False)
         index = VectorStoreIndex.from_vector_store(
-           vector_store=vector_store, service_context=service_context
+           vector_store=vector_store
         )
         query_engine = index.as_query_engine(similarity_top_k=top_k, text_qa_template=text_qa_template)
-    except:
-        cols = {"Response": "ERROR: Could not load collection", "References": "ERROR"}
-        result = [cols]
+    except Exception as e:
+        cols = {"Response": [f"ERROR: Could not load collection. ERROR: {e}"], "References": ["ERROR"]}
+        result = pd.DataFrame(data=cols)
         return result
         
-
+    l = []
+    f = []
+    try:
+        for i in range(len(X)):
+            r = query_engine.query(X[i])
+            l.append(r.response)
+            if d_type == "Documents":
+                files = ""
+                for node in r.source_nodes:
+                    files += str(node.node.metadata)
+                    files += "\n"
+                    files += node.text
+                    files += "\n"
+                f.append(files)
+            else:
+                logs = ""
+                for i in range(len(r.source_nodes)):
+                    logs += r.source_nodes[0].text
+                    logs += "\n"
+                f.append(logs)  
+    except Exception as e:
+        cols = {"Response": [f"Failed at querying. ERROR: {e}. Please check if the knowledge type is correct"], "References": ["None"]}
+        result = pd.DataFrame(data=cols)
+        return result
     
-    r = query_engine.query(X)
-    l = r.response
-    if d_type == "Documents":
-        files = ""
-        for node in r.source_nodes:
-            files += node.node.metadata['file_path']
-            files += "\n"
-    else:
-        files = ""
-        for i in range(len(r.source_nodes)):
-            files += r.source_nodes[0].text
-            files += "\n"     
-    
-    cols = {"Response": l, "References": files}
-    result = [cols]
+    cols = {"Response": l, "References": f}
+    result = pd.DataFrame(data=cols)
     return result
 
 
