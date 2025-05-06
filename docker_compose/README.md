@@ -24,11 +24,13 @@ docker compose -f ollama-docker-compose.yml up --detach
 ### Start Ollama LLM service (GPU)
 docker compose -f ollama-docker-compose-gpu.yml up --detach
 
+### Start Neo4j graph database service
+docker compose -f neo4j-docker-compose.yml up --detach
+
 ## Stop additional services
 
 You can use the following Docker compost commands to stop selected additional services.
 
-### 
 ### Stop Milvus Vector Database service
 docker compose -f milvus-docker-compose.yml down
 
@@ -37,3 +39,6 @@ docker compose -f ollama-docker-compose.yml down
 
 ### Stop Ollama LLM service (GPU)
 docker compose -f ollama-docker-compose-gpu.yml down
+
+### Stop Neo4j graph database service
+docker compose -f neo4j-docker-compose.yml down

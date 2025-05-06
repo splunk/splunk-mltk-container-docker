@@ -17,7 +17,7 @@ services:
     environment:
       - NEO4J_AUTH=neo4j/changeme
       # the following line fixes Java issue on apple silicon as described here: https://brainsteam.co.uk/2025/03/02/neo4j-on-macos/
-      - _JAVA_OPTIONS=-XX:UseSVE=0
+      # - _JAVA_OPTIONS=-XX:UseSVE=0
     ports:
       - "7474:7474"
       - "7687:7687"
