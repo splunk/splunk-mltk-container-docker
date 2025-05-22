@@ -264,12 +264,8 @@ def create_vector_db(service=None, collection_name=None, dim=None):
 
     else:
         try:
-            engine = AlloyDBEngine.afrom_instance(**vec_config_item)
-            engine.ainit_vector_store_table(
-                table_name=collection_name,
-                vector_size=dim,
-            )
-            vector_store = AlloyDBVectorStore.create(
+            engine = AlloyDBEngine.from_instance(**vec_config_item)
+            vector_store = AlloyDBVectorStore.create_sync(
                 engine=engine,
                 table_name=collection_name,
             )         
