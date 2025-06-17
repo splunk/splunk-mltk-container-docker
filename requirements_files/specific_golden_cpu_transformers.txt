@@ -29,8 +29,8 @@ rrcf
 pyod 
 suod
 pymc3
-spacy==2.3.2
-spacytextblob==0.1.7
+#spacy==2.3.2
+#spacytextblob==0.1.7
 
 # other dependencies
 tensorflow==2.8.0

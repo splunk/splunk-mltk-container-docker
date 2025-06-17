@@ -6,18 +6,15 @@
 #
 aiofiles==24.1.0
     # via -r /temp/compiled_base_functional_specific_spark_spark.in
-alembic==1.13.2
+alembic==1.16.1
     # via mlflow
-aniso8601==9.0.1
-    # via graphene
 annotated-types==0.7.0
     # via pydantic
-anyio==4.4.0
+anyio==4.9.0
     # via
     #   httpx
     #   jupyter-server
     #   starlette
-    #   watchfiles
 argon2-cffi==23.1.0
     # via jupyter-server
 argon2-cffi-bindings==21.2.0
@@ -26,151 +23,138 @@ arrow==1.3.0
     # via isoduration
 asgiref==3.8.1
     # via opentelemetry-instrumentation-asgi
-asttokens==2.4.1
+asttokens==3.0.0
     # via stack-data
-async-lru==2.0.4
+async-lru==2.0.5
     # via jupyterlab
-attrs==23.2.0
+attrs==25.3.0
     # via
     #   jsonschema
     #   referencing
-babel==2.15.0
+babel==2.17.0
     # via jupyterlab-server
-backoff==2.2.1
-    # via opentelemetry-exporter-otlp-proto-grpc
-beautifulsoup4==4.12.3
+beautifulsoup4==4.13.4
     # via nbconvert
-bleach==6.1.0
+bleach[css]==6.2.0
     # via nbconvert
-blinker==1.8.2
+blinker==1.9.0
     # via flask
-cachetools==5.3.3
-    # via mlflow
-certifi==2024.7.4
+cachetools==5.5.2
+    # via
+    #   google-auth
+    #   mlflow-skinny
+certifi==2025.4.26
     # via
     #   httpcore
     #   httpx
     #   requests
-cffi==1.16.0
+cffi==1.17.1
     # via
     #   argon2-cffi-bindings
     #   cryptography
-charset-normalizer==3.3.2
+charset-normalizer==3.4.2
     # via requests
-click==8.1.7
+click==8.2.1
     # via
     #   flask
-    #   mlflow
-    #   typer
+    #   mlflow-skinny
     #   uvicorn
-cloudpickle==3.0.0
-    # via mlflow
+cloudpickle==3.1.1
+    # via mlflow-skinny
 colorama==0.4.6
     # via nbdime
 comm==0.2.2
     # via
     #   ipykernel
     #   ipywidgets
-contourpy==1.2.1
+contourpy==1.3.2
     # via matplotlib
-cryptography==42.0.8
+cryptography==45.0.2
     # via pyopenssl
 cycler==0.12.1
     # via matplotlib
-debugpy==1.8.2
+databricks-sdk==0.54.0
+    # via mlflow-skinny
+debugpy==1.8.14
     # via ipykernel
-decorator==5.1.1
+decorator==5.2.1
     # via ipython
 defusedxml==0.7.1
     # via nbconvert
-deprecated==1.2.14
-    # via
-    #   opentelemetry-api
-    #   opentelemetry-propagator-b3
+deprecated==1.2.18
+    # via opentelemetry-api
 deprecation==2.1.0
     # via splunk-sdk
-dnspython==2.6.1
-    # via email-validator
 docker==7.1.0
     # via mlflow
-email-validator==2.2.0
-    # via fastapi
-entrypoints==0.4
-    # via mlflow
-executing==2.0.1
+executing==2.2.0
     # via stack-data
-fastapi==0.111.1
-    # via -r /temp/compiled_base_functional_specific_spark_spark.in
-fastapi-cli==0.0.4
-    # via fastapi
-fastjsonschema==2.20.0
+fastapi==0.115.12
+    # via
+    #   -r /temp/compiled_base_functional_specific_spark_spark.in
+    #   mlflow-skinny
+fastjsonschema==2.21.1
     # via nbformat
-flask==3.0.3
+flask==3.1.1
     # via mlflow
-fonttools==4.53.1
+fonttools==4.58.0
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
-gitdb==4.0.11
+gitdb==4.0.12
     # via gitpython
-gitpython==3.1.43
+gitpython==3.1.44
     # via
-    #   mlflow
+    #   mlflow-skinny
     #   nbdime
-googleapis-common-protos==1.63.2
-    # via opentelemetry-exporter-otlp-proto-grpc
-graphene==3.3
+google-auth==2.40.2
+    # via databricks-sdk
+graphene==3.4.3
     # via mlflow
-graphql-core==3.2.3
+graphql-core==3.2.6
     # via
     #   graphene
     #   graphql-relay
 graphql-relay==3.2.0
     # via graphene
-greenlet==3.0.3
+greenlet==3.2.2
     # via sqlalchemy
-grpcio==1.64.1
-    # via opentelemetry-exporter-otlp-proto-grpc
-gunicorn==22.0.0
+gunicorn==23.0.0
     # via mlflow
-h11==0.14.0
+h11==0.16.0
     # via
     #   httpcore
     #   uvicorn
-httpcore==1.0.5
+httpcore==1.0.9
     # via httpx
-httptools==0.6.1
-    # via uvicorn
-httpx==0.27.0
-    # via
-    #   fastapi
-    #   jupyterlab
-idna==3.7
+httpx==0.28.1
+    # via jupyterlab
+idna==3.10
     # via
     #   anyio
-    #   email-validator
     #   httpx
     #   jsonschema
     #   requests
-importlib-metadata==7.2.1
-    # via mlflow
+importlib-metadata==8.7.0
+    # via mlflow-skinny
 ipykernel==6.29.5
     # via jupyterlab
-ipython==8.26.0
+ipython==9.2.0
     # via
     #   ipykernel
     #   ipywidgets
-ipywidgets==8.1.3
+ipython-pygments-lexers==1.1.1
+    # via ipython
+ipywidgets==8.1.7
     # via -r /temp/compiled_base_functional_specific_spark_spark.in
 isoduration==20.11.0
     # via jsonschema
 itsdangerous==2.2.0
     # via flask
-jedi==0.19.1
+jedi==0.19.2
     # via ipython
-jinja2==3.1.4
+jinja2==3.1.6
     # via
-    #   fastapi
     #   flask
     #   jupyter-server
     #   jupyterlab
@@ -178,9 +162,9 @@ jinja2==3.1.4
     #   mlflow
     #   nbconvert
     #   nbdime
-joblib==1.4.2
+joblib==1.5.1
     # via scikit-learn
-json5==0.9.25
+json5==0.12.0
     # via jupyterlab-server
 jsonpointer==3.0.0
     # via jsonschema
@@ -189,9 +173,9 @@ jsonschema[format-nongpl]==4.23.0
     #   jupyter-events
     #   jupyterlab-server
     #   nbformat
-jsonschema-specifications==2023.12.1
+jsonschema-specifications==2025.4.1
     # via jsonschema
-jupyter-client==8.6.2
+jupyter-client==8.6.3
     # via
     #   ipykernel
     #   jupyter-server
@@ -205,11 +189,11 @@ jupyter-core==5.7.2
     #   nbclient
     #   nbconvert
     #   nbformat
-jupyter-events==0.10.0
+jupyter-events==0.12.0
     # via jupyter-server
 jupyter-lsp==2.2.5
     # via jupyterlab
-jupyter-server==2.14.2
+jupyter-server==2.16.0
     # via
     #   jupyter-lsp
     #   jupyter-server-mathjax
@@ -222,31 +206,30 @@ jupyter-server-mathjax==0.2.6
     # via nbdime
 jupyter-server-terminals==0.5.3
     # via jupyter-server
-jupyterlab==4.2.3
+jupyterlab==4.4.2
     # via -r /temp/compiled_base_functional_specific_spark_spark.in
-jupyterlab-git==0.50.1
+jupyterlab-git==0.51.1
     # via -r /temp/compiled_base_functional_specific_spark_spark.in
 jupyterlab-pygments==0.3.0
     # via nbconvert
-jupyterlab-server==2.27.2
+jupyterlab-server==2.27.3
     # via jupyterlab
-jupyterlab-widgets==3.0.11
+jupyterlab-widgets==3.0.15
     # via ipywidgets
-kiwisolver==1.4.5
+kiwisolver==1.4.8
     # via matplotlib
-mako==1.3.5
+mako==1.3.10
     # via alembic
-markdown==3.6
+markdown==3.8
     # via mlflow
-markdown-it-py==3.0.0
-    # via rich
-markupsafe==2.1.5
+markupsafe==3.0.2
     # via
+    #   flask
     #   jinja2
     #   mako
     #   nbconvert
     #   werkzeug
-matplotlib==3.9.1
+matplotlib==3.10.3
     # via
     #   -r /temp/compiled_base_functional_specific_spark_spark.in
     #   mlflow
@@ -254,17 +237,17 @@ matplotlib-inline==0.1.7
     # via
     #   ipykernel
     #   ipython
-mdurl==0.1.2
-    # via markdown-it-py
-mistune==3.0.2
+mistune==3.1.3
     # via nbconvert
-mlflow==2.14.3
+mlflow==2.22.0
     # via -r /temp/compiled_base_functional_specific_spark_spark.in
-nbclient==0.10.0
+mlflow-skinny==2.22.0
+    # via mlflow
+nbclient==0.10.2
     # via nbconvert
-nbconvert==7.16.4
+nbconvert==7.16.6
     # via jupyter-server
-nbdime==4.0.1
+nbdime==4.0.2
     # via jupyterlab-git
 nbformat==5.10.4
     # via
@@ -277,31 +260,23 @@ nest-asyncio==1.6.0
     # via ipykernel
 notebook-shim==0.2.4
     # via jupyterlab
-numpy==1.26.4
+numpy==2.2.6
     # via
     #   -r /temp/compiled_base_functional_specific_spark_spark.in
     #   contourpy
     #   matplotlib
     #   mlflow
     #   pandas
-    #   pyarrow
     #   scikit-learn
     #   scipy
 opentelemetry-api==1.12.0
     # via
-    #   mlflow
-    #   opentelemetry-exporter-jaeger-thrift
-    #   opentelemetry-exporter-otlp-proto-grpc
+    #   mlflow-skinny
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-asgi
     #   opentelemetry-instrumentation-fastapi
-    #   opentelemetry-propagator-b3
     #   opentelemetry-sdk
     #   splunk-opentelemetry
-opentelemetry-exporter-jaeger-thrift==1.12.0
-    # via splunk-opentelemetry
-opentelemetry-exporter-otlp-proto-grpc==1.12.0
-    # via splunk-opentelemetry
 opentelemetry-instrumentation==0.33b0
     # via
     #   opentelemetry-instrumentation-asgi
@@ -311,15 +286,9 @@ opentelemetry-instrumentation-asgi==0.33b0
     # via opentelemetry-instrumentation-fastapi
 opentelemetry-instrumentation-fastapi==0.33b0
     # via -r /temp/compiled_base_functional_specific_spark_spark.in
-opentelemetry-propagator-b3==1.12.0
-    # via splunk-opentelemetry
-opentelemetry-proto==1.12.0
-    # via opentelemetry-exporter-otlp-proto-grpc
 opentelemetry-sdk==1.12.0
     # via
-    #   mlflow
-    #   opentelemetry-exporter-jaeger-thrift
-    #   opentelemetry-exporter-otlp-proto-grpc
+    #   mlflow-skinny
     #   splunk-opentelemetry
 opentelemetry-semantic-conventions==0.33b0
     # via
@@ -333,19 +302,20 @@ opentelemetry-util-http==0.33b0
     #   opentelemetry-instrumentation-fastapi
 overrides==7.7.0
     # via jupyter-server
-packaging==24.1
+packaging==24.2
     # via
     #   deprecation
     #   gunicorn
     #   ipykernel
+    #   jupyter-events
     #   jupyter-server
     #   jupyterlab
     #   jupyterlab-git
     #   jupyterlab-server
     #   matplotlib
-    #   mlflow
+    #   mlflow-skinny
     #   nbconvert
-pandas==2.2.2
+pandas==2.2.3
     # via
     #   -r /temp/compiled_base_functional_specific_spark_spark.in
     #   mlflow
@@ -357,91 +327,88 @@ pexpect==4.9.0
     # via
     #   ipython
     #   jupyterlab-git
-pillow==10.4.0
+pillow==11.2.1
     # via matplotlib
-platformdirs==4.2.2
+platformdirs==4.3.8
     # via jupyter-core
-prometheus-client==0.20.0
+prometheus-client==0.22.0
     # via jupyter-server
-prompt-toolkit==3.0.47
+prompt-toolkit==3.0.51
     # via ipython
-protobuf==3.20.3
-    # via
-    #   googleapis-common-protos
-    #   mlflow
-    #   opentelemetry-proto
-psutil==6.0.0
+protobuf==6.31.0
+    # via mlflow-skinny
+psutil==7.0.0
     # via ipykernel
 ptyprocess==0.7.0
     # via
     #   pexpect
     #   terminado
-pure-eval==0.2.2
+pure-eval==0.2.3
     # via stack-data
-py4j==0.10.9.7
+py4j==0.10.9.9
     # via pyspark
-pyarrow==15.0.2
+pyarrow==19.0.1
     # via
     #   -r /temp/compiled_base_functional_specific_spark_spark.in
     #   mlflow
+pyasn1==0.6.1
+    # via
+    #   pyasn1-modules
+    #   rsa
+pyasn1-modules==0.4.2
+    # via google-auth
 pycparser==2.22
     # via cffi
-pydantic==2.8.2
+pydantic==2.11.5
     # via
     #   -r /temp/compiled_base_functional_specific_spark_spark.in
     #   fastapi
-pydantic-core==2.20.1
+    #   mlflow-skinny
+pydantic-core==2.33.2
     # via pydantic
-pygments==2.18.0
+pygments==2.19.1
     # via
     #   ipython
+    #   ipython-pygments-lexers
     #   nbconvert
     #   nbdime
-    #   rich
-pyopenssl==24.1.0
+pyopenssl==25.1.0
     # via -r /temp/compiled_base_functional_specific_spark_spark.in
-pyparsing==3.1.2
+pyparsing==3.2.3
     # via matplotlib
-pyspark==3.5.1
+pyspark==4.0.0
     # via -r /temp/compiled_base_functional_specific_spark_spark.in
 python-dateutil==2.9.0.post0
     # via
     #   arrow
+    #   graphene
     #   jupyter-client
     #   matplotlib
     #   pandas
-python-dotenv==1.0.1
-    # via uvicorn
-python-json-logger==2.0.7
+python-json-logger==3.3.0
     # via jupyter-events
-python-multipart==0.0.9
-    # via fastapi
-pytz==2024.1
-    # via
-    #   mlflow
-    #   pandas
-pyyaml==6.0.1
+pytz==2025.2
+    # via pandas
+pyyaml==6.0.2
     # via
     #   jupyter-events
-    #   mlflow
-    #   uvicorn
-pyzmq==26.0.3
+    #   mlflow-skinny
+pyzmq==26.4.0
     # via
     #   ipykernel
     #   jupyter-client
     #   jupyter-server
-querystring-parser==1.2.4
-    # via mlflow
-referencing==0.35.1
+referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
     #   jupyter-events
 requests==2.32.3
     # via
+    #   databricks-sdk
     #   docker
     #   jupyterlab-server
-    #   mlflow
+    #   mlflow-skinny
     #   nbdime
 rfc3339-validator==0.1.4
     # via
@@ -451,63 +418,53 @@ rfc3986-validator==0.1.1
     # via
     #   jsonschema
     #   jupyter-events
-rich==13.7.1
-    # via typer
-rpds-py==0.19.0
+rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-scikit-learn==1.5.1
+rsa==4.9.1
+    # via google-auth
+scikit-learn==1.6.1
     # via mlflow
-scipy==1.14.0
+scipy==1.15.3
     # via
     #   mlflow
     #   scikit-learn
 send2trash==1.8.3
     # via jupyter-server
-shellingham==1.5.4
-    # via typer
-six==1.16.0
+six==1.17.0
     # via
-    #   asttokens
-    #   bleach
     #   python-dateutil
-    #   querystring-parser
     #   rfc3339-validator
-    #   thrift
-smmap==5.0.1
+smmap==5.0.2
     # via gitdb
 sniffio==1.3.1
-    # via
-    #   anyio
-    #   httpx
-soupsieve==2.5
+    # via anyio
+soupsieve==2.7
     # via beautifulsoup4
-splunk-opentelemetry[all]==1.8.0
+splunk-opentelemetry==1.8.0
     # via -r /temp/compiled_base_functional_specific_spark_spark.in
-splunk-sdk==2.0.2
+splunk-sdk==2.1.0
     # via -r /temp/compiled_base_functional_specific_spark_spark.in
-sqlalchemy==2.0.31
+sqlalchemy==2.0.41
     # via
     #   alembic
     #   mlflow
-sqlparse==0.5.0
-    # via mlflow
+sqlparse==0.5.3
+    # via mlflow-skinny
 stack-data==0.6.3
     # via ipython
-starlette==0.37.2
+starlette==0.46.2
     # via fastapi
 terminado==0.18.1
     # via
     #   jupyter-server
     #   jupyter-server-terminals
-threadpoolctl==3.5.0
+threadpoolctl==3.6.0
     # via scikit-learn
-thrift==0.20.0
-    # via opentelemetry-exporter-jaeger-thrift
-tinycss2==1.3.0
-    # via nbconvert
-tornado==6.4.1
+tinycss2==1.4.0
+    # via bleach
+tornado==6.5.1
     # via
     #   ipykernel
     #   jupyter-client
@@ -531,39 +488,41 @@ traitlets==5.14.3
     #   nbclient
     #   nbconvert
     #   nbformat
-typer==0.12.3
-    # via fastapi-cli
-types-python-dateutil==2.9.0.20240316
+types-python-dateutil==2.9.0.20250516
     # via arrow
-typing-extensions==4.12.2
+typing-extensions==4.13.2
     # via
     #   alembic
+    #   anyio
+    #   beautifulsoup4
     #   fastapi
+    #   graphene
     #   ipython
+    #   mlflow-skinny
     #   opentelemetry-sdk
     #   pydantic
     #   pydantic-core
+    #   pyopenssl
+    #   referencing
     #   sqlalchemy
-    #   typer
-tzdata==2024.1
+    #   typing-inspection
+typing-inspection==0.4.1
+    # via pydantic
+tzdata==2025.2
     # via pandas
 uri-template==1.3.0
     # via jsonschema
-urllib3==2.2.2
+urllib3==2.4.0
     # via
     #   docker
     #   requests
-uvicorn[standard]==0.30.1
+uvicorn==0.34.2
     # via
     #   -r /temp/compiled_base_functional_specific_spark_spark.in
-    #   fastapi
-uvloop==0.19.0
-    # via uvicorn
-watchfiles==0.22.0
-    # via uvicorn
+    #   mlflow-skinny
 wcwidth==0.2.13
     # via prompt-toolkit
-webcolors==24.6.0
+webcolors==24.11.1
     # via jsonschema
 webencodings==0.5.1
     # via
@@ -571,19 +530,17 @@ webencodings==0.5.1
     #   tinycss2
 websocket-client==1.8.0
     # via jupyter-server
-websockets==12.0
-    # via uvicorn
-werkzeug==3.0.3
+werkzeug==3.1.3
     # via flask
-widgetsnbextension==4.0.11
+widgetsnbextension==4.0.14
     # via
     #   -r /temp/compiled_base_functional_specific_spark_spark.in
     #   ipywidgets
-wrapt==1.16.0
+wrapt==1.17.2
     # via
     #   deprecated
     #   opentelemetry-instrumentation
-zipp==3.19.2
+zipp==3.21.0
     # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
