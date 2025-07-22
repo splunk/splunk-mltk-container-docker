@@ -59,8 +59,8 @@ Our solution will bridge together 2 custom MCPs + general purpose LLMs + Vector 
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/AInvestigator.git
-cd beta_content/conf25_ai_investigator
+git clone https://github.com/splunk/splunk-mltk-container-docker.git 
+cd splunk-mltk-container-docker/beta_content/conf25_ai_investigator
 ```
 
 ### 2. Environment Setup
