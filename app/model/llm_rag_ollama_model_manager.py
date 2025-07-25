@@ -85,25 +85,19 @@ def apply(model,df,param):
         model_type = param['options']['params']['model_type'].strip('\"')
     except:
         model_type = "LLM"
-    
     if model_type == "embedder_model":
         # embedder model
         if manager == "pull":
             model_name = param['options']['params']['model_name'].strip('\"').strip('\'')
-            if model_name == "all-MiniLM-L6-v2" or model_name == "intfloat/multilingual-e5-large":
-                modelPath = os.path.join("/srv/app/model/data", model_name)
-                try:
-                    os.makedirs(modelPath)
-                except:
-                    print("path already exists")
-                model = SentenceTransformer(model_name)
-                model.save(modelPath)
-                l = model_name
-                m = f"Downloaded embedder model {model_name}"
-            else:
-                print("Model Not supported")
-                l = "None"
-                m = "Not supported model"
+            modelPath = os.path.join("/srv/app/model/data", model_name)
+            try:
+                os.makedirs(modelPath)
+            except:
+                print("path already exists")
+            model = SentenceTransformer(model_name)
+            model.save(modelPath)
+            l = model_name
+            m = f"Downloaded embedder model {model_name}"
         else:
             print("Not supported")
             l = "None"
@@ -143,7 +137,7 @@ def apply(model,df,param):
         try:
             l = ""
             for r in response:
-                l += r['model'].split(":")[0]
+                l += r['model']
                 l += " "
         except:
             l = None
@@ -266,6 +260,7 @@ def compute(model,df,param):
     cols={'Models': l, 'Message': m}
     returns= [cols]
     return returns
+
 
 
 

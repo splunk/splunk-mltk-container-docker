@@ -1,0 +1,33 @@
+# DSDL Data Science Environment: Docker Compose Configuration for Neo4j Graph Database service
+version: '1.0'
+# ------------------------------------------------------------------------------------------------------------------------ #
+# Define all services: Neo4j
+# ------------------------------------------------------------------------------------------------------------------------ #
+services:
+# ------------------------------------------------------------------------------------------------------------------------ #
+  # Neo4j Container
+  neo4j:
+    container_name: neo4j
+    image: neo4j:latest
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/neo4j/logs:/logs
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/neo4j/config:/config
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/neo4j/data:/data
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/neo4j/plugins:/plugins
+    environment:
+      - NEO4J_AUTH=neo4j/changeme
+      # the following line fixes Java issue on apple silicon as described here: https://brainsteam.co.uk/2025/03/02/neo4j-on-macos/
+      # - _JAVA_OPTIONS=-XX:UseSVE=0
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    restart: always
+volumes:
+  mltk-container-data:
+  mltk-container-app:
+  mltk-container-notebooks:
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+networks:
+  default:
+    name: dsenv-network

@@ -3,7 +3,7 @@
 
 
     
-# In[2]:
+# In[50]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
@@ -11,6 +11,7 @@ import json
 import numpy as np
 import pandas as pd
 import os
+from typing import Dict, List, Any, Optional, Union
 import pymilvus
 from pymilvus import (
     connections,
@@ -21,8 +22,6 @@ from pymilvus import (
 import llama_index
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Document, StorageContext, ServiceContext
 from llama_index.vector_stores.milvus import MilvusVectorStore
-from llama_index.llms.ollama import Ollama
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import textwrap
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core import ChatPromptTemplate
@@ -31,114 +30,336 @@ from typing import Sequence, List
 from llama_index.core.tools import BaseTool, FunctionTool
 from llama_index.core.agent import AgentRunner, ReActAgentWorker
 from pydantic import Field
+from app.model.llm_utils import create_llm, create_embedding_model
+import splunklib.client
 # ...
 # global constants
 MODEL_DIRECTORY = "/srv/app/model/data/"
 
-def search_splunk_events(
-    index: str, 
-    sourcetype: str, 
-    earliest_time: str, 
-    latest_time: str, 
-    source: str = None, 
-    keyword: str =None
-):
-    '''
-    Description on input fields
-    earliest_time: Time specifier for earliest event to search, formatted like '[+|-]<time_integer><time_unit>@<time_unit>'. For example, '-12h@h' for the past 12 hours, '-5m@m' for the last 5 minutes and '-40s@s' for the last 40 seconds
-    latest_time: Time specifier for latest event search, formatted like '[+|-]<time_integer><time_unit>@<time_unit>'. For example, '-12h@h' for the past 12 hours, '-5m@m' for the last 5 minutes and '-40s@s' for the last 40 seconds. For searching events up to now, set this field to 'now'
-    '''
-    # Imports
-    import splunklib.client as splunk_client
-    import splunklib.results as splunk_results
-    import time 
-    import pandas as pd
-    # Load Splunk server info and create service
-    token = os.environ["splunk_access_token"]
-    host = os.environ["splunk_access_host"]
-    port = os.environ["splunk_access_port"]
-    service = splunk_client.connect(host=host, port=port, token=token)
-    if index is not None:
-        index = index
-    else:
-        index= ' *'
-    if source is not None:
-        source = source
-    else:
-        source = ' *'
-    if sourcetype is not None:
-        sourcetype = sourcetype
-    else:
-        sourcetype = ' *'
-    if keyword is not None:
-        keyword = keyword
-    else:
-        keyword = ' *'
-    if earliest_time is not None:
-        earliest = earliest_time
-    else:
-        earliest = '-24h@h'
-    if latest_time is not None:
-        latest = latest_time
-    else:
-        latest = "now"
+## Acknowledgement: The example tools are following the Splunk MCP at https://github.com/livehybrid/splunk-mcp
 
-    query = f"index={index} sourcetype={sourcetype} source={source} {keyword} earliest={earliest} latest={latest}"
-    query_cleaned = query.strip()
-    # add search keyword before the SPL
-    query_cleaned="search "+query_cleaned
+def get_splunk_connection() -> splunklib.client.Service:
+    """
+    Get a connection to the Splunk service.
     
-    job = service.jobs.create(
-        query_cleaned,
-        earliest_time=earliest, 
-        latest_time=latest, 
-        adhoc_search_level="smart",
-        search_mode="normal")
-    while not job.is_done():
-        time.sleep(0.1)
-    resultCount = int(job.resultCount)
-    diagnostic_messages = []
-    resultset = []
-    processed = 0
-    offset = 0
-    while processed < resultCount:
-        for event in splunk_results.JSONResultsReader(job.results(output_mode='json', offset=offset, count=0)):
-            if isinstance(event, splunk_results.Message):
-                # Diagnostic messages may be returned in the results
-                diagnostic_messages.append(event.message)
-                #print('%s: %s' % (event.type, event.message))
-            elif isinstance(event, dict):
-                # Normal events are returned as dicts
-                resultset.append(event['_raw'])
-                #print(result)
-            processed += 1
-        offset = processed   
-    results = f'The list of events searched from Splunk is {str(resultset)}'
-    return results
+    Returns:
+        splunklib.client.Service: Connected Splunk service
+    """
+    try:
+        print(f"🔌 Connecting to Splunk")
+        
+        # Connect to Splunk
+        service = splunklib.client.connect(
+            host=os.environ["splunk_access_host"],
+            port=os.environ["splunk_access_port"],
+            token=os.environ["splunk_access_token"],
+            scheme="https",
+            verify=False
+        )
+        
+        print(f"Connected to Splunk successfully")
+        return service
+    except Exception as e:
+        print(f"Failed to connect to Splunk: {str(e)}")
+        raise
 
-# Milvus search function
-def search_record_from_vector_db(log_message: str, collection_name: str):
-    from pymilvus import connections, Collection
-    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-    transformer_embedder = HuggingFaceEmbedding(model_name='all-MiniLM-L6-v2')
-    connections.connect("default", host="milvus-standalone", port="19530")
-    collection = Collection(collection_name)
-    search_params = {
-        "metric_type": "L2",
-        "params": {"nprobe": 10},
-    }
-    log_message = transformer_embedder.get_text_embedding(log_message)
-    results = collection.search(data=[log_message], anns_field="embeddings", param=search_params, limit=1, output_fields=["_key","label"])
-    l = []
-    for result in results:
-        t = ""
-        for r in result:
-            t += f"For the log message {log_message}, the recorded similar log message is: {r.entity.get('label')}."
-        l.append(t)
-    return l[0]
+def search_splunk(search_query: str, earliest_time: str = "-24h", latest_time: str = "now", max_results: int = 100) -> List[Dict[str, Any]]:
+    """
+    Execute a Splunk search query and return the results.
+    
+    Args:
+        search_query: The search query to execute
+        earliest_time: Start time for the search (default: 24 hours ago)
+        latest_time: End time for the search (default: now)
+        max_results: Maximum number of results to return (default: 100)
+        
+    Returns:
+        List of search results
+    """
+    if not search_query:
+        raise ValueError("Search query cannot be empty")
+        
+    try:
+        service = get_splunk_connection()
+        print(f"🔍 Executing search: {search_query}")
+        
+        # Create the search job
+        kwargs_search = {
+            "earliest_time": earliest_time,
+            "latest_time": latest_time,
+            "preview": False,
+            "exec_mode": "blocking"
+        }
+        
+        job = service.jobs.create(search_query, **kwargs_search)
+        
+        # Get the results
+        result_stream = job.results(output_mode='json', count=max_results)
+        results_data = json.loads(result_stream.read().decode('utf-8'))
+        
+        return results_data.get("results", [])
+        
+    except Exception as e:
+        print(f"❌ Search failed: {str(e)}")
+        raise
 
-search_splunk_tool = FunctionTool.from_defaults(fn=search_splunk_events)
-search_record_from_vector_db_tool = FunctionTool.from_defaults(fn=search_record_from_vector_db)
+def list_indexes() -> Dict[str, List[str]]:
+    """
+    Get a list of all available Splunk indexes.
+    
+    Returns:
+        Dictionary containing list of indexes
+    """
+    try:
+        service = get_splunk_connection()
+        indexes = [index.name for index in service.indexes]
+        print(f"📊 Found {len(indexes)} indexes")
+        return {"indexes": indexes}
+    except Exception as e:
+        print(f"❌ Failed to list indexes: {str(e)}")
+        raise
+
+def get_index_info(index_name: str) -> Dict[str, Any]:
+    """
+    Get metadata for a specific Splunk index.
+    
+    Args:
+        index_name: Name of the index to get metadata for
+        
+    Returns:
+        Dictionary containing index metadata
+    """
+    try:
+        service = get_splunk_connection()
+        index = service.indexes[index_name]
+        
+        return {
+            "name": index_name,
+            "total_event_count": str(index["totalEventCount"]),
+            "current_size": str(index["currentDBSizeMB"]),
+            "max_size": str(index["maxTotalDataSizeMB"]),
+            "min_time": str(index["minTime"]),
+            "max_time": str(index["maxTime"])
+        }
+    except KeyError:
+        print(f"❌ Index not found: {index_name}")
+        raise ValueError(f"Index not found: {index_name}")
+    except Exception as e:
+        print(f"❌ Failed to get index info: {str(e)}")
+        raise
+
+def list_saved_searches() -> List[Dict[str, Any]]:
+    """
+    List all saved searches in Splunk
+    
+    Returns:
+        List of saved searches with their names, descriptions, and search queries
+    """
+    try:
+        service = get_splunk_connection()
+        saved_searches = []
+        
+        for saved_search in service.saved_searches:
+            try:
+                saved_searches.append({
+                    "name": saved_search.name,
+                    "description": saved_search.description or "",
+                    "search": saved_search.search
+                })
+            except Exception as e:
+                print(f"⚠️ Error processing saved search: {str(e)}")
+                continue
+            
+        return saved_searches
+        
+    except Exception as e:
+        print(f"❌ Failed to list saved searches: {str(e)}")
+        raise
+
+def list_users() -> List[Dict[str, Any]]:
+    """List all Splunk users (requires admin privileges)"""
+    try:
+        service = get_splunk_connection()
+        print("👥 Fetching Splunk users...")
+                
+        users = []
+        for user in service.users:
+            try:
+                if hasattr(user, 'content'):
+                    # Ensure roles is a list
+                    roles = user.content.get('roles', [])
+                    if roles is None:
+                        roles = []
+                    elif isinstance(roles, str):
+                        roles = [roles]
+                    
+                    # Ensure capabilities is a list
+                    capabilities = user.content.get('capabilities', [])
+                    if capabilities is None:
+                        capabilities = []
+                    elif isinstance(capabilities, str):
+                        capabilities = [capabilities]
+                    
+                    user_info = {
+                        "username": user.name,
+                        "real_name": user.content.get('realname', "N/A") or "N/A",
+                        "email": user.content.get('email', "N/A") or "N/A",
+                        "roles": roles,
+                        "capabilities": capabilities,
+                        "default_app": user.content.get('defaultApp', "search") or "search",
+                        "type": user.content.get('type', "user") or "user"
+                    }
+                    users.append(user_info)
+                    print(f"✅ Successfully processed user: {user.name}")
+                else:
+                    # Handle users without content
+                    user_info = {
+                        "username": user.name,
+                        "real_name": "N/A",
+                        "email": "N/A",
+                        "roles": [],
+                        "capabilities": [],
+                        "default_app": "search",
+                        "type": "user"
+                    }
+                    users.append(user_info)
+                    print(f"⚠️ User {user.name} has no content, using default values")
+            except Exception as e:
+                print(f"⚠️ Error processing user {user.name}: {str(e)}")
+                continue
+            
+        print(f"✅ Found {len(users)} users")
+        return users
+        
+    except Exception as e:
+        print(f"❌ Error listing users: {str(e)}")
+        raise
+
+def get_indexes_and_sourcetypes() -> Dict[str, Any]:
+    """
+    Get a list of all indexes and their sourcetypes.
+    
+    This endpoint performs a search to gather:
+    - All available indexes
+    - All sourcetypes within each index
+    - Event counts for each sourcetype
+    - Time range information
+    
+    Returns:
+        Dict[str, Any]: Dictionary containing:
+            - indexes: List of all accessible indexes
+            - sourcetypes: Dictionary mapping indexes to their sourcetypes
+            - metadata: Additional information about the search
+    """
+    try:
+        service = get_splunk_connection()
+        print("📊 Fetching indexes and sourcetypes...")
+        
+        # Get list of indexes
+        indexes = [index.name for index in service.indexes]
+        print(f"Found {len(indexes)} indexes")
+        
+        # Search for sourcetypes across all indexes
+        search_query = """
+        | tstats count WHERE index=* BY index, sourcetype
+        | stats count BY index, sourcetype
+        | sort - count
+        """
+        
+        kwargs_search = {
+            "earliest_time": "-24h",
+            "latest_time": "now",
+            "preview": False,
+            "exec_mode": "blocking"
+        }
+        
+        print("🔍 Executing search for sourcetypes...")
+        job = service.jobs.create(search_query, **kwargs_search)
+        
+        # Get the results
+        result_stream = job.results(output_mode='json')
+        results_data = json.loads(result_stream.read().decode('utf-8'))
+        
+        # Process results
+        sourcetypes_by_index = {}
+        for result in results_data.get('results', []):
+            index = result.get('index', '')
+            sourcetype = result.get('sourcetype', '')
+            count = result.get('count', '0')
+            
+            if index not in sourcetypes_by_index:
+                sourcetypes_by_index[index] = []
+            
+            sourcetypes_by_index[index].append({
+                'sourcetype': sourcetype,
+                'count': count
+            })
+        
+        response = {
+            'indexes': indexes,
+            'sourcetypes': sourcetypes_by_index,
+            'metadata': {
+                'total_indexes': len(indexes),
+                'total_sourcetypes': sum(len(st) for st in sourcetypes_by_index.values()),
+                'search_time_range': '24 hours'
+            }
+        }
+        
+        print(f"✅ Successfully retrieved indexes and sourcetypes")
+        return response
+        
+    except Exception as e:
+        print(f"❌ Error getting indexes and sourcetypes: {str(e)}")
+        raise
+
+def health_check() -> Dict[str, Any]:
+    """Get basic Splunk connection information and list available apps"""
+    try:
+        service = get_splunk_connection()
+        print("🏥 Performing health check...")
+        
+        # List available apps
+        apps = []
+        for app in service.apps:
+            try:
+                app_info = {
+                    "name": app['name'],
+                    "label": app['label'],
+                    "version": app['version']
+                }
+                apps.append(app_info)
+            except Exception as e:
+                print(f"⚠️ Error getting info for app {app['name']}: {str(e)}")
+                continue
+        
+        response = {
+            "status": "healthy",
+            "connection": {
+                "host": os.environ["splunk_access_host"],
+                "port": os.environ["splunk_access_port"],
+                "scheme": "https",
+                "username": "admin",
+                "ssl_verify": False
+            },
+            "apps_count": len(apps),
+            "apps": apps
+        }
+        
+        print(f"✅ Health check successful. Found {len(apps)} apps")
+        return response
+        
+    except Exception as e:
+        print(f"❌ Health check failed: {str(e)}")
+        raise
+
+        
+search_splunk_tool = FunctionTool.from_defaults(fn=search_splunk)
+list_indexes_tool = FunctionTool.from_defaults(fn=list_indexes)
+get_index_info_tool = FunctionTool.from_defaults(fn=get_index_info)
+list_saved_searches_tool = FunctionTool.from_defaults(fn=list_saved_searches)
+list_users_tool = FunctionTool.from_defaults(fn=list_users)
+get_indexes_and_sourcetypes_tool = FunctionTool.from_defaults(fn=get_indexes_and_sourcetypes)
+health_check_tool = FunctionTool.from_defaults(fn=health_check)
 
 
 
@@ -195,38 +416,46 @@ def fit(model,df,param):
 
 
 
-
-
     
-# In[6]:
+# In[4]:
 
 
-# apply your model
-# returns the calculated results
 def apply(model,df,param):
-    # Example: 'all-MiniLM-L6-v2'
-    query = param['options']['params']['prompt'].strip('\"')
-    # Case of only two functions
     try:
-        func1 = int(param['options']['params']['func1'])
-        func2 = int(param['options']['params']['func2'])
+        query = param['options']['params']['prompt'].strip('\"')
     except:
-        func1 = 1
-        func2 = 1
-    tool_list = []
+        result = pd.DataFrame({'Message': "ERROR: Please input a parameter \'prompt\'."})
+        return result
+        
+    tool_list = [
+        search_splunk_tool,
+        list_indexes_tool,
+        get_index_info_tool,
+        list_saved_searches_tool,
+        list_users_tool,
+        get_indexes_and_sourcetypes_tool,
+        health_check_tool
+    ]
 
-    if func1:
-        tool_list.append(search_splunk_tool)
-    if func2:
-        tool_list.append(search_record_from_vector_db_tool)
-    
     try:
-        model = param['options']['params']['model_name'].strip('\"')
+        service = param['options']['params']['llm_service'].strip("\"")
+        print(f"Using {service} LLM service.")
     except:
-        model="mistral"
-    
-    url = "http://ollama:11434"
-    llm = Ollama(model=model, base_url=url, request_timeout=6000.0)
+        service = "ollama"
+        print("Using default Ollama LLM service.")
+
+    try:
+        model_name = param['options']['params']['model_name'].strip("\"")
+    except:
+        model_name = None
+        print("No model name specified")
+        
+    llm, m = create_llm(service=service, model=model_name)
+
+    if llm is None:
+        cols={'Message': [m]}
+        returns=pd.DataFrame(data=cols)
+        return returns
 
     
     worker = ReActAgentWorker.from_tools(tool_list, llm=llm)
@@ -239,16 +468,6 @@ def apply(model,df,param):
             cols[response.sources[i].tool_name] = [response.sources[i].content]
     result = pd.DataFrame(data=cols)
     return result
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -286,7 +505,7 @@ def load(name):
 
 
     
-# In[18]:
+# In[11]:
 
 
 # return a model summary
@@ -295,40 +514,52 @@ def summary(model=None):
     return returns
 
 def compute(model,df,param):
-    # Example: 'all-MiniLM-L6-v2'
-    query = param['params']['prompt'].strip('\"')
-    # Case of only two functions
     try:
-        func1 = int(param['params']['func1'])
-        func2 = int(param['params']['func2'])
+        query = param['options']['params']['prompt'].strip('\"')
     except:
-        func1 = 1
-        func2 = 1
-    tool_list = []
+        result = pd.DataFrame({'Message': "ERROR: Please input a parameter \'prompt\'."})
+        return result
+    # Case of only two functions. Please customize for your own functions
+    tool_list = [
+        search_splunk_tool,
+        list_indexes_tool,
+        get_index_info_tool,
+        list_saved_searches_tool,
+        list_users_tool,
+        get_indexes_and_sourcetypes_tool,
+        health_check_tool
+    ]
 
-    if func1:
-        tool_list.append(search_splunk_tool)
-    if func2:
-        tool_list.append(search_record_from_vector_db_tool)
-    
     try:
-        model = param['params']['model_name'].strip('\"')
+        service = param['options']['params']['llm_service'].strip("\"")
+        print(f"Using {service} LLM service.")
     except:
-        model="mistral"
-    
-    url = "http://ollama:11434"
-    llm = Ollama(model=model, base_url=url, request_timeout=6000.0)
+        service = "ollama"
+        print("Using default Ollama LLM service.")
+
+    try:
+        model_name = param['options']['params']['model_name'].strip("\"")
+    except:
+        model_name = None
+        print("No model name specified")
+        
+    llm, m = create_llm(service=service, model=model_name)
+
+    if llm is None:
+        cols={'Message': [m]}
+        returns=pd.DataFrame(data=cols)
+        return returns
 
     
     worker = ReActAgentWorker.from_tools(tool_list, llm=llm)
     agent = AgentRunner(worker)     
     response = agent.chat(query)
     
-    cols = {"Response": response.response}
+    cols = {"Response": [response.response]}
     for i in range(len(response.sources)):
         if response.sources[i].tool_name != "unknown":
-            cols[response.sources[i].tool_name] = response.sources[i].content
-    result = [cols]
+            cols[response.sources[i].tool_name] = [response.sources[i].content]
+    result = pd.DataFrame(data=cols)
     return result
 
 

@@ -1,0 +1,38 @@
+# DSDL Data Science Environment: Docker Compose Configuration for Dgraph Graph Database service
+version: '1.0'
+# ------------------------------------------------------------------------------------------------------------------------ #
+# Define all services for Dgraph
+# ------------------------------------------------------------------------------------------------------------------------ #
+services:
+  dgraph-zero:
+    image: dgraph/dgraph:latest
+    container_name: dgraph-zero
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/dgraph:/dgraph
+    ports:
+      - 5080:5080
+      - 6080:6080
+    command: dgraph zero --my=dgraph-zero:5080
+
+  dgraph-alpha:
+    image: dgraph/dgraph:latest
+    container_name: dgraph-alpha
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/dgraph:/dgraph
+    ports:
+      - 8080:8080
+      - 9080:9080
+    command: dgraph alpha --my=dgraph-alpha:7080 --zero=dgraph-zero:5080
+    depends_on:
+      - dgraph-zero
+
+  dgraph-ratel:
+    image: dgraph/ratel:latest
+    container_name: dgraph-ratel
+    ports:
+      - 8001:8000
+
+# ------------------------------------------------------------------------------------------------------------------------ #
+networks:
+  default:
+    name: dsenv-network
