@@ -3,10 +3,10 @@
 
 
     
-# In[180]:
+# In[306]:
 
 
-# this definition exposes all python module imports that should be available in all subsequent commands
+# This definition exposes all python module imports that should be available in all subsequent commands
 import json
 import numpy as np
 import pandas as pd
@@ -64,6 +64,7 @@ class SimpleDNN(nn.Module):
     def __init__(self, input_dim, num_hidden_layers, nodes_per_layer, activation_func, dropout_rate):
         super(SimpleDNN, self).__init__()
         layers = []
+        
         # Input layer
         layers.append(nn.Linear(input_dim, nodes_per_layer))
         layers.append(activation_func)
@@ -84,10 +85,10 @@ class SimpleDNN(nn.Module):
     def forward(self, x):
         return self.layers(x)
 
-# global constants
-nodes_per_layer = 64
-batch_size = 512
-class_weight = 1
+# Global constants
+nodes_per_layer = 128
+batch_size = 256
+class_weight = .3
 num_epochs = 10
 MODEL_DIRECTORY = "/srv/app/model/data/"
 
@@ -98,10 +99,10 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[182]:
+# In[308]:
 
 
-# this cell is not executed from MLTK and should only be used for staging data into the notebook environment
+# This cell is not executed from MLTK and should only be used for staging data into the notebook environment
 def stage(name):
     with open("data/"+name+".csv", 'r') as f:
         df = pd.read_csv(f)
@@ -120,7 +121,7 @@ def stage(name):
 
 
     
-# In[186]:
+# In[312]:
 
 
 # initialize your model
@@ -131,6 +132,7 @@ def init(df,param):
     input_dim = len(df.columns)-2 #remove training and flag field in input dimensionality
     num_hidden_layers = int(param['options']['params']['num_hidden_layers'])
     activation_name = param['options']['params']['activation_name'].strip('\"')
+    
     # Map activation functions
     activation_mapping = {
         'ReLU': nn.ReLU(),
@@ -157,11 +159,11 @@ def init(df,param):
 
 
     
-# In[188]:
+# In[314]:
 
 
-# train your model
-# returns a fit info json object and may modify the model object
+# Train your model
+# Returns a fit info json object and may modify the model object
 def fit(model,df,param):
     summary_list = {}
     df_train = df[df['is_train'] == 1]
@@ -177,6 +179,7 @@ def fit(model,df,param):
     print("Shape of y_test:", y_test.shape)
 
     device = torch.device('cpu')
+    
     # Convert pandas Series to NumPy arrays before creating tensors
     X_train_tensor = torch.tensor(X_train.values, dtype=torch.float32).to(device)
     y_train_tensor = torch.tensor(y_train.values, dtype=torch.long).to(device) # Convert Series to numpy array
@@ -258,11 +261,11 @@ def fit(model,df,param):
 
 
     
-# In[190]:
+# In[316]:
 
 
-# apply your model
-# returns the calculated results
+# Apply your model
+# Returns the calculated results
 def apply(model,df,param):
     try:
         X = df.drop('label', axis=1)
@@ -297,10 +300,10 @@ def apply(model,df,param):
 
 
     
-# In[192]:
+# In[318]:
 
 
-# save model to name in expected convention "<algo_name>_<model_name>"
+# Save model to name in expected convention "<algo_name>_<model_name>"
 def save(model,name):
     model_path = MODEL_DIRECTORY + name + ".pth"
     torch.save(model['dnn'], model_path)
@@ -317,10 +320,10 @@ def save(model,name):
 
 
     
-# In[194]:
+# In[320]:
 
 
-# load model from name in expected convention "<algo_name>_<model_name>"
+# Load model from name in expected convention "<algo_name>_<model_name>"
 def load(name):
     model = {}
     with open(MODEL_DIRECTORY + name + ".json", 'r') as file:
@@ -354,10 +357,10 @@ def load(name):
 
 
     
-# In[197]:
+# In[323]:
 
 
-# return a model summary
+# Return a model summary
 def summary(model=None):
     try:
         with open(MODEL_DIRECTORY + "dnn_lab_loss.json", 'r') as file:
@@ -366,16 +369,6 @@ def summary(model=None):
         loss_info = {'training_settings': "None", 'training_time': "None", 'epoch_number':"None", 'loss_list':"None", 'final_loss': "None"}
     returns = loss_info
     return returns
-
-
-
-
-
-
-
-
-
-
 
 
 
