@@ -1,0 +1,99 @@
+# FastAPI stack
+fastapi>=0.109.1
+pydantic
+uvicorn
+aiofiles
+pyopenssl 
+
+# jupyter
+jupyterlab>4.0.0
+
+#interactive python dependancies
+ipywidgets
+jupyterlab-git
+widgetsnbextension
+matplotlib
+
+# splunk functionality dependancies
+splunk-sdk
+splunk-opentelemetry
+#opentelemetry-instrumentation-fastapi==0.33b0
+
+# basic data-science libraries
+pandas
+numpy
+# Basics
+llama-index
+llama-index-core
+llama-parse
+llama-index-readers-file
+llama-index-utils-workflow
+
+# Vector Stores
+llama-index-vector-stores-milvus
+llama-index-vector-stores-pinecone
+llama-index-vector-stores-neo4jvector
+llama-index-vector-stores-mongodb
+llama-index-vector-stores-azureaisearch
+llama-index-vector-stores-databricks
+llama-index-vector-stores-vertexaivectorsearch
+llama-index-alloydb-pg
+llama-index-retrievers-bedrock
+
+# Embeddings
+llama-index-embeddings-ollama
+llama-index-embeddings-huggingface
+llama-index-embeddings-openai
+llama-index-embeddings-instructor
+llama-index-embeddings-bedrock
+llama-index-embeddings-azure-openai
+llama-index-embeddings-gemini
+llama-index-embeddings-vertex
+llama-index-embeddings-vllm
+
+# LLMs
+llama-index-llms-ollama
+llama-index-llms-azure-openai
+llama-index-llms-bedrock
+llama-index-llms-bedrock-converse
+llama-index-llms-openai
+llama-index-llms-gemini
+llama-index-llms-vertex
+llama-index-llms-huggingface
+llama-index-llms-huggingface-api
+llama-index-llms-deepseek
+llama-index-llms-anthropic
+llama-index-llms-vllm
+
+# Graphs
+llama-index-graph-stores-neo4j
+
+
+# Tools
+llama-index-tools-mcp
+llama-index-tools-graphql
+llama-index-tools-google
+llama-index-tools-jira
+llama-index-tools-wikipedia
+llama-index-tools-neo4j
+llama-index-tools-slack
+llama-index-tools-arxiv
+
+# Agents
+llama-index-agent-openai
+
+
+# Others
+google-auth
+sentence-transformers
+pymilvus
+pydantic
+PyPDF2
+PyYAML
+docx2txt
+python-pptx
+Pillow
+sentencepiece
+tf-keras
+
+
