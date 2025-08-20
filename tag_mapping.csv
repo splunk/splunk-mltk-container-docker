@@ -9,4 +9,4 @@ escu-cpu,python:3.9.19-slim-bullseye,Dockerfile.debian.escu,base_functional.txt,
 spark,quay.io/jupyter/all-spark-notebook:spark-3.5.1,Dockerfile.debian.spark,base_functional.txt,specific_spark.txt,none,Dockerfile.debian.requirements,Spark 3.5.0 (5.2.2)
 golden-cpu-arm,redhat/ubi9,Dockerfile.redhat,base_functional.txt,specific_golden_cpu_redhat_arm64.txt,none,Dockerfile.redhat.requirements,Red Hat UBI Golden CPU ARM64 (5.2.2)
 golden-gpu-geo,nvidia/cuda:12.4.1-cudnn-runtime-ubuntu20.04,Dockerfile.debian,base_functional.txt,specific_golden_gpu_geometric.txt,nvidia,Dockerfile.debian.requirements,Golden Image GPU Geometric (5.2.2)
-agentic-ai,python:3.12.11-slim-bullseye,Dockerfile.debian.agentic,base_functional.txt,specific_llm_agentic.txt,none,Dockerfile.debian.requirements,Agentic AI (5.2.2)
+agentic-ai,python:3.13.6-slim-bullseye,Dockerfile.debian.agentic,base_functional.txt,specific_llm_agentic.txt,none,Dockerfile.debian.requirements,Agentic AI (5.2.2)
