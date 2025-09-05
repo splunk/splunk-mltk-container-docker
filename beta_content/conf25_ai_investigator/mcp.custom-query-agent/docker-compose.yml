@@ -1,0 +1,71 @@
+services:
+  # SSE Internal - accessible locally via port 7006
+  custom-query-agent-sse-int:
+    build: .
+    image: ${MCP_SERVER_DOCKER_IMAGE_NAME:-custom-query-agent}
+    container_name: ${MCP_SERVER_DOCKER_CONTAINER_NAME}-sse-int
+    env_file:
+      - .env
+    environment:
+      - MCP_SERVER_TRANSPORT=sse
+      - CUSTOM_QUERY_AGENT_HOST=http://host.docker.internal:2993
+    ports:
+      - "${MCP_SERVER_SSE_PORT:-7006}:${MCP_SERVER_SSE_PORT:-7006}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - default
+
+  # Streamable HTTP Internal - accessible locally via port 7007
+  custom-query-agent-stream-http-int:
+    build: .
+    image: ${MCP_SERVER_DOCKER_IMAGE_NAME:-custom-query-agent}
+    container_name: ${MCP_SERVER_DOCKER_CONTAINER_NAME}-stream-http-int
+    env_file:
+      - .env
+    environment:
+      - MCP_SERVER_TRANSPORT=streamable-http
+      - CUSTOM_QUERY_AGENT_HOST=http://host.docker.internal:2993
+    ports:
+      - "${MCP_SERVER_STREAMABLE_HTTP_PORT:-7007}:${MCP_SERVER_STREAMABLE_HTTP_PORT:-7007}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - default
+
+  # Streamable HTTP External - accessible via Cloudflare tunnel
+  custom-query-agent-stream-http-ext:
+    build: .
+    image: ${MCP_SERVER_DOCKER_IMAGE_NAME:-custom-query-agent}
+    container_name: ${MCP_SERVER_DOCKER_CONTAINER_NAME}-stream-http-ext
+    env_file:
+      - .env
+    environment:
+      - MCP_SERVER_TRANSPORT=streamable-http
+      - CUSTOM_QUERY_AGENT_HOST=http://host.docker.internal:2993
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      tunnel:
+        aliases:
+          - custom-query-agent-ext
+
+  # Cloudflare tunnel - NO CHANGES
+  custom-query-agent-cloudflare:
+    image: cloudflare/cloudflared:latest
+    container_name: ainv__mcp_custom-query-agent-cloudflare
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TOKEN}
+    restart: unless-stopped
+    networks:
+      - tunnel
+    depends_on:
+      - custom-query-agent-stream-http-ext
+
+networks:
+  tunnel:
+    driver: bridge
+  default:
+    driver: bridge

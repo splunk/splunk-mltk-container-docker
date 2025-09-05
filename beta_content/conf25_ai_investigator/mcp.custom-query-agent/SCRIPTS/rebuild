@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Reload script - Start fresh (rebuild and start)
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m'
+
+# Get script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
+cd "${SCRIPT_DIR}" || exit 1
+
+echo -e "${WHITE}=== Custom Query Agent Start Fresh ===${NC}"
+echo -e "${YELLOW}Building and starting containers from scratch...${NC}"
+echo ""
+
+# Stop existing containers first (without removing images)
+echo -e "${CYAN}Stopping existing containers...${NC}"
+sudo docker compose down
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Containers stopped${NC}"
+else
+    echo -e "${YELLOW}⚠ No containers to stop (continuing)${NC}"
+fi
+
+# Build containers from scratch
+echo -e "${CYAN}Building containers (no cache)...${NC}"
+sudo docker compose build --no-cache
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Containers built successfully${NC}"
+else
+    echo -e "${RED}✗ Failed to build containers${NC}"
+    exit 1
+fi
+
+# Start containers
+echo -e "${CYAN}Starting containers...${NC}"
+sudo docker compose up -d
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Containers started successfully${NC}"
+    echo ""
+    echo -e "${WHITE}=== Services Running ===${NC}"
+    echo -e "${CYAN}Status:${NC} Use ${WHITE}dock status${NC} to check container status"
+    echo -e "${CYAN}Logs:${NC} Use ${WHITE}sudo docker compose logs -f${NC} to view logs"
+else
+    echo -e "${RED}✗ Failed to start containers${NC}"
+    exit 1
+fi

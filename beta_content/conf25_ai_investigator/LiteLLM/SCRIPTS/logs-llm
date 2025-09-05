@@ -1,0 +1,2 @@
+#!/bin/bash
+tail -f logs/litellm/raw/api_logs.jsonl | jq '.'

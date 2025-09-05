@@ -1,0 +1,37 @@
+#!/bin/bash
+
+clear
+
+# So that all executable scripts will be runnable by typing: scriptname (instead of ./scriptname)
+export PATH="$PATH:."
+
+# Check if the script was sourced
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  echo "This script must be run:"
+  echo " "
+  echo "   source ./init"
+  exit 1
+fi
+
+# Initialize conda
+eval "$(conda shell.bash hook)"
+
+# Get the current directory name
+ENV_NAME=AInv2
+
+# Check if the conda env already exists
+if conda info --envs | grep -w "$ENV_NAME" > /dev/null; then
+    echo "✅ Conda environment '$ENV_NAME' already exists."
+else
+    echo "⚙️  Creating conda environment '$ENV_NAME' from environment.yml..."
+    conda env create --file=SETUP/environment.yml
+fi
+
+# Activate the environment
+echo "🔵 Activating conda environment '$ENV_NAME'..."
+conda deactivate
+conda activate "$ENV_NAME"
+
+# To completely delete conda environment:
+# conda env list
+# conda env remove -n your_env_name -y

@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# LiteLLM Reset Script - Full cleanup of containers and images
+# Removes all project containers, volumes, and images
+
+set -e
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PARENT_DIR="$(dirname "$SCRIPT_DIR")"
+cd "${PARENT_DIR}" || exit 1
+
+# Load environment variables from .env file
+if [ -f "${PARENT_DIR}/.env" ]; then
+    set -a
+    source "${PARENT_DIR}/.env"
+    set +a
+fi
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m' # No Color
+
+# Project settings - extract prefix from container names
+PROJECT_PREFIX=$(echo "${LITELLM_CONTAINER:-ainv__litellm-main}" | cut -d'_' -f1)
+
+echo -e "${WHITE}=== LiteLLM Full Cleanup ===${NC}"
+echo -e "${YELLOW}This will completely remove all containers, volumes, and images${NC}"
+echo ""
+
+# Stop and remove containers, networks, volumes
+echo -e "${CYAN}Stopping and removing containers, networks, volumes...${NC}"
+if [ -f "docker-compose-litellm.yml" ]; then
+    sudo docker compose -f docker-compose-litellm.yml down -v --remove-orphans
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ Containers and volumes removed${NC}"
+    else
+        echo -e "${YELLOW}⚠ No containers to stop or minor issues (continuing)${NC}"
+    fi
+fi
+
+# Remove project-specific volumes
+echo -e "${CYAN}Removing project volumes...${NC}"
+sudo docker volume ls | grep "${PROJECT_PREFIX}" | awk '{print $2}' | xargs -r sudo docker volume rm 2>/dev/null || true
+
+# Remove project-specific images
+echo -e "${CYAN}Removing project images...${NC}"
+# Remove images with project prefix
+sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep -i "${PROJECT_PREFIX}\|litellm" | while read -r image_info; do
+    image_id=$(echo "$image_info" | awk '{print $2}')
+    image_name=$(echo "$image_info" | awk '{print $1}')
+    echo -e "${YELLOW}  Removing image: ${image_name}${NC}"
+    sudo docker rmi -f "$image_id" 2>/dev/null || true
+done
+
+# Remove official LiteLLM images
+sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep -E "^ghcr.io/berriai/litellm" | while read -r image_info; do
+    image_id=$(echo "$image_info" | awk '{print $2}')
+    image_name=$(echo "$image_info" | awk '{print $1}')
+    echo -e "${YELLOW}  Removing image: ${image_name}${NC}"
+    sudo docker rmi -f "$image_id" 2>/dev/null || true
+done
+
+# Clean up dangling images
+echo -e "${CYAN}Cleaning up dangling images...${NC}"
+sudo docker image prune -f
+
+# Final cleanup status
+echo ""
+echo -e "${GREEN}✓ Full cleanup completed${NC}"
+echo -e "${CYAN}Use '${WHITE}dock reload${CYAN}' to rebuild and start fresh${NC}"

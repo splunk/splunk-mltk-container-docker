@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Fraud Investigator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6">AI Fraud Investigator ◆ Query</h1>
+        
+        <a href="/manage" class="btn btn-secondary mb-4">Manage Vector DB ▶</a>
+        
+        <div class="mb-4">
+            <label for="llm-provider" class="block mb-2">LLM Provider:</label>
+            <select id="llm-provider" class="w-full p-2 border rounded">
+                <option value="ollama_3.1_8b">Ollama: llama3.1:8b-instruct-q8_0</option>
+                <option value="ollama_3.2_3b">Ollama: llama3.2:3b-instruct-q8_0</option>
+                <option value="ollama_3.1_70b">Ollama: llama3.1:70b-instruct-q4_K_M</option>
+                <option value="ollama_nemotron_70b">Ollama: nemotron:70b-instruct-q4_K_M</option>
+                <option value="ollama_3.3_70b">Ollama: llama3.3:70b-instruct-q4_K_M</option>
+                <option value="openai">OpenAI: gpt-4o</option>
+                <option value="groq">Groq: llama-3.1-8b-instant</option>
+            </select>
+        </div>
+        
+        <div class="mb-4">
+            <label for="query" class="block mb-2">Enter your query:</label>
+            <textarea id="query" class="w-full p-2 border rounded" rows="2"></textarea>
+        </div>
+        
+        <button id="generate-btn" class="btn btn-blue mb-4">Generate Query</button>
+        
+        <div id="result" class="bg-gray-100 p-4 rounded mt-4">
+            <div class="mb-4">
+                <h2 class="text-xl font-semibold mb-2">Generated SPL Query:</h2>
+                <pre id="spl-query" class="bg-white p-4 rounded overflow-x-auto"></pre>
+            </div>
+            
+            <div class="mt-4">
+                <h2 class="text-xl font-semibold mb-2">Recommended Visualization:</h2>
+                <div id="viz-recommendation" class="bg-white p-4 rounded flex items-center gap-4">
+                    <div id="viz-icon" class="text-4xl"></div>
+                    <div id="viz-text" class="text-lg font-medium"></div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h2 class="text-xl font-semibold mb-2">Total Attempts:</h2>
+                <pre id="total-attempts" class="bg-white p-4 rounded overflow-x-auto"></pre>
+            </div>
+
+            <div id="error-message" class="text-red-500 mt-4 hidden">
+                <h2 class="text-xl font-semibold mb-2">Error:</h2>
+                <p id="error-text"></p>
+            </div>
+
+            <div class="system-prompt-section mb-4">
+                <h2 class="text-xl font-semibold mb-2">System Prompt</h2>
+                <div class="system-prompt-content">
+                    <textarea id="system-prompt" class="w-full" rows="4" readonly>---</textarea>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h2 class="text-xl font-semibold mb-2">LLM User Query:</h2>
+                <pre id="llm-query" class="bg-white p-4 rounded overflow-x-auto"></pre>
+            </div>
+
+        </div>
+    </div>
+    
+    <script src="/static/query_generator.js?v={{ timestamp }}"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+Data_Store_Type:
+    Index
+
+Data_Store_Name:
+    web_traffic
+
+Data_Store_Description:
+    Web server logs
+    This data source is suitable for index= queries that are asking to retrieve detailed activity or raw events from data.
+
+Data_Store_Content:
+    - _time (Timestamp): Timestamp of the event; Example: "2023-10-01T12:34:56Z"
+    - src_ip (String): IP address of the website visitor; Example: "192.168.1.1"
+    - Country (String): Country of origin of the IP address; Example: "United States"
+    - Region (String): Region of origin of the IP address; Example: "California"
+    - City (String): City of origin of the IP address; Example: "San Francisco"
+    - username (String): Name of the user account; Example: "johndoe"
+    - logged_in (Integer): Flag indicating if the login attempt was successful or failed. (0 = failed login, 1 = successful login); Example: 1
+    - http_user_agent (String): Browser user agent used; Example: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)..."
+    - http_method (String): HTTP request method used for the event; Example: "GET"
+    - status (Integer): HTTP status code (Possible values: 200 = Success, 301 = Permanent Redirect, 400-499 = Client Errors, 500-599 = Server Errors); Example: 200
+    - uri_path (String): Page that was accessed by the visitor; Example: "/home"
+    - bytes_in (Integer): Total number of bytes sent to the server within a single request; Example: 512
+    - bytes_out (Integer): Total number of bytes received from the server within a single response; Example: 2048
+

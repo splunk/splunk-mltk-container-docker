@@ -34,8 +34,8 @@ pymilvus
 #Spacy does not compile in ubi9 because of blis and thinc
 #spacy==2.3.2
 #spacytextblob==0.1.7
-spacy
-spacytextblob
+#spacy
+#spacytextblob
 
 onnx
 onnxscript

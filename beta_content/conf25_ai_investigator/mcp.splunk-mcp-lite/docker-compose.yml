@@ -1,0 +1,65 @@
+services:
+  # SSE Internal - accessible locally via port 7008
+  splunk-mcp-lite-sse-int:
+    build: .
+    image: ${MCP_SERVER_DOCKER_IMAGE_NAME:-splunk-mcp-lite}
+    container_name: ${MCP_SERVER_DOCKER_CONTAINER_NAME}-sse-int
+    env_file:
+      - .env
+    environment:
+      - MCP_SERVER_TRANSPORT=sse
+      - RUNNING_INSIDE_DOCKER=1
+    ports:
+      - "${MCP_SERVER_SSE_PORT:-7008}:${MCP_SERVER_SSE_PORT:-7008}"
+    restart: unless-stopped
+    networks:
+      - default
+
+  # Streamable HTTP Internal - accessible locally via port 7009
+  splunk-mcp-lite-stream-http-int:
+    build: .
+    image: ${MCP_SERVER_DOCKER_IMAGE_NAME:-splunk-mcp-lite}
+    container_name: ${MCP_SERVER_DOCKER_CONTAINER_NAME}-stream-http-int
+    env_file:
+      - .env
+    environment:
+      - MCP_SERVER_TRANSPORT=streamable-http
+      - RUNNING_INSIDE_DOCKER=1
+    ports:
+      - "${MCP_SERVER_STREAMABLE_HTTP_PORT:-7009}:${MCP_SERVER_STREAMABLE_HTTP_PORT:-7009}"
+    restart: unless-stopped
+    networks:
+      - default
+
+  # Streamable HTTP External - accessible via Cloudflare tunnel
+  splunk-mcp-lite-stream-http-ext:
+    build: .
+    image: ${MCP_SERVER_DOCKER_IMAGE_NAME:-splunk-mcp-lite}
+    container_name: ${MCP_SERVER_DOCKER_CONTAINER_NAME}-stream-http-ext
+    env_file:
+      - .env
+    environment:
+      - MCP_SERVER_TRANSPORT=streamable-http
+      - RUNNING_INSIDE_DOCKER=1
+    restart: unless-stopped
+    networks:
+      tunnel:
+        aliases:
+          - splunk-mcp-lite-ext
+
+  # Cloudflare tunnel - NO CHANGES
+  splunk-mcp-lite-cloudflare:
+    image: cloudflare/cloudflared:latest
+    container_name: ainv__mcp_splunk-lite-cloudflare
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TOKEN}
+    restart: unless-stopped
+    networks:
+      - tunnel
+    depends_on:
+      - splunk-mcp-lite-stream-http-ext
+
+networks:
+  tunnel:
+    driver: bridge
+  default:
+    driver: bridge

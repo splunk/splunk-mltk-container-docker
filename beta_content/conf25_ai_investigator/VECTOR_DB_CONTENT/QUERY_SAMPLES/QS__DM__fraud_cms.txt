@@ -1,0 +1,485 @@
+##################### QS: opioid drugs :
+
+User query: List the top 20 cities with the highest number of providers prescribing opioids totaling more than $10,000 and exceeding 20 times the prescribing rate for their specialty.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| where pct_opioid_drugs_cost > all_pct__opioid_drugs_cost * 10
+| where cost_opioid_drugs_total > 10000
+| top prescriber_city limit=20
+
+User query: Identify the top 100 providers whose opioid prescribing rates exceed their specialty's rate by more than 10 times.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| where pct_opioid_drugs_cost > all_pct__opioid_drugs_cost*10
+| sort 0 - cost_opioid_drugs_total
+| head 100
+
+User query: List all providers in family related services that prescribed opioids for more than 100000 dollars?
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_type IN ("*Family*")
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| where cost_opioid_drugs_total > 100000
+| sort 0 - cost_opioid_drugs_total
+
+User query: List all prescribers in Houston, TX prescribing opioids for more than $50000. Show all details.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state="TX" fraud_cms.prescriber_city="Houston"
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| where cost_opioid_drugs_total>50000
+| sort 0 - cost_opioid_drugs_total
+
+User query: List top prescribers in emergency related specialties who prescribed at least 100000 worth of opioids
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_type IN ("*emergency*")
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| where cost_opioid_drugs_total>=100000
+| sort  0 -  cost_opioid_drugs_total
+
+User query: List 10 most aggressive prescribers of opioids in Florida
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("FL")
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort  0 -  cost_opioid_drugs_total
+| head 10
+
+User query: Which specialties has lowest opioid prescribing rates?
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  BY 
+    fraud_cms.prescriber_type fraud_cms.all_pct__opioid_drugs_cost
+| rename fraud_cms.* as *
+| sort 0 + all_pct__opioid_drugs_cost
+
+User query: Which specialties has highest opioid prescribing rates?
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  BY 
+    fraud_cms.prescriber_type fraud_cms.all_pct__opioid_drugs_cost
+| rename fraud_cms.* as *
+| sort 0 + all_pct__opioid_drugs_cost
+
+User query: Which specialties prescribing the highest amount of opioids by dollar amount?
+SPL answer: | tstats summariesonly=1 sum(fraud_cms.cost_opioid_drugs_total) as total_opioids_by_dollar_amount
+  FROM datamodel=fraud_cms
+  BY fraud_cms.prescriber_type
+| rename fraud_cms.* as *
+| sort 0 - total_opioids_by_dollar_amount
+
+User query: List all providers in the USA who prescribed narcotics totaling more than $1,000,000
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  BY fraud_cms.all_pct__opioid_drugs_cost fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost
+| rename fraud_cms.* as *
+| where cost_opioid_drugs_total>1000000
+| sort 0 - cost_opioid_drugs_total
+
+User query: List states and cities with the highest number of providers prescribing opioids totaling at least $500,000 each.
+SPL answer: | tstats summariesonly=1 c as count, sum(fraud_cms.cost_opioid_drugs_total) as total_opioids_cost_per_city
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.cost_opioid_drugs_total > 500000
+  BY fraud_cms.prescriber_state fraud_cms.prescriber_city
+| rename fraud_cms.* as *
+| sort 0 - count
+
+User query: List the top 20 providers from Connecticut state who prescribe the highest total dollar value of opioids.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("CT")
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_opioid_drugs_total
+| head 20
+
+User query: List the top 20 providers from Oakland, CA with the highest opioid prescription prescription rate compare to all medications.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("CA") fraud_cms.prescriber_city IN ("Oakland")
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - pct_opioid_drugs_cost
+| head 20
+
+User query: List the top 50 providers ranked by the total dollar value of opioids prescribed, where opioids represent at least 95% of their total prescription cost.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.pct_opioid_drugs_cost>=95
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_opioid_drugs_total
+| head 50
+
+User query: List pediatricians who prescribed narcotics totaling at least $10,000 to their patients
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_type IN ("Pediatric Medicine") fraud_cms.cost_opioid_drugs_total>=10000
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_opioid_drugs_total
+
+User query: Are there any dentistry related specialists who prescribed narcotics accounting for at least 10% of their total prescription costs?
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_type IN ("*dental*", "*dentist*") fraud_cms.pct_opioid_drugs_cost>=10
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_opioid_drugs_total
+
+User query: Find providers from specialties that typically do not prescribe opioids but have prescribed opioids totaling over $100,000, representing more than 75% of their total prescription costs
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.all_pct__opioid_drugs_cost<1 fraud_cms.cost_opioid_drugs_total>100000 fraud_cms.pct_opioid_drugs_cost>75
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_opioid_drugs_total
+
+User query: Identify the top 25 narcotic prescribers in Nashville, TN, who prescribe opioids in more than 50% of their total prescriptions, ranked by the total dollar value of their opioid prescriptions.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("TN") fraud_cms.prescriber_city IN ("Nashville") fraud_cms.pct_opioid_drugs_cost>50
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_opioid_drugs_total
+| head 25
+
+User query: List top 50 prescribers of opioids by dollar value in california and nevada 
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("NV", "CA")
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_opioid_drugs_total
+| head 50
+
+User query: List top 100 cities in USA by volume of opioid prescriptions
+SPL answer: | tstats summariesonly=1 sum(fraud_cms.cost_opioid_drugs_total) as cost_opioids_total_per_city
+  FROM datamodel=fraud_cms
+  BY 
+    fraud_cms.prescriber_state fraud_cms.prescriber_city
+| rename fraud_cms.* as *
+| sort 0 - cost_opioids_total_per_city
+| head 100
+
+User query: List top 50 opioid prescribers in CA from specialties excluding pain, addiction and sport related medicines
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("CA") NOT fraud_cms.prescriber_type IN ("*pain*", "*addiction*", "*sport*")
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_opioid_drugs_total
+| head 50
+
+User query: Find prescriber with last name Adler from Phoenix, AZ
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_fullname IN ("*adler*") fraud_cms.prescriber_state IN ("AZ") fraud_cms.prescriber_city IN ("Phoenix")
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_opioid_drugs_total
+
+User query: Show top doctors prescribing narcotics in Family specialities in NY but excluding NYC
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_type IN ("*family*") fraud_cms.prescriber_state IN ("NY") NOT fraud_cms.prescriber_city IN ("New York")
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_opioid_drugs_total
+
+User query: Identify top 100 providers who prescribed at least $100k worth of opioids and for whom opioid prescriptions accounted for at least 40% of their total prescribing volume by cost.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.cost_opioid_drugs_total>=100000 fraud_cms.pct_opioid_drugs_cost>=40 
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_opioid_drugs_total
+| head 100
+
+User query: Find medical professionals in Greensboro, NC with first or last name containing "Crisp", "Roche", or "Celeste"
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("NC") fraud_cms.prescriber_city IN ("Greensboro") fraud_cms.prescriber_fullname IN ("*Crisp*", "*Roche*", or "*Celeste*")
+  BY 
+    fraud_cms.all_pct__opioid_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_opioid_drugs_total fraud_cms.pct_opioid_drugs_cost fraud_cms.pct_opioid_claims fraud_cms.cost_opioid_per_benef fraud_cms.cost_opioid_per_claim
+| rename fraud_cms.* as *
+| sort 0 - prescriber_fullname
+
+##################### QS: Brand name drugs :
+
+User query: List the top 20 cities with the highest number of providers prescribing brand name drugs totaling more than $10,000 and exceeding 20 times the prescribing rate for their specialty.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| where pct_brand_drugs_cost > all_pct__brand_drugs_cost * 10
+| where cost_brand_drugs_total > 10000
+| top prescriber_city limit=20
+
+User query: Identify the top 100 providers whose brand name drugs prescribing rates exceed their specialty's rate by more than 10 times.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| where pct_brand_drugs_cost > all_pct__brand_drugs_cost*10
+| sort 0 - cost_brand_drugs_total
+| head 100
+
+User query: List all providers in family related services that prescribed brand name drugs for more than 100000 dollars?
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_type IN ("*Family*")
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| where cost_brand_drugs_total > 100000
+| sort 0 - cost_brand_drugs_total
+
+User query: List all prescribers in Houston, TX prescribing brand name drugs for more than $50000. Show all details.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state="TX" fraud_cms.prescriber_city="Houston"
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| where cost_brand_drugs_total>50000
+| sort 0 - cost_brand_drugs_total
+
+User query: List top prescribers in emergency related specialties who prescribed at least 100000 worth of brand name drugs
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_type IN ("*emergency*")
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| where cost_brand_drugs_total>=100000
+| sort  0 -  cost_brand_drugs_total
+
+User query: List 10 most aggressive prescribers of brand name drugs in Florida
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("FL")
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort  0 -  cost_brand_drugs_total
+| head 10
+
+User query: Which specialties has lowest brand name drugs prescribing rates?
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  BY 
+    fraud_cms.prescriber_type fraud_cms.all_pct__brand_drugs_cost
+| rename fraud_cms.* as *
+| sort 0 + all_pct__brand_drugs_cost
+
+User query: Which specialties has highest brand name drugs prescribing rates?
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  BY 
+    fraud_cms.prescriber_type fraud_cms.all_pct__brand_drugs_cost
+| rename fraud_cms.* as *
+| sort 0 + all_pct__brand_drugs_cost
+
+User query: Which specialties prescribing the highest amount of brand name drugs by dollar amount?
+SPL answer: | tstats summariesonly=1 sum(fraud_cms.cost_brand_drugs_total) as total_brands_by_dollar_amount
+  FROM datamodel=fraud_cms
+  BY fraud_cms.prescriber_type
+| rename fraud_cms.* as *
+| sort 0 - total_brands_by_dollar_amount
+
+User query: List all providers in the USA who prescribed brand name drugs totaling more than $1,000,000
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  BY fraud_cms.all_pct__brand_drugs_cost fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost
+| rename fraud_cms.* as *
+| where cost_brand_drugs_total>1000000
+| sort 0 - cost_brand_drugs_total
+
+User query: List states and cities with the highest number of providers prescribing brand name drugs totaling at least $500,000 each.
+SPL answer: | tstats summariesonly=1 c as count, sum(fraud_cms.cost_brand_drugs_total) as total_brands_cost_per_city
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.cost_brand_drugs_total > 500000
+  BY fraud_cms.prescriber_state fraud_cms.prescriber_city
+| rename fraud_cms.* as *
+| sort 0 - count
+
+User query: List the top 20 providers from Connecticut state who prescribe the highest total dollar value of brand name drugs.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("CT")
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_brand_drugs_total
+| head 20
+
+User query: List the top 20 providers from Oakland, CA with the highest brand name drugs prescription prescription rate compare to all medications.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("CA") fraud_cms.prescriber_city IN ("Oakland")
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort 0 - pct_brand_drugs_cost
+| head 20
+
+User query: List the top 50 providers ranked by the total dollar value of brand name drugs prescribed, where brand name drugs represent at least 95% of their total prescription cost.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.pct_brand_drugs_cost>=95
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_brand_drugs_total
+| head 50
+
+User query: List pediatricians who prescribed brand name drugs totaling at least $10,000 to their patients
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_type IN ("Pediatric Medicine") fraud_cms.cost_brand_drugs_total>=10000
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_brand_drugs_total
+
+User query: Are there any dentistry related specialists who prescribed brand name drugs accounting for at least 10% of their total prescription costs?
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_type IN ("*dental*", "*dentist*") fraud_cms.pct_brand_drugs_cost>=10
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_brand_drugs_total
+
+User query: Find providers from specialties that typically do not prescribe brand name drugs but have prescribed brand name drugs totaling over $100,000, representing more than 75% of their total prescription costs
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.all_pct__brand_drugs_cost<1 fraud_cms.cost_brand_drugs_total>100000 fraud_cms.pct_brand_drugs_cost>75
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_brand_drugs_total
+
+User query: Identify the top 25 brand name drugs prescribers in Nashville, TN, who prescribe brand name drugs in more than 50% of their total prescriptions, ranked by the total dollar value of their brand name drugs prescriptions.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("TN") fraud_cms.prescriber_city IN ("Nashville") fraud_cms.pct_brand_drugs_cost>50
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_brand_drugs_total
+| head 25
+
+User query: List top 50 prescribers of brand name drugs by dollar value in california and nevada 
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("NV", "CA")
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_brand_drugs_total
+| head 50
+
+User query: List top 100 cities in USA by volume of brand name drugs prescriptions
+SPL answer: | tstats summariesonly=1 sum(fraud_cms.cost_brand_drugs_total) as cost_brands_total_per_city
+  FROM datamodel=fraud_cms
+  BY 
+    fraud_cms.prescriber_state fraud_cms.prescriber_city
+| rename fraud_cms.* as *
+| sort 0 - cost_brands_total_per_city
+| head 100
+
+User query: List top 50 brand name drugs prescribers in CA from specialties excluding pain, addiction and sport related medicines
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_state IN ("CA") NOT fraud_cms.prescriber_type IN ("*pain*", "*addiction*", "*sport*")
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_brand_drugs_total
+| head 50
+
+User query: Show top doctors prescribing brand name drugs in Family specialities in NY but excluding NYC
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.prescriber_type IN ("*family*") fraud_cms.prescriber_state IN ("NY") NOT fraud_cms.prescriber_city IN ("New York")
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_brand_drugs_total
+
+User query: Identify top 100 providers who prescribed at least $100k worth of brand name drugs and for whom brand name drugs prescriptions accounted for at least 40% of their total prescribing volume by cost.
+SPL answer: | tstats summariesonly=1 c
+  FROM datamodel=fraud_cms
+  WHERE fraud_cms.cost_brand_drugs_total>=100000 fraud_cms.pct_brand_drugs_cost>=40 
+  BY 
+    fraud_cms.all_pct__brand_drugs_cost
+    fraud_cms.prescriber_type fraud_cms.prescriber_npi fraud_cms.prescriber_fullname fraud_cms.prescriber_state fraud_cms.prescriber_city fraud_cms.cost_brand_drugs_total fraud_cms.pct_brand_drugs_cost fraud_cms.pct_brand_claims fraud_cms.cost_brand_per_benef fraud_cms.cost_brand_per_claim
+| rename fraud_cms.* as *
+| sort 0 - cost_brand_drugs_total
+| head 100

@@ -1,0 +1,36 @@
+Data_Store_Type:
+    Datamodel
+
+Data_Store_Name:
+    fraud_cms
+
+Data_Store_Description:
+    Medicare Part D Prescribers Dataset
+    Information on drug prescriptions, healthcare providers (doctors, prescribers), 
+    Data is organized by prescriber_npi (National Provider Identifier) and contains summary information on drug claims, drug types, percentages, dollar amounts, beneficiaries.
+
+Data_Store_Content:
+    - ant_claims_pct: Percentage of antibiotic claims relative to the total number of claims; Example: 25.12
+    - ant_drugs_cost_pct: Percentage of antibiotic drug costs relative to the total cost of all claims; Example: 1564.32
+    - brand_claims_pct: Percentage of brand name drugs claims relative to the total number of claims; Example: 25.12
+    - brand_drugs_cost_pct: Percentage of brand name drugs costs relative to the total cost of all claims; Example: 1564.32
+    - gen_claims_pct: Percentage of generic name drugs claims relative to the total number of claims; Example: 25.12
+    - gen_drugs_cost_pct: Percentage of generic name drugs costs relative to the total cost of all claims; Example: 1564.32
+    - median__opioid_drugs_cost_pct: Median percentage of opioid (narcotics) drug costs relative to the total claim costs for all providers; Example: 1564.32
+    - median__opioid_drugs_cost_total: Median total cost (in dollars) of opioid (narcotics) drug claims across all providers; Example: 1564.32
+    - opioid_benef_pct: Percentage of beneficiaries with opioid (narcotics) claims relative to the total number of beneficiaries; Example: 27.4
+    - opioid_claims_pct: Percentage of opioid (narcotics) claims relative to the total number of claims; Example: 25.12
+    - opioid_drugs_cost_pct: Percentage of opioid (narcotics) drug costs relative to the total cost of all claims; Example: 1564.32
+    - opioid_drugs_cost_total: Total dollar value of all opioid (narcotics) claims for provider; Example: 431245.32
+    - oth_claims_pct: Percentage of other drugs claims relative to the total number of claims; Example: 25.12
+    - oth_drugs_cost_pct: Percentage of other drugs costs relative to the total cost of all claims; Example: 1564.32
+    - prescriber_npi: Prescriber (doctor, provider)	National Provider Identifier; Example: 1457875346
+    - prescriber_address: Prescriber's address of practice; Example: 9500 Euclid Ave, Cleveland, OH 44195
+    - prescriber_city: Prescriber's city of practice; Example: Cleveland
+    - prescriber_creds; Prescriber's credentrials; Example: MD
+    - prescriber_fullname; Prescriber's full name - first name + last name; Example: Hamna Fahad
+    - prescriber_state; Prescriber's state; Example: OH
+    - prescriber_type; Prescriber's type (specialty); Example: "Internal Medicine", "Pediatric Medicine", "Medical Toxicology".
+    - prescriber_zip; Prescriber's ZIP code; Example: 44195
+    - total_claims; Total number of claims submitted by the prescriber for all drugs; Example: 99
+    - total_drugs_cost; Total cost (in dollars) of all drugs prescribed, across all claims by the prescriber; Example: 218234.56
