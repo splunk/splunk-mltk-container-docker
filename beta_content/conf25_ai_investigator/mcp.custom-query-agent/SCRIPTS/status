@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Status script - Show container and service status
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m'
+
+# Get script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
+cd "${SCRIPT_DIR}" || exit 1
+
+echo -e "${WHITE}=== Custom Query Agent Status ===${NC}"
+echo ""
+
+# Check docker compose status
+echo -e "${CYAN}Container Status:${NC}"
+sudo docker compose -f "${SCRIPT_DIR}/docker-compose.yml" ps
+echo ""
+
+# Check if any services are running
+SERVICES=$(sudo docker compose -f "${SCRIPT_DIR}/docker-compose.yml" ps --services 2>/dev/null)
+if [ -n "$SERVICES" ]; then
+    RUNNING_COUNT=$(sudo docker compose -f "${SCRIPT_DIR}/docker-compose.yml" ps --services --filter "status=running" 2>/dev/null | wc -l)
+    TOTAL_COUNT=$(echo "$SERVICES" | wc -l)
+    
+    if [ "$RUNNING_COUNT" -eq "$TOTAL_COUNT" ]; then
+        echo -e "${GREEN}✓ All services are running ($RUNNING_COUNT/$TOTAL_COUNT)${NC}"
+    elif [ "$RUNNING_COUNT" -gt 0 ]; then
+        echo -e "${YELLOW}⚠ Some services are running ($RUNNING_COUNT/$TOTAL_COUNT)${NC}"
+    else
+        echo -e "${RED}✗ No services are running${NC}"
+    fi
+    
+    # Check CloudFlare tunnel specifically if it exists
+    if echo "$SERVICES" | grep -q "cloudflare"; then
+        echo ""
+        CLOUDFLARE_RUNNING=$(sudo docker compose -f "${SCRIPT_DIR}/docker-compose.yml" ps --services --filter "status=running" 2>/dev/null | grep -c "cloudflare")
+        if [ "$CLOUDFLARE_RUNNING" -gt 0 ]; then
+            echo -e "${GREEN}✓ CloudFlare tunnel is active${NC}"
+        else
+            echo -e "${YELLOW}⚠ CloudFlare tunnel is not running${NC}"
+            # Check if token is configured
+            if grep -q "CLOUDFLARE_TOKEN=$" .env 2>/dev/null || grep -q "CLOUDFLARE_TOKEN= *$" .env 2>/dev/null; then
+                echo -e "${YELLOW}  Note: CLOUDFLARE_TOKEN not configured in .env${NC}"
+            fi
+        fi
+    fi
+    
+    echo ""
+    echo -e "${CYAN}View logs:${NC}"
+    echo -e "  All services:        ${WHITE}sudo docker compose -f ${SCRIPT_DIR}/docker-compose.yml logs -f${NC}"
+    echo -e "  Internal service:    ${WHITE}sudo docker compose -f ${SCRIPT_DIR}/docker-compose.yml logs -f custom-query-agent-int${NC}"
+    echo -e "  External service:    ${WHITE}sudo docker compose -f ${SCRIPT_DIR}/docker-compose.yml logs -f custom-query-agent-ext${NC}"
+    echo -e "  CloudFlare tunnel:   ${WHITE}sudo docker compose -f ${SCRIPT_DIR}/docker-compose.yml logs -f custom-query-agent-cloudflare${NC}"
+else
+    echo -e "${RED}✗ No containers found${NC}"
+    echo -e "${YELLOW}Use 'dock reset0' to set up containers${NC}"
+fi

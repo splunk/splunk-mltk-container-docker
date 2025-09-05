@@ -1,0 +1,508 @@
+#!/bin/bash
+
+# Colors for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+RESET='\033[0m'
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR"
+
+# Load environment variables from .env
+if [ -f "../.env" ]; then
+    export $(cat ../.env | grep -v '^#' | xargs)
+fi
+
+# Get ports from environment
+MCP_PORT="${MCP_SERVER_SSE_PORT:-7006}"
+SPL_AGENT_URL="${CUSTOM_QUERY_AGENT_HOST:-http://localhost:2993}"
+# Extract port from SPL_AGENT_URL
+SPL_AGENT_PORT=$(echo "$SPL_AGENT_URL" | sed -n 's/.*:\([0-9]*\).*/\1/p')
+SPL_AGENT_PORT="${SPL_AGENT_PORT:-2993}"
+
+# Get local and external URLs
+LOCAL_MCP_URL="http://localhost:${MCP_PORT}/sse"
+EXTERNAL_MCP_URL="${MCP_SERVER_HOST_EXTERNAL_URL:-}"
+
+# Check if running in auto mode
+AUTO_MODE=false
+AUTO_CHOICE=""
+if [ $# -eq 1 ] && [[ "$1" =~ ^[1-5]$ ]]; then
+    AUTO_MODE=true
+    AUTO_CHOICE=$1
+    # Check if trying to run interactive test
+    if [ "$AUTO_CHOICE" = "5" ]; then
+        echo -e "${RED}Error: Option 5 (Interactive Query Testing) cannot be run in automatic mode${RESET}"
+        exit 1
+    fi
+fi
+
+# Function to check if MCP server is running
+check_mcp_server() {
+    local url=${1:-"$LOCAL_MCP_URL"}
+    local is_remote=${2:-false}
+    
+    if [ "$is_remote" = true ]; then
+        echo -n "Checking if remote MCP server is accessible at $url... "
+        # Use timeout and check for SSE headers instead of waiting for response body
+        if timeout 5 curl -s -I "$url" 2>/dev/null | grep -q "text/event-stream"; then
+            echo -e "${GREEN}✓ Remote server is accessible${RESET}"
+            return 0
+        else
+            echo -e "${RED}✗ Remote server not accessible${RESET}"
+            echo -e "${YELLOW}Please ensure the remote server is running and accessible${RESET}"
+            return 1
+        fi
+    else
+        echo -n "Checking if MCP server is running on port $MCP_PORT... "
+        # Use timeout and check for SSE headers instead of waiting for response body
+        if timeout 2 curl -s -I "$url" 2>/dev/null | grep -q "text/event-stream"; then
+            echo -e "${GREEN}✓ Server is running${RESET}"
+            return 0
+        else
+            echo -e "${RED}✗ Server not found${RESET}"
+            echo -e "${YELLOW}Please start the MCP server first:${RESET}"
+            echo "  cd ../  # Go to project directory"
+            echo "  ./start_sse  # or python server.py"
+            return 1
+        fi
+    fi
+}
+
+# Function to check if SPL Vectors Agent is running
+check_spl_agent() {
+    echo -n "Checking if SPL Vectors Agent is running on port $SPL_AGENT_PORT... "
+    if timeout 2 curl -s $SPL_AGENT_URL/ >/dev/null 2>&1; then
+        echo -e "${GREEN}✓ Agent is running${RESET}"
+        return 0
+    else
+        echo -e "${RED}✗ Agent not found${RESET}"
+        echo -e "${YELLOW}Please start the SPL Vectors Agent:${RESET}"
+        echo "  cd ../../  # Go to AInvestigator directory"
+        echo "  ./start   # Start the SPL Vectors Agent"
+        return 1
+    fi
+}
+
+# Function to display menu
+show_menu() {
+    clear
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════════════════════${RESET}"
+    echo -e "${BOLD}${CYAN}      Custom Query Agent Test Suite - testall          ${RESET}"
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════════════════════${RESET}"
+    
+    # Show server status
+    echo -e "\n${BOLD}Server Status:${RESET}"
+    echo -n "  MCP Server (port $MCP_PORT): "
+    if timeout 1 curl -s -I http://localhost:$MCP_PORT/sse 2>/dev/null | grep -q "text/event-stream"; then
+        echo -e "${GREEN}✓ Running${RESET}"
+    else
+        echo -e "${RED}✗ Not running${RESET}"
+    fi
+    
+    echo -n "  SPL Agent (port $SPL_AGENT_PORT): "
+    if timeout 1 curl -s $SPL_AGENT_URL/ >/dev/null 2>&1; then
+        echo -e "${GREEN}✓ Running${RESET}"
+    else
+        echo -e "${RED}✗ Not running${RESET}"
+    fi
+    
+    echo -e "\n${BOLD}Local Tests:${RESET}"
+    echo -e "  ${GREEN}1${RESET}) Test Stdio Transport for this MCP          - Spawn server in stdio mode and test"
+    echo -e "  ${GREEN}2${RESET}) Test SSE Transport for this MCP (local)   - Check SSE endpoint (requires running server)"
+    echo -e "  ${GREEN}3${RESET}) Test Connection to SPL Agent              - Test AInvestigator connection"
+    echo -e "  ${GREEN}4${RESET}) Show MCP Configuration                    - Display Custom Query Agent config"
+    echo -e "  ${GREEN}5${RESET}) Interactive Query Testing (local)         - Run custom queries interactively (use /c to toggle context)"
+    
+    if [ -n "$EXTERNAL_MCP_URL" ]; then
+        echo -e "\n${BOLD}Remote Tests (via ${EXTERNAL_MCP_URL}):${RESET}"
+        echo -e "  ${GREEN}6${RESET}) Test Streamable HTTP Transport (remote)   - Check remote streamable-http endpoint"
+        echo -e "  ${GREEN}7${RESET}) Interactive Query Testing (remote)        - Run custom queries via remote MCP"
+    else
+        echo -e "\n${YELLOW}Remote tests not available (MCP_SERVER_HOST_EXTERNAL_URL not set)${RESET}"
+    fi
+    
+    echo -e "\n  ${RED}q${RESET}) Exit (or press ESC)"
+    echo
+    echo -e "${BOLD}${CYAN}═══════════════════════════════════════════════════════${RESET}"
+}
+
+# Function to press any key to continue
+press_any_key() {
+    if [ "$AUTO_MODE" = true ]; then
+        return
+    fi
+    
+    echo
+    echo -e "${YELLOW}Press any key to return to menu (ESC to exit)...${RESET}"
+    # Ensure output is flushed before waiting for input
+    exec 1>&1
+    read -n 1 -s -r key
+    # Check if ESC was pressed (ESC = \033 or decimal 27)
+    if [[ $key == $'\033' ]]; then
+        echo -e "\n${GREEN}Goodbye!${RESET}"
+        exit 0
+    fi
+}
+
+# Function to run a test and show results
+run_test() {
+    local test_name=$1
+    local test_file=$2
+    local use_remote=${3:-false}
+    
+    echo -e "\n${BOLD}${CYAN}Running $test_name...${RESET}"
+    echo -e "${CYAN}════════════════════════════════════════════════${RESET}\n"
+    
+    if [ "$use_remote" = true ]; then
+        # Set environment variable for remote URL
+        MCP_TEST_URL="$EXTERNAL_MCP_URL" python "$test_file"
+    else
+        # Run with default local URL
+        python "$test_file"
+    fi
+    local exit_code=$?
+    
+    if [ $exit_code -eq 0 ]; then
+        echo -e "\n${GREEN}${BOLD}✅ $test_name completed successfully!${RESET}"
+    else
+        echo -e "\n${RED}${BOLD}❌ $test_name failed with exit code $exit_code${RESET}"
+    fi
+    
+    return $exit_code
+}
+
+# Function to test SPL Agent connection directly
+test_spl_agent_connection() {
+    echo -e "\n${BOLD}${CYAN}Testing Connection to SPL Agent...${RESET}"
+    echo -e "${CYAN}════════════════════════════════════════════════${RESET}\n"
+    
+    echo "Testing connection to AInvestigator at $SPL_AGENT_URL"
+    
+    # Test basic connectivity only
+    if curl -s -f -X GET "$SPL_AGENT_URL/" >/dev/null 2>&1; then
+        echo -e "${GREEN}✓ Successfully connected to SPL Vectors Agent${RESET}"
+        echo -e "${GREEN}✓ Server is running on port $SPL_AGENT_PORT${RESET}"
+        return 0
+    else
+        echo -e "${RED}✗ Cannot connect to SPL Vectors Agent at $SPL_AGENT_URL${RESET}"
+        echo -e "${YELLOW}Please ensure the AInvestigator server is running${RESET}"
+        return 1
+    fi
+}
+
+# Function for interactive query testing
+interactive_queries() {
+    local use_remote=${1:-false}
+    
+    echo -e "\n${BOLD}${CYAN}Interactive Query Testing${RESET}"
+    echo -e "${CYAN}════════════════════════════════════════════════${RESET}"
+    echo -e "${YELLOW}Enter natural language queries to convert to SPL.${RESET}"
+    echo -e "${YELLOW}Commands:${RESET}"
+    echo -e "${YELLOW}  /c - Toggle include_context on/off${RESET}"
+    echo -e "${YELLOW}  /q - Return to menu${RESET}\n"
+    
+    if [ "$use_remote" = true ]; then
+        echo -e "${CYAN}Using remote MCP server at: $EXTERNAL_MCP_URL${RESET}\n"
+    else
+        echo -e "${CYAN}Using local MCP server${RESET}\n"
+    fi
+    
+    # Get the absolute path to the project directory
+    PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+    
+    # Create a temporary Python script for interactive testing
+    cat > /tmp/interactive_query_test.py << EOF
+import asyncio
+import json
+import sys
+from pathlib import Path
+
+# Add parent directory to path
+sys.path.insert(0, "$PROJECT_DIR")
+
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+async def interactive_test():
+    server_params = StdioServerParameters(
+        command="python",
+        args=["$PROJECT_DIR/server.py"],
+        env={"MCP_SERVER_TRANSPORT": "stdio"}
+    )
+    
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            
+            # Ensure terminal is in proper mode
+            import readline  # This enables cursor keys and history
+            
+            # Track include_context state
+            include_context = False
+            
+            while True:
+                try:
+                    if include_context:
+                        context_status = "\033[1;32mON\033[0m"  # Green for ON
+                    else:
+                        context_status = "\033[1;31mOFF\033[0m"  # Red for OFF
+                    query = input(f"\nEnter query (include_context: {context_status}) > ").strip()
+                except KeyboardInterrupt:
+                    print("\n\nInterrupted. Type /q to exit.")
+                    continue
+                except EOFError:
+                    break
+                    
+                if query == '/q':
+                    break
+                    
+                if query == '/c':
+                    include_context = not include_context
+                    new_status = "\033[1;32mON\033[0m" if include_context else "\033[1;31mOFF\033[0m"
+                    print(f"\n✓ include_context toggled to: {new_status}")
+                    continue
+                    
+                if not query:
+                    continue
+                
+                print("\nGenerating SPL query...")
+                try:
+                    result = await session.call_tool("generate_spl_query", arguments={
+                        "query": query,
+                        "include_context": include_context
+                    })
+                    
+                    # Extract the actual content from the result
+                    if hasattr(result, 'content') and result.content:
+                        spl_result = json.loads(result.content[0].text)
+                    else:
+                        spl_result = result
+                    
+                    if "error" in spl_result:
+                        print(f"\n❌ Error: {spl_result['error']}")
+                        if "details" in spl_result:
+                            print(f"   Details: {spl_result['details']}")
+                    else:
+                        # Display context if included and available
+                        if include_context and "llm_query" in spl_result:
+                            print(f"\n{'='*60}")
+                            print(f"CONTEXT INFORMATION (include_context=ON)")
+                            print(f"{'='*60}")
+                            
+                            if "system_prompt" in spl_result and spl_result["system_prompt"]:
+                                print(f"\n📋 System Prompt:")
+                                print(f"{'-'*60}")
+                                print(spl_result["system_prompt"])
+                            
+                            if "llm_query" in spl_result:
+                                print(f"\n📝 LLM Query:")
+                                print(f"{'-'*60}")
+                                print(spl_result["llm_query"])
+                            
+                            print(f"\n{'='*60}")
+                        
+                        print(f"\n✅ Generated SPL:")
+                        spl_query = spl_result.get('spl_query', 'N/A')
+                        # Color the SPL query in bright cyan for better visibility
+                        print(f"   \033[1;36m{spl_query}\033[0m")
+                        
+                        # Color other metadata in dim/gray
+                        print(f"\n   \033[90mVisualization: {spl_result.get('viz_type', 'N/A')}\033[0m")
+                        print(f"   \033[90mTool used: {spl_result.get('tool_used', 'N/A')}\033[0m")
+                        print(f"   \033[90mTime range: {spl_result.get('earliest', 'N/A')} to {spl_result.get('latest', 'N/A')}\033[0m")
+                        
+                except Exception as e:
+                    print(f"\n❌ Exception: {e}")
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(interactive_test())
+    except KeyboardInterrupt:
+        print("\n\nInterrupted by user")
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        sys.exit(1)
+EOF
+
+    # Save current terminal settings
+    stty_save=$(stty -g 2>/dev/null)
+    
+    # Run the interactive test
+    if [ "$use_remote" = true ]; then
+        MCP_TEST_URL="$EXTERNAL_MCP_URL" python /tmp/interactive_query_test.py
+    else
+        python /tmp/interactive_query_test.py
+    fi
+    
+    # Restore terminal settings
+    [ -n "$stty_save" ] && stty "$stty_save"
+    
+    # Clean up
+    rm -f /tmp/interactive_query_test.py
+}
+
+# Function to show configuration
+show_mcp_config() {
+    echo -e "\n${BOLD}${CYAN}MCP Server Configuration${RESET}"
+    echo -e "${CYAN}════════════════════════════════════════════════${RESET}\n"
+    
+    # Get the absolute path to the project directory
+    PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+    
+    # Create a temporary Python script to get config
+    cat > /tmp/get_config.py << EOF
+import asyncio
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, "$PROJECT_DIR")
+
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+async def get_config():
+    server_params = StdioServerParameters(
+        command="python",
+        args=["$PROJECT_DIR/server.py"],
+        env={"MCP_SERVER_TRANSPORT": "stdio"}
+    )
+    
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            result = await session.call_tool("get_config", arguments={})
+            # Extract the actual content from the result
+            if hasattr(result, 'content') and result.content:
+                config_data = json.loads(result.content[0].text)
+            else:
+                config_data = result
+            print(json.dumps(config_data, indent=2))
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(get_config())
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+EOF
+
+    python /tmp/get_config.py
+    rm -f /tmp/get_config.py
+}
+
+# Function to execute a choice
+execute_choice() {
+    local choice=$1
+    
+    case $choice in
+        1)
+            echo -e "\n${YELLOW}Note: This test spawns its own server process in stdio mode${RESET}"
+            run_test "Stdio Transport Test" "test_connection.py" false
+            press_any_key
+            ;;
+            
+        2)
+            if check_mcp_server "$LOCAL_MCP_URL" false; then
+                run_test "SSE Transport Test (local)" "test_sse_transport.py" false
+                press_any_key
+            else
+                press_any_key
+            fi
+            ;;
+            
+        3)
+            test_spl_agent_connection
+            press_any_key
+            ;;
+            
+        4)
+            show_mcp_config
+            press_any_key
+            ;;
+            
+        5)
+            if check_spl_agent; then
+                interactive_queries false
+                press_any_key
+            else
+                press_any_key
+            fi
+            ;;
+            
+        6)
+            if [ -n "$EXTERNAL_MCP_URL" ]; then
+                echo -n "Checking if remote Streamable HTTP server is accessible at $EXTERNAL_MCP_URL... "
+                # For streamable HTTP, just check if the URL is reachable
+                if timeout 5 curl -s -I "$EXTERNAL_MCP_URL" 2>/dev/null | grep -q "HTTP"; then
+                    echo -e "${GREEN}✓ Remote server is accessible${RESET}"
+                    run_test "Streamable HTTP Test (remote)" "test_streamable_http.py" true
+                    press_any_key
+                else
+                    echo -e "${RED}✗ Remote server not accessible${RESET}"
+                    echo -e "${YELLOW}Please ensure the remote server is running and accessible${RESET}"
+                    press_any_key
+                fi
+            else
+                echo -e "\n${RED}Remote URL not configured${RESET}"
+                press_any_key
+            fi
+            ;;
+            
+        7)
+            if [ -n "$EXTERNAL_MCP_URL" ]; then
+                if check_spl_agent; then
+                    interactive_queries true
+                    press_any_key
+                else
+                    press_any_key
+                fi
+            else
+                echo -e "\n${RED}Remote URL not configured${RESET}"
+                press_any_key
+            fi
+            ;;
+            
+        q|Q)
+            echo -e "\n${GREEN}Goodbye!${RESET}"
+            exit 0
+            ;;
+            
+        *)
+            echo -e "\n${RED}Invalid option. Please try again.${RESET}"
+            sleep 1
+            ;;
+    esac
+}
+
+# Main execution
+if [ "$AUTO_MODE" = true ]; then
+    # Auto mode - run specified test and exit
+    echo -e "${BOLD}${CYAN}Running test $AUTO_CHOICE in automatic mode${RESET}"
+    execute_choice "$AUTO_CHOICE"
+    exit $?
+else
+    # Interactive mode - show menu loop
+    while true; do
+        show_menu
+        
+        echo -n "Select an option: "
+        read -n 1 -s -r choice
+        
+        # Check if ESC was pressed
+        if [[ $choice == $'\033' ]]; then
+            echo -e "\n${GREEN}Goodbye!${RESET}"
+            exit 0
+        fi
+        
+        # Echo the choice for visibility
+        echo "$choice"
+        
+        execute_choice "$choice"
+    done
+fi

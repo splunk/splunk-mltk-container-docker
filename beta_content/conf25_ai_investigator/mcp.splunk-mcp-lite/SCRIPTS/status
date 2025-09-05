@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# Status script - Show container and service status
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m'
+
+# Get script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
+cd "${SCRIPT_DIR}" || exit 1
+
+echo -e "${WHITE}=== Splunk MCP Lite Status ===${NC}"
+echo ""
+
+# Check docker compose status
+echo -e "${CYAN}Container Status:${NC}"
+sudo docker compose -f "${SCRIPT_DIR}/docker-compose.yml" ps
+echo ""
+
+# Check running services
+RUNNING_SERVICES=$(sudo docker compose -f "${SCRIPT_DIR}/docker-compose.yml" ps --services --filter "status=running" 2>/dev/null)
+ALL_SERVICES=$(sudo docker compose -f "${SCRIPT_DIR}/docker-compose.yml" ps --services 2>/dev/null)
+
+# Count services
+RUNNING_COUNT=$(echo "$RUNNING_SERVICES" | grep -v '^$' | wc -l)
+TOTAL_COUNT=$(echo "$ALL_SERVICES" | grep -v '^$' | wc -l)
+
+if [ "$TOTAL_COUNT" -eq 0 ]; then
+    echo -e "${RED}✗ No containers found${NC}"
+    echo -e "${YELLOW}Use 'dock reset0' to set up containers${NC}"
+else
+    echo -e "${CYAN}Services Summary:${NC}"
+    echo -e "Running: ${GREEN}$RUNNING_COUNT${NC} / Total: ${WHITE}$TOTAL_COUNT${NC}"
+    echo ""
+    
+    # Check individual services
+    # Check for internal services (SSE and Stream HTTP)
+    INTERNAL_SERVICES_RUNNING=false
+    if echo "$RUNNING_SERVICES" | grep -q "splunk-mcp-lite-sse-int"; then
+        INTERNAL_SERVICES_RUNNING=true
+    fi
+    if echo "$RUNNING_SERVICES" | grep -q "splunk-mcp-lite-stream-http-int"; then
+        INTERNAL_SERVICES_RUNNING=true
+    fi
+    
+    if [ "$INTERNAL_SERVICES_RUNNING" = true ]; then
+        echo -e "${GREEN}✓ Internal services are running${NC}"
+        echo -e "  ${CYAN}Local URL:${NC} ${WHITE}http://localhost:8052${NC}"
+    else
+        echo -e "${RED}✗ Internal services are not running${NC}"
+    fi
+    
+    # Check for external service
+    if echo "$RUNNING_SERVICES" | grep -q "splunk-mcp-lite-stream-http-ext"; then
+        echo -e "${GREEN}✓ External service (splunk-mcp-lite-stream-http-ext) is running${NC}"
+        echo -e "  ${CYAN}Ready for Cloudflare tunnel${NC}"
+    else
+        echo -e "${RED}✗ External service (splunk-mcp-lite-stream-http-ext) is not running${NC}"
+    fi
+    
+    if echo "$RUNNING_SERVICES" | grep -q "splunk-mcp-lite-cloudflare"; then
+        echo -e "${GREEN}✓ Cloudflare tunnel is running${NC}"
+        echo -e "  ${CYAN}Check Cloudflare dashboard for subdomain URL${NC}"
+    else
+        echo -e "${YELLOW}⚠ Cloudflare tunnel is not running${NC}"
+        echo -e "  ${CYAN}Ensure CLOUDFLARE_TOKEN is set in .env${NC}"
+    fi
+    
+    # Check if port is accessible
+    if command -v nc &> /dev/null; then
+        echo ""
+        echo -e "${CYAN}Port Check:${NC}"
+        # Extract PORT from .env if exists, default to 8052
+        PORT=8052
+        if [ -f .env ]; then
+            ENV_PORT=$(grep '^PORT=' .env | cut -d= -f2 | tr -d '\r')
+            if [ -n "$ENV_PORT" ]; then
+                PORT="$ENV_PORT"
+            fi
+        fi
+        
+        if nc -zv localhost $PORT 2>&1 | grep -q succeeded; then
+            echo -e "${GREEN}✓ Port $PORT is accessible${NC}"
+        else
+            echo -e "${YELLOW}⚠ Port $PORT is not accessible${NC}"
+        fi
+    fi
+    
+    if [ "$RUNNING_COUNT" -eq 0 ]; then
+        echo ""
+        echo -e "${YELLOW}Use 'dock reset0' or 'dock restart' to start the services${NC}"
+    fi
+fi

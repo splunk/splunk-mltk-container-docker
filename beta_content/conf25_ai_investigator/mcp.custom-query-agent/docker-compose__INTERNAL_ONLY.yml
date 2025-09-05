@@ -1,0 +1,21 @@
+services:
+  custom-query-agent:
+    build: .
+    container_name: ainv__mcp_custom-query-agent
+    ports:
+      - "${MCP_SERVER_PORT}:${MCP_SERVER_PORT}"
+    env_file:
+      - .env
+    environment:
+      # Override CUSTOM_QUERY_AGENT_HOST to use host network when running in Docker
+      - CUSTOM_QUERY_AGENT_HOST=http://host.docker.internal:2993
+    extra_hosts:
+      # This allows the container to connect to services on the host
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,18 @@
+services:
+  splunk-mcp-lite:
+    build: .
+    container_name: ainv__mcp_splunk-lite
+    ports:
+      - "${MCP_SERVER_PORT}:8052"
+    env_file:
+      - .env
+# This will map .env's - 'SPLUNK_HOST_FOR_DOCKER=etc_hosts__name_of_my_local_machine' to host machine (but NOT localhost).
+#    extra_hosts:
+#      - "${SPLUNK_HOST_FOR_DOCKER}:host-gateway"
+    restart: unless-stopped
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge

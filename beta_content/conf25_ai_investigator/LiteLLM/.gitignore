@@ -1,0 +1,24 @@
+# Environment files
+.env
+.env.local
+.env.production
+
+# Backup directories
+backups/
+__pycache__/
+
+# Docker volumes (if mounted locally)
+volumes/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/
+*.swp
+*.swo
