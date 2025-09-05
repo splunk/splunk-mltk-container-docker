@@ -6,6 +6,7 @@ ARG REQUIREMENTS_PYTHON_SPECIFIC
 
 # setup environment
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+# keep python version in sync with base image!
 ENV PATH /dltk/.local/bin:/dltk/.local/lib/python3.12/site-packages/:$PATH
 ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC 
 
