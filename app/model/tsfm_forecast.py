@@ -3,7 +3,7 @@
 
 
     
-# In[3]:
+# In[2]:
 
 
 # this definition exposes all python module imports that should be available in all subsequent commands
@@ -16,8 +16,8 @@ from typing import List, Tuple
 import torch
 from datasets import Dataset as HFDataset
 from huggingface_hub import snapshot_download
-from app.model.patched_decoder_multi_resolution import PatchedTSMultiResolutionDecoder,TimesfmMRConfig
-from app.model.timesfm_multi_resolution import TimesFmMRTorch, TimesFmTorch
+from app.model.patched_decoder_multi_resolution import PatchedTSMultiResolutionDecoder,CiscoTsmMRConfig
+from app.model.cisco_tsm_mr import CiscoTsmMR
 from timesfm.pytorch_patched_decoder import create_quantiles
 from timesfm import TimesFmHparams, TimesFmCheckpoint
 # ...
@@ -29,7 +29,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 
 
     
-# In[8]:
+# In[3]:
 
 
 # this cell is not executed from MLTK and should only be used for staging data into the notebook environment
@@ -51,7 +51,7 @@ def stage(name):
 
 
     
-# In[25]:
+# In[14]:
 
 
 # initialize your model
@@ -82,28 +82,28 @@ def init(df,param):
         try:
             print(local_path)
             ckpt = TimesFmCheckpoint(path=local_path)
-            model_inst = TimesFmMRTorch(
+            model_inst = CiscoTsmMR(
                 hparams=hp,
                 checkpoint=ckpt,
-                use_multi_resolution=True,
-                use_special_token_s=True,
+                use_resolution_embeddings=True,
+                use_special_token=True,
             )
         except:
             # Load from Huggingface instead
             ckpt = TimesFmCheckpoint(huggingface_repo_id=hf_repo)
-            model_inst = TimesFmMRTorch(
+            model_inst = CiscoTsmMR(
                 hparams=hp,
                 checkpoint=ckpt,
-                use_multi_resolution=True,
-                use_special_token_s=True,
+                use_resolution_embeddings=True,
+                use_special_token=True,
             )
     else:
         ckpt = TimesFmCheckpoint(huggingface_repo_id=hf_repo)
-        model_inst = TimesFmMRTorch(
+        model_inst = CiscoTsmMR(
             hparams=hp,
             checkpoint=ckpt,
-            use_multi_resolution=True,
-            use_special_token_s=True,
+            use_resolution_embeddings=True,
+            use_special_token=True,
         )
 
     return model_inst
@@ -132,7 +132,7 @@ def fit(model,df,param):
 
 
     
-# In[21]:
+# In[22]:
 
 
 # apply your model
@@ -159,25 +159,27 @@ def apply(model,df,param):
     agg_factor = 60
 
     # Inference for forecasting
-    mean, full = model.forecast(series_list, agg_factor=agg_factor)
-
+    future_forecasts = model.forecast(series_list, agg_factor=agg_factor)
+    mean, full = future_forecasts[0]["mean"], future_forecasts[0]["quantiles"]
     # Obtain mean and quantiles of the forecasted series
-    means = series_list[0] + mean.tolist()[0]
-    p10 = series_list[0] + full[0,:,1].tolist() 
-    p20 = series_list[0] + full[0,:,2].tolist() 
-    p30 = series_list[0] + full[0,:,3].tolist() 
-    p40 = series_list[0] + full[0,:,4].tolist() 
-    p50 = series_list[0] + full[0,:,5].tolist() 
-    p60 = series_list[0] + full[0,:,6].tolist() 
-    p70 = series_list[0] + full[0,:,7].tolist() 
-    p80 = series_list[0] + full[0,:,8].tolist() 
-    p90 = series_list[0] + full[0,:,9].tolist() 
+    means = series_list[0] + mean.tolist()
+    p10 = series_list[0] + full["0.1"].tolist() 
+    p20 = series_list[0] + full["0.2"].tolist() 
+    p30 = series_list[0] + full["0.3"].tolist() 
+    p40 = series_list[0] + full["0.4"].tolist() 
+    p50 = series_list[0] + full["0.5"].tolist() 
+    p60 = series_list[0] + full["0.6"].tolist() 
+    p70 = series_list[0] + full["0.7"].tolist() 
+    p80 = series_list[0] + full["0.8"].tolist() 
+    p90 = series_list[0] + full["0.9"].tolist() 
 
     cols = {'mean': means, 'p10': p10, 'p20': p20, 'p30': p30, 'p40': p40, 'p50': p50, 'p60': p60, 'p70': p70, 'p80': p80, 'p90': p90}
 
     result = pd.DataFrame(cols)
 
     return result
+
+
 
 
 
