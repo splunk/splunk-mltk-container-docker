@@ -3,6 +3,10 @@
 # -------------------------------------------------------------------------------
 
 from fastapi import FastAPI, Request, Header
+from fastapi.middleware.cors import CORSMiddleware
+from app.model.llm_utils_chat import create_llm
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+# from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 
@@ -13,10 +17,266 @@ import pandas as pd
 import json
 import csv
 import os
+import time
 import uvicorn
+from app.libraries.logging_function import get_logger
 
 app = FastAPI()
 
+# CORS for Splunk JavaScript
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+try:
+    MAX_MSGS = int(os.environ['MAX_MSGS']) 
+except:
+    MAX_MSGS = 20
+
+try:
+    TTL_EVICT_SECONDS = int(os.environ['TTL_EVICT_SECONDS']) 
+except:
+    TTL_EVICT_SECONDS = 3600   
+
+try:
+    MAX_LOG_TOKEN_SIZE = int(os.environ['MAX_LOG_TOKEN_SIZE']) 
+except:
+    MAX_LOG_TOKEN_SIZE = 3000
+
+try:
+    DEFAULT_LLM = os.environ['DEFAULT_LLM'].strip('"')
+except:
+    DEFAULT_LLM = 'bedrock'
+
+try:
+    SYSTEM_PROMPT = os.environ['SYSTEM_PROMPT'].strip('"')
+    if len(SYSTEM_PROMPT) > 0:
+        system_prompt_chat = SystemMessage(content=SYSTEM_PROMPT)
+    else:
+        system_prompt_chat = SystemMessage('''You are a friendly chatbot that is well-verse in Splunk and logs. You are here to help people ''')
+except:
+    system_prompt_chat = SystemMessage('''You are a friendly chatbot that is well-verse in Splunk and logs. You are here to help people ''')
+
+
+
+LLM_LIST = ['ollama', 'bedrock', 'azure_openai', 'openai', 'gemini']
+llm_clients = {}
+
+## manage_session_states_logs={userSession:[(Summary_of_Log_flag, raw logs, summary_of_log)]}
+manage_session_states_logs = {}
+## Manage_session_states_history = {userSession: [{"role": "user", "content": user_query}]}
+manage_session_states_history = {}
+## Manage "last seen" for users
+session_last_seen = {}
+
+
+for LLM in LLM_LIST:
+    try:
+        client, msg = create_llm(service=LLM)
+        print(msg)
+        llm_clients[f"llm_client_{LLM}"] = client
+    except Exception as e:
+        llm_clients[f"llm_client_{LLM}"] = None
+
+## Base Directory for Logging
+base_dir = os.getcwd()
+
+######################################################## HOUSE KEEPING FUNCTIONS #############################################################
+## Function to manage history for token
+def trim_history(hist):
+    """Trims the conversation history after it goes past certain length of messages"""
+    # keep system prompt at index 0, keep last MAX_MSGS-1 others
+    if len(hist) > MAX_MSGS:
+        print(f"Length of history: {len(hist)}")
+        print(f"History: {hist}")
+        return [hist[0]] + hist[-(MAX_MSGS-1):]
+    return hist
+
+## Function to manage TTL for each user
+def touch_session(userSession: str) -> None:
+    """Mark a session as recently used."""
+    session_last_seen[userSession] = time.time()
+
+## Function to clean_up_expired_sessions()
+def cleanup_expired_sessions() -> int:
+    now = time.time()
+    expired = []
+    for sid, last in session_last_seen.items():
+        if now - last > TTL_EVICT_SECONDS:
+            expired.append(sid)
+
+    for sid in expired:
+        session_last_seen.pop(sid, None)
+        manage_session_states_history.pop(sid, None)
+
+def count_tokens(logs_list, log):
+    total_token_count = 0
+    list_of_usable_logs = []
+    for i in range(len(logs_list)):
+        userRawLogs = logs_list[i]['_raw']
+        len_of_log_char = len(userRawLogs) ## Count the number of characters
+        print(f"log: {userRawLogs}")
+        print(f"{i}: Word Count = {len_of_log_char}")
+        token_count_for_curr_log = len_of_log_char/4 ## Assume that 1 token is 4 characters
+        total_token_count += token_count_for_curr_log
+        print(f"Total Token Count: {total_token_count}")
+        if total_token_count > MAX_LOG_TOKEN_SIZE:
+            log.info(f"Number of tokens exceeds > {MAX_LOG_TOKEN_SIZE}, will truncate the logs.")
+            log.info(f"Trunchated Logs: {list_of_usable_logs}")
+            return list_of_usable_logs
+        else:
+            list_of_usable_logs.append(logs_list[i])
+    log.info(f"Number of tokens did not exceed {MAX_LOG_TOKEN_SIZE}.")
+    log.info(f"Logs: {list_of_usable_logs}")
+    return list_of_usable_logs
+
+##############################################################################################################################################
+
+######################################################## Endpoints and Functional Code ########################################################
+
+## API endpoint for the Logs in the SPL to be recorded.
+@app.post("/logReview")
+async def logReview(req:Request):
+    try:
+        ## Getting the data from the API call.
+        body = await req.json()
+        # print(f"/logReview body: {body}")
+        userName = body.get("userName")
+        userSession = body.get("sessionID")
+        userRawData = body.get("logs", "")
+        # userRawData = json.dumps(temp_logs, indent=2)
+        # print(f"{type(temp_logs)}")
+        ## Setup logger
+        log = get_logger(userName=userName, userSession=userSession, base_dir=base_dir)
+        touch_session(userSession)
+        cleanup_expired_sessions()
+        ## Concatenating all the raw logs together into a string and removing curly braces.
+        append_Raw_Logs = ""
+        userRawData = count_tokens(userRawData, log)
+        for i in range(len(userRawData)):
+            userRawLogs = userRawData[i]['_raw']
+            if "{" in userRawLogs:
+                userRawLogs = userRawLogs.replace("{", "")
+            if "}" in userRawLogs:
+                userRawLogs = userRawLogs.replace("}", "")
+            append_Raw_Logs = append_Raw_Logs + "\n" + userRawLogs
+        append_Raw_Logs_to_LLM = "Raw Logs: \n" + append_Raw_Logs ## append_Raw_Logs_to_LLM is the finalised string to be used in prompts for logs.
+
+        ## Setting up the history for each userSession
+        # Tactic: Set up the conversation chain Human->AI for asking of approval for log summary.
+        query = HumanMessage('Here is my log set from Splunk. ' + append_Raw_Logs_to_LLM) ## HumanMessage to be appended (Coversation chain for logs)
+        summarise_logs_query = AIMessage(f'I have received {len(userRawData)} lines of logs. Would you like to summarise the logs? I will return a summary of what happened within the logs in less than 200 words.') ## AI Message to be appended after HumanMessage(Conversation Chain simulating the LLM asking for summary)
+
+        # Check if it is user's first time having the conversation.
+        # if userSession in manage_session_states_logs: # Not user's first time
+        #     manage_session_states_logs[userSession].append((False, append_Raw_Logs_to_LLM, llm_summary)) # Manage history of Splunk Results(logs)
+        if userSession not in manage_session_states_history: # If it is user's first time
+            manage_session_states_history[userSession] = []
+            manage_session_states_history[userSession].append(system_prompt_chat) # Add in the system prompt
+            manage_session_states_history[userSession].append(query) # Add in the human message about the raw logs
+            manage_session_states_history[userSession].append(summarise_logs_query) # Add in the AI message about the logs
+        # Not the user's first message        
+        else:  
+            manage_session_states_history[userSession].append(query) # Append the Human message about the raw logs
+            manage_session_states_history[userSession].append(summarise_logs_query) # Append the AI message about the logs.
+
+        # Manage History Length
+        # print(type(manage_session_states_history[userSession]))
+        manage_session_states_history[userSession] = trim_history(manage_session_states_history[userSession])
+
+        # print("############################# Summary of user session's list of logs ##############################")
+        # print(f"User session Number: {userSession} \n")
+        # print(f"Number of Raw Logs: {len(userRawData)}")
+        # print(f"Conversation history of {userSession}: {manage_session_states_history[userSession]}")
+        # print(f"\nAI message returning back to user: {summarise_logs_query.content}")
+        log.info(f"------------------------- Received Logs -------------------------")
+        log.info(f"\nLogs!! HumanMessage: {query}\n")
+        log.info(f"AIMessage: {summarise_logs_query}")
+        log.info(f"------------------------- End Logs -------------------------")
+
+        return {"status": "received", "data": summarise_logs_query.content}
+    except Exception as e:
+        print("Error:", str(e))
+        log.error(f"Error in /logReview: {str(e)}\n")
+        return {"status": "error", "error": str(e)}
+    
+## Function to organise the LLM prompt for invocation.
+async def chatbox_callLLM(human_msg, userSession, llm_option):
+    # print("################################################################ LLM Initialised ##############################################################")
+    manage_session_states_history[userSession].append(human_msg) # Append the Userquery (Human Message) into the history
+    history = manage_session_states_history[userSession] # Extract the full Conversation History to be used as the prompt
+    # print(f"Final prompt to LLM: {history}")
+    try:
+        llm_client = llm_clients[f"llm_client_{llm_option}"]
+
+        if llm_client is None:
+            raise RuntimeError(f"SYSTEM: LLM option {llm_option} has not been successfully configured. Please try another LLM option.")
+        print(f"LLM client {llm_option} is available")
+    except Exception as e:
+        raise RuntimeError(f"SYSTEM: Failed to initiate LLM option {llm_option}. The following error occurred: {e}.  Please switch to a different LLM. ")
+    result = await llm_client.ainvoke(history) # Send the Conversation History to the Client.
+    # print("################################################################ LLM Reply ##############################################################")
+    # print(f"LLM Reply: {result}")
+    # print("###############################################################User History###############################################################")
+    manage_session_states_history[userSession].append(result) # Append AI's reply to the Conversation History
+    # Manage History Length
+    # print(type(manage_session_states_history[userSession]))
+    manage_session_states_history[userSession] = trim_history(manage_session_states_history[userSession])
+
+    # print(f"{manage_session_states_history[userSession]}")
+    return result
+
+
+## Endpoint for the chatbox
+@app.post("/chatbox")
+async def chat(req:Request):
+    try:
+        body = await req.json()
+        # print(f"Request body: {body}")
+        userName = body.get("userName")
+        userSession = body.get("sessionID")
+        user_query = body.get("message", "")
+        llm_option = body.get("llmOption", DEFAULT_LLM)
+
+        ## Setup logger
+        log = get_logger(userName=userName, userSession=userSession, base_dir=base_dir)
+        touch_session(userSession)
+        cleanup_expired_sessions()
+        ## Check if user history exists. If not, templatise it.
+        if userSession not in manage_session_states_history:
+            # first_human_msg = HumanMessage(user_query)
+            manage_session_states_history[userSession] = []
+            # Append system prompt first
+            manage_session_states_history[userSession].append(system_prompt_chat)
+        # print("------------------------------- START of DATA RETRIEVAL:Chatbox API Call -------------------------------")
+        # print(f"\nUser's Name: {userName}\n")
+        # print(f"Current user session ID: {userSession}\n")
+        # print(f"Current user query: {user_query}\n")
+        # print("------------------------------- END of DATA RETRIEVAL:Chatbox API Call -------------------------------")
+        # print("################################################################ Enter AI Function ##############################################################")
+        human_msg = HumanMessage(user_query) # Convert it into the langchain HumanMessage template for prompt.
+        ai_response = await chatbox_callLLM(human_msg, userSession, llm_option)
+
+        log.info("------------------------------- Start: Chatbox API Call -------------------------------")
+        log.info(f"LLM option: {llm_option}")
+        log.info(f"HumanMessage: {human_msg}")
+        log.info(f"AIMessage: {ai_response}")
+        log.info("------------------------------- End:Chatbox API Call -------------------------------")
+
+
+        return {"status": "received", "data": ai_response.content}
+
+    except Exception as e:
+        print(f"Error in CHATBOX: {e}")
+        log.error(f"Error in /chatbox endpoint: {str(e)}\n")
+        return {"status": "error", "data": "Problem occured in chatbox endpoint"}
+    
+################################################################################################################
 # -------------------------------------------------------------------------------
 # GLOBAL variables 
 # -------------------------------------------------------------------------------
