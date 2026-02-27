@@ -3,9 +3,9 @@
 Splunk App for Data Science and Deep Learning (DSDL) 5.2.3 formerly known as Deep Learning Toolkit for Splunk (DLTK) versions 2.3.0 - 3.9.0 and (DSDL) 5.0.0 - 5.2.3 published on [splunkbase](https://splunkbase.splunk.com/app/4607/).
 There is also a prior DLTK version 4.x which was open sourced on [GitHub](https://github.com/splunk/deep-learning-toolkit) but is not actively maintained. Please make use of the latest version 5.2.3
 
-Copyright (C) 2005-2025 Splunk Inc. All rights reserved.  
+Copyright (C) 2005-2026 Splunk Inc. All rights reserved.  
 Author: [Philipp Drieger]()
-Contributors: [Josh Cowling](https://www.linkedin.com/in/josh-cowling/), [Huaibo Zhao](), [Tatsu Murata]() 
+Contributors: [Josh Cowling](), [Huaibo Zhao](), [Tatsu Murata]() 
 
 # About
 This repository contains the collection of resources, scripts, and testing frameworks that are used build and deploy the default container images used by the DSDL app. It can be used to modify, secure, update and change these containers and their build process to meet the needs of your enterprise environment.
