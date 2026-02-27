@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+python-dotenv
+pydantic>=2.0.0
+openai
+jinja2
+python-multipart
+debugpy
+numpy
+groq
+torch
+sentence-transformers
+pydantic-ai>=0.1.0
+httpx>=0.24.0
+logfire
+aiohttp

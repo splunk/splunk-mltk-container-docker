@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# LiteLLM Stop Script
+# Stops all project containers
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+WHITE='\033[0;37m'
+NC='\033[0m' # No Color
+
+echo -e "${WHITE}=== Stopping Services ===${NC}"
+
+# Function to stop a specific service
+stop_service() {
+    local service=$1
+    local compose_file=$2
+    
+    # Check if any containers are running
+    if sudo docker compose -f $compose_file ps | grep -q "Up"; then
+        echo -e "\n${WHITE}Stopping $service services...${NC}"
+        sudo docker compose -f $compose_file down
+        echo -e "${GREEN}✓ $service services stopped${NC}"
+    else
+        echo -e "\n${YELLOW}No running $service services found${NC}"
+    fi
+}
+
+# Stop LiteLLM services
+stop_service "LiteLLM" "docker-compose-litellm.yml"
+
+echo ""
+echo -e "${WHITE}Container Status:${NC}"
+echo -e "\n${WHITE}LiteLLM Services:${NC}"
+sudo docker compose -f docker-compose-litellm.yml ps

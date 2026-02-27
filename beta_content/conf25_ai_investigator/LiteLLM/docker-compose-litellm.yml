@@ -1,0 +1,91 @@
+services:
+  litellm:
+    image: ${LITELLM_IMAGE}
+    container_name: ${LITELLM_CONTAINER}
+    env_file:
+      - .env
+    ports:
+      - "${LITELLM_PORT:-4000}:${LITELLM_INTERNAL_PORT:-4000}"
+    environment:
+      DATABASE_URL: "postgresql://${LITELLM_DB_USER:-llmproxy}:${LITELLM_DB_PASSWORD:-dbpassword9090}@litellm_db:${LITELLM_DB_INTERNAL_PORT:-5432}/${LITELLM_DB_NAME:-litellm}"
+      STORE_MODEL_IN_DB: "${LITELLM_STORE_MODEL_IN_DB:-True}"
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml
+    command: ["--config", "/app/config.yaml", "--port", "${LITELLM_INTERNAL_PORT:-4000}", "--host", "0.0.0.0"]
+    depends_on:
+      litellm_db:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "${LITELLM_EXTRA_HOST}:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Checking litellm health...\" && wget --no-verbose --tries=1 http://localhost:${LITELLM_INTERNAL_PORT:-4000}/health/liveliness || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - default
+
+  litellm_db:
+    image: postgres:${LITELLM_POSTGRES_VERSION:-16}
+    restart: always
+    container_name: ${LITELLM_DB_CONTAINER}
+    environment:
+      POSTGRES_DB: ${LITELLM_DB_NAME:-litellm}
+      POSTGRES_USER: ${LITELLM_DB_USER:-llmproxy}
+      POSTGRES_PASSWORD: ${LITELLM_DB_PASSWORD:-dbpassword9090}
+    ports:
+      - "${LITELLM_DB_PORT:-5434}:${LITELLM_DB_INTERNAL_PORT:-5432}"
+    volumes:
+      - litellm_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Checking litellm_db health...\" && pg_isready -d ${LITELLM_DB_NAME:-litellm} -U ${LITELLM_DB_USER:-llmproxy}"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      - default
+
+  raw_logger_proxy:
+    build: 
+      context: ./raw_logger_proxy
+      dockerfile: Dockerfile
+    image: ${RAW_LOGGING_IMAGE}
+    container_name: ${RAW_LOGGING_CONTAINER}
+    ports:
+      - "${RAW_LOGGING_PORT:-4001}:${RAW_LOGGING_PORT:-4001}"
+    environment:
+      LITELLM_HOST: ${LITELLM_CONTAINER}
+      LITELLM_PORT: ${LITELLM_INTERNAL_PORT:-4000}
+      PROXY_PORT: ${RAW_LOGGING_PORT:-4001}
+      LOG_DIR: ${RAW_LOGGING_LOG_DIR}
+      MAX_BODY_LOG_SIZE: ${RAW_LOGGING_MAX_BODY_SIZE:-1048576}
+      LOG_FORMAT: ${RAW_LOGGING_FORMAT:-json}
+      RAW_LOGGING_REDACT_SENSITIVE: ${RAW_LOGGING_REDACT_SENSITIVE:-true}
+      RAW_LOGGING_INCLUDE_HEADERS: ${RAW_LOGGING_INCLUDE_HEADERS:-false}
+      RAW_LOGGING_ROTATION_SIZE: ${RAW_LOGGING_ROTATION_SIZE:-100}
+      RAW_LOGGING_RETENTION_DAYS: ${RAW_LOGGING_RETENTION_DAYS:-30}
+      RAW_LOGGING_COMPRESS: ${RAW_LOGGING_COMPRESS:-true}
+    volumes:
+      - ${RAW_LOGGING_DIR:-./logs/litellm/raw}:/app/logs
+    depends_on:
+      - litellm
+    healthcheck:
+      test: ["CMD-SHELL", "echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Checking raw_logger_proxy health...\" && curl -f http://localhost:${RAW_LOGGING_PORT:-4001}/about"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  litellm_postgres_data:
+    name: ${LITELLM_DB_VOLUME}
+    driver: local

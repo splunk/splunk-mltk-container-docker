@@ -1,0 +1,122 @@
+User query: How many hits server received in the last 24 hours?
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-24h latest=now | table count
+
+User query: Who are 10 most active visitors in the last hour?
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-1h latest=now BY fraud_web.src_ip fraud_web.Country fraud_web.http_user_agent | rename fraud_web.* AS * | sort - count | head 10 | table count src_ip Country http_user_agent
+
+User query: How many unique devices has been used to hit server in the last 4 hours?
+SPL answer: | tstats summariesonly=1 fillnull_value="---" dc(fraud_web.http_user_agent) as unique_devices FROM datamodel=fraud_web WHERE earliest=-4h latest=now | rename fraud_web.* AS * | table unique_devices
+
+User query: How many unique devices has been used to hit server in the last 4 hours? And show me 10 most active ones
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-4h latest=now BY fraud_web.http_user_agent | rename fraud_web.* AS * | eventstats dc(http_user_agent) as unique_user_agents_num | sort - count | head 10 | table count http_user_agent unique_user_agents_num
+
+User query: Who are the most active visitors from China or Japan in the last day?
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-1d latest=now fraud_web.Country IN ("China", "Japan") BY fraud_web.src_ip fraud_web.Country | rename fraud_web.* AS * | sort - count | head 20 | table count src_ip Country
+
+User query: Show me visitors who generates most errors
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-1d latest=now fraud_web.status>=400 BY fraud_web.src_ip fraud_web.Country | rename fraud_web.* AS * | sort - count | head 10 | table count src_ip Country
+
+User query: Show me top 20 visitors who are hitting the server 5 times above average
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count as total_hits FROM datamodel=fraud_web WHERE earliest=-1d latest=now BY fraud_web.src_ip | rename fraud_web.* AS * | eventstats avg(total_hits) as avg_hits | where total_hits > (avg_hits * 5) | sort - total_hits | head 20 | table src_ip, total_hits, avg_hits
+
+User query: What are the top 10 pages accessed by users from the US in the last week?
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-7d latest=now fraud_web.Country="United States" BY fraud_web.uri_path | rename fraud_web.* AS * | sort - count | head 10 | table count uri_path
+
+User query: Which IP addresses used multiple user agents last day? List these IP addresses as well as agents
+SPL answer: | tstats summariesonly=1 fillnull_value="---" dc(fraud_web.http_user_agent) as user_agents_num, values(fraud_web.http_user_agent) as user_agents_list FROM datamodel=fraud_web WHERE earliest=-1d latest=now BY fraud_web.src_ip | rename fraud_web.* AS * | where user_agents_num > 1 | sort - user_agents_num | table src_ip user_agents_num user_agents_list
+
+User query: Identify IP addresses that have attempted to log in more than 10 times unsuccessfully in the last hour.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-1h latest=now fraud_web.logged_in=0 BY fraud_web.src_ip | rename fraud_web.* AS * | where count > 10 | sort - count | table src_ip count
+
+User query: Find the top 5 countries generating the most 500 Internal Server Error responses in the last 24 hours.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-24h latest=now fraud_web.status=500 BY fraud_web.Country | rename fraud_web.* AS * | sort - count | head 5 | table Country count
+
+User query: List all users who have logged in from different cities within the last day.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" values(fraud_web.City) as cities dc(fraud_web.City) as city_count FROM datamodel=fraud_web WHERE earliest=-1d latest=now fraud_web.logged_in=1 BY fraud_web.username | rename fraud_web.* AS * | where city_count > 1 | table username cities
+
+User query: Detect IP addresses that downloaded more than 1GB of data in the last 2 hours.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" sum(fraud_web.bytes_out) as total_bytes_out FROM datamodel=fraud_web WHERE earliest=-2h latest=now BY fraud_web.src_ip | rename fraud_web.* AS * | where total_bytes_out > 1073741824 | table src_ip total_bytes_out
+
+User query: Identify usernames with failed login attempts from multiple countries in the last week.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" dc(fraud_web.Country) as country_count values(fraud_web.Country) as countries FROM datamodel=fraud_web WHERE earliest=-7d latest=now fraud_web.logged_in=0 BY fraud_web.username | rename fraud_web.* AS * | where country_count > 1 | table username countries
+
+User query: Show top 10 IP addresses by total bytes_in in the last 6 hours.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" sum(fraud_web.bytes_in) as total_bytes_in FROM datamodel=fraud_web WHERE earliest=-6h latest=now BY fraud_web.src_ip fraud_web.Country | rename fraud_web.* AS * | sort - total_bytes_in | head 10 | table src_ip Country total_bytes_in
+
+User query: Find the most accessed pages resulting in 404 errors in the last day.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-1d latest=now fraud_web.status=404 BY fraud_web.uri_path | rename fraud_web.* AS * | sort - count | table uri_path count
+
+User query: Find top 10 user agents causing the most server errors in the last 3 days.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-3d latest=now fraud_web.status>=500 BY fraud_web.http_user_agent | rename fraud_web.* AS * | sort - count | head 10 | table http_user_agent count
+
+User query: Identify users who have logged in from a new country compared to their previous logins.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" last(fraud_web.Country) as last_country, values(fraud_web.Country) as all_countries FROM datamodel=fraud_web WHERE fraud_web.logged_in=1 BY fraud_web.username | rename fraud_web.* AS * | where mvcount(all_countries) > 1 AND last_country != mvindex(all_countries, -2) | table username last_country all_countries
+
+User query: Find IP addresses with sudden spikes in bytes_out within the last hour.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" avg(fraud_web.bytes_out) as avg_bytes_out, latest(fraud_web.bytes_out) as latest_bytes_out FROM datamodel=fraud_web WHERE earliest=-1h latest=now BY fraud_web.src_ip | rename fraud_web.* AS * | where latest_bytes_out > (avg_bytes_out * 5) | table src_ip latest_bytes_out avg_bytes_out
+
+User query: Show top 5 regions with the highest number of failed logins.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE fraud_web.logged_in=0 BY fraud_web.Region fraud_web.Country | rename fraud_web.* AS * | sort - count | head 5 | table Country Region count
+
+User query: Detect any HTTP methods used other than GET or POST in the last 24 hours.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-24h latest=now NOT fraud_web.http_method IN ("GET", "POST") BY fraud_web.http_method | rename fraud_web.* AS * | sort - count | table http_method count
+
+User query: Identify cities experiencing the most server errors in the last month.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-30d latest=now fraud_web.status>=500 BY fraud_web.City | rename fraud_web.* AS * | sort - count | table City count
+
+User query: Identify the top 10 most common status codes returned by the server.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web BY fraud_web.status | rename fraud_web.* AS * | sort - count | head 10 | table status count
+
+User query: Find the number of requests per HTTP method used in the last day.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-1d latest=now BY fraud_web.http_method | rename fraud_web.* AS * | table http_method count
+
+User query: Detect any spike in 404 errors over the past 24 hours.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE fraud_web.status=404 AND latest=now BY _time span=1h | rename fraud_web.* AS * | timechart span=1h sum(count) as total_404_errors
+
+User query: Show the distribution of response status codes by country.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web BY fraud_web.Country fraud_web.status | rename fraud_web.* AS * | chart sum(count) BY Country status
+
+User query: Identify any IP addresses generating over 1000 requests in the last hour.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-1h latest=now BY fraud_web.src_ip | rename fraud_web.* AS * | where count > 1000 | sort - count | table src_ip count
+
+User query: Find the average bytes_out per request for each user agent.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" avg(fraud_web.bytes_out) as avg_bytes_out FROM datamodel=fraud_web BY fraud_web.http_user_agent | rename fraud_web.* AS * | sort - avg_bytes_out| table http_user_agent avg_bytes_out
+
+User query: Find the total data transferred (bytes_in and bytes_out) per country.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" sum(fraud_web.bytes_in) as total_bytes_in sum(fraud_web.bytes_out) as total_bytes_out FROM datamodel=fraud_web BY fraud_web.Country | rename fraud_web.* AS * | eval total_data=total_bytes_in + total_bytes_out | sort - total_data | table Country total_data
+
+User query: Identify any sudden changes in the number of unique visitors over the last week.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" dc(fraud_web.src_ip) as unique_visitors FROM datamodel=fraud_web WHERE earliest=-7d latest=now BY _time span=1d | rename fraud_web.* AS * | timechart span=1d sum(unique_visitors)
+
+User query: Detect any changes in the pattern of HTTP methods used over time.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE latest=now BY _time fraud_web.http_method span=1h | rename fraud_web.* as * | timechart span=1h sum(count) BY http_method
+
+User query: Find users who have logged in from IP addresses located in different countries within an hour.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" dc(fraud_web.Country) as countries_num, values(fraud_web.Country) as countries_list FROM datamodel=fraud_web WHERE earliest=-1h fraud_web.logged_in=1 BY fraud_web.username | rename fraud_web.* AS * | wehere countries_num>1 | sort - countries_num | table username countries_num countries_list
+
+User query: Show the percentage of successful versus failed login attempts.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count from datamodel=fraud_web BY fraud_web.logged_in | rename fraud_web.* AS * | eventstats sum(count) as total | eval percentage=(count/total)*100 | table logged_in count percentage
+
+User query: Identify any IP addresses that have sent unusually large requests (bytes_in).
+SPL answer: | tstats summariesonly=1 fillnull_value="---" max(fraud_web.bytes_in) as max_bytes_in FROM datamodel=fraud_web WHERE earliest=-1d latest=now BY fraud_web.src_ip | rename fraud_web.* AS * | where max_bytes_in > 10485760 | table src_ip max_bytes_in
+
+User query: Find the number of distinct users per city.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" dc(fraud_web.username) as unique_users FROM datamodel=fraud_web BY fraud_web.Country fraud_web.City | rename fraud_web.* AS * | table Country City unique_users
+
+User query: Find the top 5 IP addresses by number of different usernames used.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" dc(fraud_web.username) as usernames_num, values(fraud_web.username) as usernames_list FROM datamodel=fraud_web BY fraud_web.src_ip | rename fraud_web.* as * | sort - usernames_num | table src_ip usernames_num usernames_list
+
+User query: Are there any successful logins to the same user account from more than one country within the last day?
+SPL answer: | tstats summariesonly=1 fillnull_value="---" dc(fraud_web.Country) as unique_countries FROM datamodel=fraud_web WHERE earliest=-1d latest=now fraud_web.logged_in=1 BY fraud_web.username | rename fraud_web.* AS * | where unique_countries>1 | sort - unique_countries | table unique_countries, username
+
+User query: Show me rare status codes and their count.
+SPL answer: | tstats summariesonly=1 fillnull_value="---"  count FROM datamodel=fraud_web WHERE earliest=-1d latest=now BY fraud_web.status | rename fraud_web.* AS * | sort + count | head 10 | table status, count
+
+User query: Identify the top 3 user agents causing the most 404 Not Found errors in the last week.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-7d latest=now fraud_web.status=404 BY fraud_web.http_user_agent | rename fraud_web.* AS * | sort - count | head 3 | table http_user_agent count
+
+User query: Find the average bytes_in and bytes_out for each unique uri_path in the last month.
+SPL answer: | tstats summariesonly=1 fillnull_value="---" avg(fraud_web.bytes_in) as avg_bytes_in avg(fraud_web.bytes_out) as avg_bytes_out FROM datamodel=fraud_web WHERE earliest=-1m latest=now BY fraud_web.uri_path | rename fraud_web.* AS * | table uri_path avg_bytes_in avg_bytes_out
+
+User query: Are there any brute force attacks on user accounts in the last day?
+SPL answer: | tstats summariesonly=1 fillnull_value="---" count FROM datamodel=fraud_web WHERE earliest=-1d latest=now fraud_web.logged_in=0 BY fraud_web.username | rename fraud_web.* AS * | where count > 10

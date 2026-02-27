@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# Freeze docker-compose image versions based on currently running containers
+
+# --- Functions ---
+
+print_usage() {
+    echo "Usage: $0 <input-docker-compose.yml>"
+    echo "Example: $0 docker-compose.yml"
+}
+
+# Download yq if not available
+ensure_yq() {
+    if [[ ! -f /tmp/yq ]]; then
+        echo "📥 Downloading yq..."
+        wget -qO /tmp/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+        chmod +x /tmp/yq
+    fi
+    YQ="/tmp/yq"
+}
+
+# --- Validations ---
+
+# Check args
+if [[ $# -lt 1 ]]; then
+    echo "❌ No input file specified."
+    print_usage
+    exit 1
+fi
+
+INPUT_FILE="$1"
+OUTPUT_FILE="${INPUT_FILE%.yml}__FROZEN.yml"
+
+# Check input file exists
+if [[ ! -f "$INPUT_FILE" ]]; then
+    echo "❌ Input file '$INPUT_FILE' not found."
+    exit 1
+fi
+
+# Ensure we have yq
+ensure_yq
+
+# --- Processing ---
+
+echo "📦 Freezing Docker Compose file: $INPUT_FILE"
+cp "$INPUT_FILE" "$OUTPUT_FILE"
+
+# Extract service names (using yq v4 syntax)
+SERVICE_NAMES=$($YQ e '.services | keys | .[]' "$INPUT_FILE")
+
+for SERVICE in $SERVICE_NAMES; do
+    CONTAINER_NAME=$($YQ e ".services.$SERVICE.container_name" "$INPUT_FILE")
+
+    if [[ "$CONTAINER_NAME" == "null" || -z "$CONTAINER_NAME" ]]; then
+        echo "⚠️  Skipping service '$SERVICE': No container_name specified."
+        continue
+    fi
+
+    # Check if container is running
+    if ! sudo docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+        echo "❌ Container '$CONTAINER_NAME' for service '$SERVICE' is not running."
+        echo "Make sure all containers are running before freezing."
+        exit 1
+    fi
+
+    # Get exact image name and tag
+    IMAGE_NAME=$(sudo docker inspect "$CONTAINER_NAME" --format '{{.Config.Image}}')
+    
+    if [[ -z "$IMAGE_NAME" ]]; then
+        echo "❌ Failed to inspect container '$CONTAINER_NAME'"
+        exit 1
+    fi
+
+    # Extract the repository and tag
+    if [[ "$IMAGE_NAME" =~ ^([^:]+):(.+)$ ]]; then
+        REPO="${BASH_REMATCH[1]}"
+        TAG="${BASH_REMATCH[2]}"
+    else
+        REPO="$IMAGE_NAME"
+        TAG="latest"
+    fi
+
+    # Get the digest from docker images
+    DIGEST=$(sudo docker images --digests --format "{{.Repository}}:{{.Tag}} {{.Digest}}" | grep "^${REPO}:${TAG} " | awk '{print $2}')
+    
+    # Use digest format if available
+    if [[ -n "$DIGEST" && "$DIGEST" != "<none>" ]]; then
+        IMAGE="${REPO}@${DIGEST}"
+        echo "✅ Freezing service '$SERVICE': ${REPO}@${DIGEST}"
+    else
+        IMAGE="$IMAGE_NAME"
+        echo "✅ Freezing service '$SERVICE': $IMAGE_NAME (no digest available)"
+    fi
+    
+    $YQ e -i ".services.$SERVICE.image = \"$IMAGE\"" "$OUTPUT_FILE"
+done
+
+echo "🎉 Frozen Compose file written to: $OUTPUT_FILE"

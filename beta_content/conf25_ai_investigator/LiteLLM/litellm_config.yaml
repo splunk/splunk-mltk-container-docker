@@ -1,0 +1,50 @@
+model_list:
+  - model_name: "ollama/*"
+    litellm_params:
+      model: "ollama/*"
+      api_base: http://localhost:11438
+
+  # See: https://docs.litellm.ai/docs/providers/openai_compatible
+  - model_name: requesty/*
+    litellm_params:
+      model: openai/*                             # add openai/ prefix to route as OpenAI provider.
+      api_base: https://router.requesty.ai/v1     # add api base for OpenAI compatible provider. Make sure api_base has the /v1 postfix
+      api_key: "os.environ/REQUESTY_API_KEY"      # api key to send your model
+
+  # EXAMPLE/custom (see: https://docs.litellm.ai/docs/providers/openai_compatible)
+  # Use this naming convention to call Requesty.ai models: "requesty/openai/gpt-4.1-nano-2025-04-14"
+  # - model_name: xxxx1
+  #   litellm_params:
+  #     model: openai/openai/gpt-4.1-nano-2025-04-14       # add openai/ prefix to route as OpenAI provider. Syntax: PROVIDER_TYPE/model
+  #     api_base: https://router.requesty.ai/v1     # add api base for OpenAI compatible provider. Make sure api_base has the /v1 postfix
+  #     api_key: "os.environ/REQUESTY_API_KEY"      # api key to send your model
+
+  # Generic wildcard for any other provider (fallback)
+  - model_name: "*"
+    litellm_params:
+      model: "*"
+
+# General Settings
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+  store_model_in_db: true             # To view request and response details at: /ui/?page=logs
+  store_prompts_in_spend_logs: true   # To view request and response details at: /ui/?page=logs
+
+# Callback Settings
+litellm_settings:
+  # Additional metrics collection
+  collect_metrics: true
+  
+  # Optional: Configure additional telemetry
+  telemetry: true
+
+# Router Settings
+router_settings:
+  cache: false
+  cache_responses: false
+  
+# Optional: Add rate limiting
+# rate_limit_settings:
+#   max_requests: 100
+#   time_window: 60

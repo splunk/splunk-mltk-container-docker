@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# LiteLLM Test Script
+# Simple test to verify LiteLLM is working correctly
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+echo -e "${CYAN}=== LiteLLM API Test ===${NC}"
+echo "Testing LiteLLM proxy functionality..."
+echo ""
+
+# Load .env for configuration
+if [ -f ".env" ]; then
+    source .env
+else
+    echo -e "${YELLOW}Warning: .env file not found, using defaults${NC}"
+fi
+
+# Check if LiteLLM is running
+LITELLM_PORT=${LITELLM_PORT:-4000}
+if ! nc -z localhost $LITELLM_PORT 2>/dev/null; then
+    echo -e "${RED}Error: LiteLLM is not running on port $LITELLM_PORT${NC}"
+    echo "Please start LiteLLM first with: ./dock reload"
+    exit 1
+fi
+
+# Run the Python test script
+echo "Running hello_world__litellm.py test..."
+echo ""
+
+if python3 hello_world__litellm.py; then
+    echo ""
+    echo -e "${GREEN}✓ Test completed successfully!${NC}"
+    echo ""
+    echo "You can also:"
+    echo "• View API docs at: http://localhost:${LITELLM_PORT}/docs"
+    echo "• View LiteLLM UI at: http://localhost:${LITELLM_PORT}/ui"
+    echo "• Check logs with: ./dock logs-llm"
+else
+    echo ""
+    echo -e "${RED}✗ Test failed${NC}"
+    echo "Check the error messages above and ensure:"
+    echo "• LiteLLM is running (./dock status)"
+    echo "• Required API keys are set in .env"
+    echo "• The specified models are available"
+fi

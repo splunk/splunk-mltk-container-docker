@@ -1,0 +1,281 @@
+#!/bin/bash
+
+# Clear screen only if parameters are passed
+if [ $# -gt 0 ]; then
+    clear
+fi
+
+# ANSI color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+WHITE='\033[0;37m'
+NC='\033[0m' # No Color
+
+# Get the script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# Component directories
+COMPONENTS=(
+    "LiteLLM"
+    "mcp.splunk-mcp-lite"
+    "mcp.custom-query-agent"
+)
+
+# Function to print usage
+print_usage() {
+    echo -e "${WHITE}Usage:${NC} ./dock [command]"
+    echo ""
+    echo -e "${WHITE}Commands:${NC}"
+    echo -e "  ${GREEN}reset0${NC}   - Full cleanup of all components"
+    echo -e "  ${GREEN}rebuild${NC}  - Rebuild and start all components"
+    echo -e "  ${GREEN}stop${NC}     - Stop all components"
+    echo -e "  ${GREEN}restart${NC}  - Restart all components"
+    echo -e "  ${GREEN}status${NC}   - Show status of all components"
+}
+
+# Execute command on all components
+execute_command() {
+    local command=$1
+    shift
+    local args="$@"
+    
+    echo -e "${WHITE}=== Executing '$command' on all components ===${NC}\n"
+    
+    # Arrays to track component statuses
+    declare -a component_names
+    declare -a component_statuses
+    declare -a component_ports
+    declare -a component_issues
+    
+    for component in "${COMPONENTS[@]}"; do
+        local dock_path="$SCRIPT_DIR/$component/dock"
+        
+        if [ -f "$dock_path" ]; then
+            echo -e "${CYAN}[$component]${NC}"
+            
+            # For status command, capture output to analyze it
+            if [[ "$command" == "status" ]]; then
+                # Capture the output to analyze status
+                local output=$(cd "$SCRIPT_DIR/$component" && ./dock $command $args 2>&1)
+                echo "$output"
+                echo ""
+                
+                # Store component name
+                component_names+=("$component")
+                
+                # Parse issues from output
+                local issues=""
+                
+                # Check for specific error patterns
+                if echo "$output" | grep -q "Restarting"; then
+                    # Only report restarting containers that belong to this component
+                    local component_prefix=""
+                    if [[ "$component" == "mcp.custom-query-agent" ]]; then
+                        component_prefix="custom-query-agent"
+                    elif [[ "$component" == "mcp.splunk-mcp-lite" ]]; then
+                        component_prefix="splunk-mcp-lite"
+                    elif [[ "$component" == "LiteLLM" ]]; then
+                        component_prefix="litellm"
+                    fi
+                    
+                    if [[ -n "$component_prefix" ]]; then
+                        local restarting_services=$(echo "$output" | grep "Restarting" | grep -i "$component_prefix" | awk '{print $1}')
+                        if [[ -n "$restarting_services" ]]; then
+                            echo "$restarting_services" | while read -r service; do
+                                issues+="Container restarting: ${service}\n"
+                            done
+                        fi
+                    fi
+                fi
+                
+                if echo "$output" | grep -q "CLOUDFLARE_TOKEN not configured"; then
+                    issues+="CloudFlare token not configured\n"
+                fi
+                
+                if echo "$output" | grep -q "No containers found"; then
+                    issues+="No containers found - needs setup\n"
+                fi
+                
+                if echo "$output" | grep -q "Errors: [1-9]"; then
+                    local error_count=$(echo "$output" | grep -oP "Errors: \K[0-9]+" | head -1)
+                    issues+="Errors found in logs: ${error_count}\n"
+                fi
+                
+                if echo "$output" | grep -q "Warnings: [1-9]"; then
+                    local warning_count=$(echo "$output" | grep -oP "Warnings: \K[0-9]+" | head -1)
+                    issues+="Warnings found in logs: ${warning_count}\n"
+                fi
+                
+                if echo "$output" | grep -q "FATAL:"; then
+                    local fatal_msg=$(echo "$output" | grep "FATAL:" | sed 's/^[[:space:]]*//' | head -1)
+                    issues+="Fatal error: ${fatal_msg}\n"
+                fi
+                
+                # Add specific status information for partial services
+                if echo "$output" | grep -q "⚠.*[Ss]ome services are running"; then
+                    # Extract the running/total count
+                    local service_count=$(echo "$output" | grep -oP "\([0-9]+/[0-9]+\)" | head -1)
+                    if [[ -n "$service_count" ]]; then
+                        issues+="Service status: Some services running ${service_count}\n"
+                    fi
+                    
+                    # Find which services are not running by checking docker ps output
+                    if echo "$output" | grep -q "STATUS"; then
+                        # Look for containers that are not in "Up" state
+                        local problem_containers=$(echo "$output" | grep -E "Restarting|Exited|Created" | head -3)
+                        if [[ -n "$problem_containers" ]]; then
+                            echo "$problem_containers" | while IFS= read -r line; do
+                                local container=$(echo "$line" | awk '{print $1}')
+                                local status=$(echo "$line" | grep -oE "Restarting \([0-9]+\)|Exited \([0-9]+\)|Created" | head -1)
+                                issues+="Container not healthy: ${container} (${status})\n"
+                            done
+                        fi
+                    fi
+                fi
+                
+                # Store issues (remove trailing newline)
+                issues=$(echo -e "$issues" | sed '/^$/d')
+                component_issues+=("$issues")
+                
+                # Parse status from output
+                if echo "$output" | grep -q "✓.*[Ss]ervice.*running\|✓.*Running\|✓.*[Aa]ll services are running"; then
+                    component_statuses+=("${GREEN}✓ Running${NC}")
+                elif echo "$output" | grep -q "⚠.*[Ss]ome services are running"; then
+                    # Some services running
+                    component_statuses+=("${YELLOW}⚠ Partial${NC}")
+                elif echo "$output" | grep -q "Running: [1-9]"; then
+                    # For mcp.splunk-mcp-lite format
+                    component_statuses+=("${GREEN}✓ Running${NC}")
+                elif echo "$output" | grep -q "✗.*[Nn]o services.*running\|Service is not running\|not running\|Running: 0"; then
+                    component_statuses+=("${RED}✗ Not Running${NC}")
+                else
+                    component_statuses+=("${YELLOW}? Unknown${NC}")
+                fi
+                
+                # Extract ports
+                local ports=""
+                if [[ "$component" == "LiteLLM" ]]; then
+                    ports="7010, 7011, 5435"
+                elif [[ "$component" == "mcp.splunk-mcp-lite" ]]; then
+                    ports="8052"
+                elif [[ "$component" == "mcp.custom-query-agent" ]]; then
+                    ports="7007"
+                fi
+                component_ports+=("$ports")
+            else
+                # For other commands, stream output in real-time
+                (cd "$SCRIPT_DIR/$component" && ./dock $command $args)
+                echo ""
+            fi
+        else
+            echo -e "${RED}[$component] dock script not found${NC}\n"
+            if [[ "$command" == "status" ]]; then
+                component_names+=("$component")
+                component_statuses+=("${RED}✗ Script Not Found${NC}")
+                component_ports+=("-")
+                component_issues+=("Docker management script not found")
+            fi
+        fi
+    done
+    
+    echo -e "${GREEN}=== Command '$command' completed ===${NC}"
+    
+    # Print summary for status command
+    if [[ "$command" == "status" ]]; then
+        echo ""
+        echo -e "${WHITE}=== SUMMARY REPORT ===${NC}"
+        echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        printf "%-30s %-20s %s\n" "Component" "Status" "Ports"
+        echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        
+        for i in "${!component_names[@]}"; do
+            printf "%-30s %-20b %s\n" "${component_names[$i]}" "${component_statuses[$i]}" "${component_ports[$i]}"
+        done
+        
+        echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        
+        # Count running services and identify problematic ones
+        local running_count=0
+        local partial_count=0
+        local not_running_count=0
+        local has_issues=false
+        declare -a problematic_components
+        
+        for i in "${!component_statuses[@]}"; do
+            if [[ "${component_statuses[$i]}" == *"✓ Running"* ]]; then
+                ((running_count++))
+            elif [[ "${component_statuses[$i]}" == *"⚠ Partial"* ]]; then
+                ((partial_count++))
+                problematic_components+=("${component_names[$i]} (Partial)")
+            elif [[ "${component_statuses[$i]}" == *"✗"* ]]; then
+                ((not_running_count++))
+                problematic_components+=("${component_names[$i]} (Not Running)")
+            fi
+            if [[ -n "${component_issues[$i]}" ]]; then
+                has_issues=true
+            fi
+        done
+        
+        echo ""
+        echo -e "${WHITE}Total Components: ${#component_names[@]}${NC}"
+        echo -e "${GREEN}Fully Running: $running_count${NC}"
+        if [[ $partial_count -gt 0 ]]; then
+            echo -e "${YELLOW}Partially Running: $partial_count${NC}"
+        fi
+        if [[ $not_running_count -gt 0 ]]; then
+            echo -e "${RED}Not Running: $not_running_count${NC}"
+        fi
+        
+        # Show problematic components
+        if [[ ${#problematic_components[@]} -gt 0 ]]; then
+            echo ""
+            echo -e "${WHITE}Components with issues:${NC}"
+            for comp in "${problematic_components[@]}"; do
+                echo -e "  ${YELLOW}•${NC} $comp"
+            done
+        fi
+        
+        # Display issues if any
+        if [[ "$has_issues" == true ]]; then
+            echo ""
+            echo -e "${WHITE}=== ISSUES DETECTED ===${NC}"
+            echo -e "${WHITE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+            
+            for i in "${!component_names[@]}"; do
+                if [[ -n "${component_issues[$i]}" ]]; then
+                    echo -e "${CYAN}${component_names[$i]}:${NC}"
+                    # Print each issue on its own line with proper indentation
+                    echo "${component_issues[$i]}" | while IFS= read -r line; do
+                        if [[ -n "$line" ]]; then
+                            echo -e "  ${YELLOW}→${NC} $line"
+                        fi
+                    done
+                    echo ""
+                fi
+            done
+        fi
+    fi
+}
+
+# Main script logic
+if [ $# -eq 0 ]; then
+    print_usage
+    exit 0
+fi
+
+COMMAND=$1
+shift
+ARGS="$@"
+
+case $COMMAND in
+    reset0|rebuild|stop|restart|status)
+        execute_command $COMMAND $ARGS
+        ;;
+    *)
+        echo -e "${RED}Error: Unknown command '$COMMAND'${NC}"
+        print_usage
+        exit 1
+        ;;
+esac

@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# Splunk MCP Lite Management Script
+# Frontend for all management commands
+
+# ANSI color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m' # No Color
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+SCRIPTS_DIR="${SCRIPT_DIR}/SCRIPTS"
+
+# Function to print usage
+print_usage() {
+    echo -e "${WHITE}Splunk MCP Lite Management Tool${NC}"
+    echo -e "${WHITE}================================${NC}"
+    echo ""
+    echo -e "${CYAN}Usage:${NC} dock COMMAND"
+    echo ""
+    echo -e "${CYAN}Available Commands:${NC}"
+    echo -e "  ${GREEN}reset0${NC}    - Full cleanup. ${YELLOW}Removes all containers, volumes, and images${NC}"
+    echo -e "  ${GREEN}rebuild${NC}   - Start fresh. ${YELLOW}Rebuild and start containers from scratch${NC}"
+    echo -e "  ${GREEN}stop${NC}      - Stop and remove containers"
+    echo -e "  ${GREEN}restart${NC}   - Restart containers (stop + start)"
+    echo -e "  ${GREEN}status${NC}    - Show container & service status"
+    echo ""
+    echo -e "${CYAN}Service URL:${NC} ${WHITE}http://localhost:8052${NC}"
+    echo ""
+}
+
+# Check if no arguments provided
+if [ $# -eq 0 ]; then
+    print_usage
+    exit 0
+fi
+
+# Save current directory
+ORIGINAL_DIR="$(pwd)"
+
+# Get command and shift to get remaining parameters
+COMMAND="$1"
+shift
+
+# Function to return to original directory
+return_to_original() {
+    cd "${ORIGINAL_DIR}" || exit 1
+}
+
+# Change to script directory to ensure relative paths work correctly
+cd "${SCRIPT_DIR}" || exit 1
+
+# Route to appropriate script
+case "$COMMAND" in
+    reset0)
+        "${SCRIPTS_DIR}/reset0" "$@"
+        return_to_original
+        ;;
+    rebuild)
+        "${SCRIPTS_DIR}/rebuild" "$@"
+        return_to_original
+        ;;
+    stop)
+        "${SCRIPTS_DIR}/stop" "$@"
+        return_to_original
+        ;;
+    restart)
+        "${SCRIPTS_DIR}/restart" "$@"
+        return_to_original
+        ;;
+    status)
+        "${SCRIPTS_DIR}/status" "$@"
+        return_to_original
+        ;;
+    help|--help|-h)
+        print_usage
+        return_to_original
+        exit 0
+        ;;
+    *)
+        echo -e "${RED}Error: Unknown command '${COMMAND}'${NC}"
+        echo ""
+        print_usage
+        return_to_original
+        exit 1
+        ;;
+esac

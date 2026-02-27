@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# LiteLLM Reload Script - Start fresh (rebuild and start)
+# Rebuilds and starts containers from scratch
+
+set -e
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PARENT_DIR="$(dirname "$SCRIPT_DIR")"
+cd "${PARENT_DIR}" || exit 1
+
+# Load environment variables from .env file
+if [ -f "${PARENT_DIR}/.env" ]; then
+    set -a
+    source "${PARENT_DIR}/.env"
+    set +a
+fi
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m' # No Color
+
+echo -e "${WHITE}=== LiteLLM Start Fresh ===${NC}"
+echo -e "${YELLOW}Building and starting containers from scratch...${NC}"
+echo ""
+
+# Check if .env exists
+if [ ! -f ".env" ]; then
+    echo -e "${YELLOW}⚠️  No .env file found. Run './setup' first to configure services.${NC}"
+    exit 1
+fi
+
+# Stop existing containers first (without removing images)
+echo -e "${CYAN}Stopping existing containers...${NC}"
+if [ -f "docker-compose-litellm.yml" ]; then
+    sudo docker compose -f docker-compose-litellm.yml down
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ Containers stopped${NC}"
+    else
+        echo -e "${YELLOW}⚠ No containers to stop (continuing)${NC}"
+    fi
+fi
+
+# Build containers from scratch
+echo -e "${CYAN}Building containers (no cache)...${NC}"
+sudo docker compose -f docker-compose-litellm.yml build --no-cache
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Containers built successfully${NC}"
+else
+    echo -e "${RED}✗ Failed to build containers${NC}"
+    exit 1
+fi
+
+# Start containers
+echo -e "${CYAN}Starting containers...${NC}"
+sudo docker compose -f docker-compose-litellm.yml up -d
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Containers started successfully${NC}"
+    echo ""
+    echo -e "${WHITE}=== Services Running ===${NC}"
+    echo -e "${CYAN}Service Endpoints:${NC}"
+    echo -e "  ${WHITE}• LiteLLM Proxy:${NC} http://localhost:${LITELLM_PORT:-7010} ${YELLOW}(direct, no logging)${NC}"
+    echo -e "  ${WHITE}• Raw Logger Proxy:${NC} http://localhost:${RAW_LOGGING_PORT:-7011} ${YELLOW}(with raw logging)${NC}"
+    echo -e "  ${WHITE}• PostgreSQL:${NC} localhost:${LITELLM_DB_PORT:-5435}"
+    echo ""
+    echo -e "${CYAN}Status:${NC} Use ${WHITE}dock status${NC} to check container status"
+else
+    echo -e "${RED}✗ Failed to start containers${NC}"
+    exit 1
+fi

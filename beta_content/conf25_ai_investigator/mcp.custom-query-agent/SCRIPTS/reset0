@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Reset script - Full cleanup of containers and images
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m'
+
+# Get script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
+cd "${SCRIPT_DIR}" || exit 1
+
+echo -e "${WHITE}=== Custom Query Agent Full Cleanup ===${NC}"
+echo -e "${YELLOW}This will completely remove all containers, volumes, and images${NC}"
+echo ""
+
+# Stop and remove containers, networks, volumes
+echo -e "${CYAN}Stopping and removing containers, networks, volumes...${NC}"
+sudo docker compose down -v --remove-orphans
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Containers and volumes removed${NC}"
+else
+    echo -e "${YELLOW}⚠ No containers to stop or minor issues (continuing)${NC}"
+fi
+
+# Get project name for image cleanup
+PROJECT_NAME=$(basename "$SCRIPT_DIR")
+PROJECT_NAME=${PROJECT_NAME//[.-]/_}
+
+# Remove project-specific images
+echo -e "${CYAN}Removing project images...${NC}"
+sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep -E "^${PROJECT_NAME}|^${SCRIPT_DIR##*/}" | while read -r image_info; do
+    image_id=$(echo "$image_info" | awk '{print $2}')
+    image_name=$(echo "$image_info" | awk '{print $1}')
+    echo -e "${YELLOW}  Removing image: ${image_name}${NC}"
+    sudo docker rmi -f "$image_id" 2>/dev/null
+done
+
+# Also check for compose-prefixed images
+sudo docker images --format "{{.Repository}}:{{.Tag}} {{.ID}}" | grep -i "custom.*query\|query.*agent" | while read -r image_info; do
+    image_id=$(echo "$image_info" | awk '{print $2}')
+    image_name=$(echo "$image_info" | awk '{print $1}')
+    echo -e "${YELLOW}  Removing image: ${image_name}${NC}"
+    sudo docker rmi -f "$image_id" 2>/dev/null
+done
+
+# Clean up dangling images related to this project
+echo -e "${CYAN}Cleaning up dangling images...${NC}"
+sudo docker image prune -f
+
+# Final cleanup status
+echo ""
+echo -e "${GREEN}✓ Full cleanup completed${NC}"
+echo -e "${CYAN}Use '${WHITE}dock reload${CYAN}' to rebuild and start fresh${NC}"

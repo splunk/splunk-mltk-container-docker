@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Stop script - Stop and remove containers
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+WHITE='\033[1;37m'
+NC='\033[0m'
+
+# Get script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )"
+cd "${SCRIPT_DIR}" || exit 1
+
+echo -e "${WHITE}=== Custom Query Agent Stop ===${NC}"
+echo -e "${YELLOW}Stopping and removing containers...${NC}"
+echo ""
+
+# Stop containers
+echo -e "${CYAN}Stopping containers...${NC}"
+sudo docker compose down
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Containers stopped and removed successfully${NC}"
+else
+    echo -e "${RED}✗ Failed to stop containers${NC}"
+    exit 1
+fi

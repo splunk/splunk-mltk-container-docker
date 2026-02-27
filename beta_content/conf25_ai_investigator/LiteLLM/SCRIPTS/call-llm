@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PARENT_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Load environment variables from .env file
+if [ -f "${PARENT_DIR}/.env" ]; then
+    set -a
+    source "${PARENT_DIR}/.env"
+    set +a
+fi
+
+# Default values
+DEFAULT_MODEL="ollama/llama3.1:70b-instruct-q4_K_M"
+DEFAULT_MESSAGE="Tell me a joke"
+API_KEY="${LITELLM_MASTER_KEY:-sk-21056a9b6f5910fa}"
+API_ENDPOINT="http://localhost:${RAW_LOGGING_PORT:-7011}/v1/chat/completions"
+
+# Color codes (avoiding blue as per instructions)
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Print syntax
+echo -e "${CYAN}Syntax: $0 [model] [message]${NC}"
+echo ""
+
+# Parse arguments
+if [ $# -eq 0 ]; then
+    # No arguments - use defaults
+    MODEL="$DEFAULT_MODEL"
+    MESSAGE="$DEFAULT_MESSAGE"
+elif [ $# -eq 1 ]; then
+    # One argument - set model only
+    MODEL="$1"
+    MESSAGE="$DEFAULT_MESSAGE"
+elif [ $# -ge 2 ]; then
+    # Two or more arguments - set model and concatenate the rest as message
+    MODEL="$1"
+    shift
+    MESSAGE="$*"
+fi
+
+# Display request info
+echo -e "${YELLOW}Calling LiteLLM Proxy:${NC}"
+echo -e "${GREEN}Model:${NC} $MODEL"
+echo -e "${GREEN}Message:${NC} $MESSAGE"
+echo ""
+
+# Build the curl command
+CURL_CMD="curl -s -X POST \"$API_ENDPOINT\" \
+  -H \"Authorization: Bearer $API_KEY\" \
+  -H \"Content-Type: application/json\" \
+  -d '{
+    \"model\": \"$MODEL\",
+    \"messages\": [{\"role\": \"user\", \"content\": \"$MESSAGE\"}],
+    \"max_tokens\": 2000
+  }'"
+
+# Display the curl command
+echo -e "${CYAN}Executing:${NC}"
+echo "$CURL_CMD"
+echo ""
+
+# Make the API call
+response=$(curl -s -X POST "$API_ENDPOINT" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"model\": \"$MODEL\",
+    \"messages\": [{\"role\": \"user\", \"content\": \"$MESSAGE\"}],
+    \"max_tokens\": 2000
+  }")
+
+# Check if curl succeeded
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Error: Failed to connect to LiteLLM proxy${NC}"
+    exit 1
+fi
+
+# Check for error in response
+if echo "$response" | grep -q '"error"'; then
+    echo -e "${RED}Error response:${NC}"
+    echo "$response" | jq '.' 2>/dev/null || echo "$response"
+else
+    echo -e "${GREEN}Response:${NC}"
+    echo "$response" | jq '.' 2>/dev/null || echo "$response"
+fi

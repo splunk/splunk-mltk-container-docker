@@ -11,7 +11,7 @@ scipy
 scikit-learn
 networkx
 
-tensorflow-cpu
+tensorflow
 mlflow>=2.9.2
 
 prophet

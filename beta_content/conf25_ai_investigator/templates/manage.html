@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Vector DB</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Fraud Investigator ◆ Manage Vector DB</h1>
+        
+        <a href="/" class="btn btn-secondary mb-4">◀ Back Home</a>
+        
+        {% if message %}
+            <div class="alert alert-success mb-4" role="alert">
+                {{ message }}
+            </div>
+        {% endif %}
+        
+        <section class="section">
+            <h2>Existing Entries</h2>
+            
+            <div class="table-wrapper">
+                <table class="entries-table">
+                    <thead>
+                        <tr>
+                            <th class="id-column">ID</th>
+                            <th class="type-column">Type</th>
+                            <th class="actions-column">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in entries %}
+                            <tr data-id="{{ entry.id }}">
+                                <td class="truncate-with-tooltip" data-full-text="{{ entry.id }}">{{ entry.id }}</td>
+                                <td>{{ entry.metadata.get('entry_type', 'N/A') }}</td>
+                                <td>
+                                    <button class="btn btn-blue view-btn" data-modal-id="content-{{ entry.id }}">View</button>
+                                    <button class="btn btn-red remove-btn" data-id="{{ entry.id }}">Remove</button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination mt-4">
+                {% if current_page > 1 %}
+                    <a href="?page={{ current_page - 1 }}{% if search %}&search={{ search }}{% endif %}" class="btn btn-blue">Previous</a>
+                {% endif %}
+                <span class="mx-2">Page {{ current_page }} of {{ total_pages }}</span>
+                {% if current_page < total_pages %}
+                    <a href="?page={{ current_page + 1 }}{% if search %}&search={{ search }}{% endif %}" class="btn btn-blue">Next</a>
+                {% endif %}
+            </div>
+        </section>
+        
+        <section id="add-content" class="section">
+            <h2>Add Content</h2>
+            <form id="add-content-form" method="post" action="/add_content">
+                <div class="form-group">
+                    <label for="upload-type">Upload Type:</label>
+                    <div class="upload-type-buttons">
+                        <button type="button" class="btn" data-type="query_example">Query Example</button>
+                        <button type="button" class="btn" data-type="data_description">Data Description</button>
+                    </div>
+                    <input type="hidden" id="upload-type" name="upload_type" value="">
+                </div>
+                
+                <div id="data-description-fields" style="display: none;">
+                    <div class="form-group">
+                        <label for="data-store">Data Store:</label>
+                        <select id="data-store" name="data_store">
+                            <option value="datamodel">Datamodel</option>
+                            <option value="index">Index</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="data-store-name">Data Store Name:</label>
+                        <input type="text" id="data-store-name" name="data_store_name">
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description (optional):</label>
+                        <textarea id="description" name="description" rows="2"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="content">Content:</label>
+                    <textarea id="content" name="content" rows="10" required></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-blue">Add Content</button>
+            </form>
+        </section>
+    </div>
+    
+    {% for entry in entries %}
+        <div id="content-{{ entry.id }}" class="modal">
+            <div class="modal-content" 
+                 data-entry-type="{{ entry.metadata.get('entry_type', 'N/A') }}"
+                 data-description="{{ entry.metadata.get('description', '') }}"
+                 data-tool-name="{{ entry.metadata.get('tool_name', '') }}"
+                 data-threshold="{{ entry.metadata.get('threshold', '') }}">
+                <span class="close" onclick="hideModal('content-{{ entry.id }}')">&times;</span>
+                <div class="modal-body">
+                    <pre style="display: none;">{{ entry.content }}</pre>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    
+    <script src="/static/manage.js"></script>
+</body>
+</html>
