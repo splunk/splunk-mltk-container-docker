@@ -32,19 +32,20 @@ To build the default golden cpu image locally, simply run:
 or specify additional arguments:
 `./build.sh golden-cpu local_build/ 1.0.0`
 
-In this latest version of this repository the following tags are available, but customizations can easily be made and added to `tag_mapping.csv` file for custom builds:
+For the current v5.2.3 release, the following tags are available in `tag_mapping.csv`. You can still add custom entries for your own builds:
 
 | `build configuration tag` | Description |
 | --- | --- |
-| minimal-cpu | Debian bullseye based with a minimal data-science environment (numpy,scipi,pandas,scikit-learn,matplotlib,etc). Notably this does not include tensorflow or pytorch which significantly bloat image size. |
-| minimal-gpu | Debian bullseye based with a minimal data-science environment (numpy,scipi,pandas,scikit-learn,matplotlib,etc). Notably this does not include tensorflow or pytorch which significantly bloat image size. Does include jupyter nvidia dashboards for GPU resource monitoring. |
-| golden-cpu | Debian bullseye based with a wide range of data science libraries and tools. (all of the above including tensorflow, pytorch, umap-learn, datashader, dask, spacy, networkx and many more see `requirements_files/specific_golden_cpu.txt` for more details). Excludes tensorflow and torch GPU functionality where possible | 
-| golden-gpu | The same as golden-cpu but with tensorflow and pytorch GPU libraries |
-| ubi-functional-cpu | Redhat UBI9 based image. Contains only the specific libraries needed to have a functional conntection between the DSDL app and an external container. Most suitable for building custom enterprise-ready images on top of. |
-| ubi-minimal-cpu | Redhat UBI9 based image with a basic data science environment. |
-| ubi-golden-cpu | Redhat UBI9 based image with a wide range of data science libraries and tools. Spacy excluded due to build issues on redhat. |
-| golden-gpu-transformers | Variation on the Debian golden CPU image which supports the use of certain transformer models, including GPU suppport |
-| golden-gpu-rapids | Variation on the Debian golden CPU image which supports the use of rapids on a GPU enabled image |
+| golden-cpu | Red Hat UBI Golden CPU (5.2.3) |
+| golden-gpu | Golden Image GPU (5.2.3) |
+| golden-cpu-transformers | Transformers CPU (5.2.3) |
+| golden-gpu-transformers | Transformers GPU (5.2.3) |
+| golden-gpu-rapids | Rapids 24.04 (5.2.3) |
+| ubi-llm-rag | Red Hat LLM RAG CPU (5.2.3) |
+| escu-cpu | ESCU (5.2.3) |
+| spark | Spark 3.5.0 (5.2.3) |
+| golden-cpu-arm | Red Hat UBI Golden CPU ARM64 (5.2.3) |
+| agentic-ai | Agentic AI (5.2.3) |
 
 When building images the build script creates an images.conf which will be placed in the `<splunk>/etc/apps/mltk-container/local` directory to make the image available for use in the DSDL app.
 
@@ -62,6 +63,7 @@ To do this add an entry to the `tag_mapping.csv` file which references a `base i
 | base_requirements / specific_requirements | These columns specify the names of requirements files to use from the `./requirements_files/` directory | For consistency  python requirements files are spit into two. For most images `base_requirements` can be set to use the `base_functional.txt` requirements file, which contains all of the basic libraries needed for DSDL to function. `specifc_requirements` may then be set to install libraries appropriate for your particualr use-case or environment. For the majority of examples in the DSDL app to function you must have the libraries listed in `specific_golden_cpu.txt` installed. Note: the build scipt will only use these files if a compiled requirements file has not been created for that image. If you make changes to an existing requirements file please ensure you delete any compiled requirements files (./requirements_files/compiled_*) before beginning a new build.
 | runtime | This may be set to only two values: `none` or `nvidia` | `nvidia` only required if you are intending to use GPU functionality |
 | requirements_dockerfile | This is only used if you are pre-compiling python requirements. Set this to a dockerfile with a minimal environment which will work with the proposed base image. Debian and Redhat variants are provided, see `./dockerfiles/Dockerfile.*.(redhat\|debian).requirements` for examples. Others may be added as needed. | |
+| stanza_name | Display title used in generated image stanza output (for example, in `images_conf_files/*-images.txt`) | `build.sh` reads this as the title for the image configuration. |
 
 Example requirements files and dockerfiles can be found in `requirements_files/` and `dockerfiles/` directories.
 
