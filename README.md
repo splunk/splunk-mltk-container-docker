@@ -1,7 +1,7 @@
 # Splunk App for Data Science and Deep Learning
 
-Splunk App for Data Science and Deep Learning (DSDL) 5.2.1 formerly known as Deep Learning Toolkit for Splunk (DLTK) versions 2.3.0 - 3.9.0 and (DSDL) 5.0.0 - 5.2.1 published on [splunkbase](https://splunkbase.splunk.com/app/4607/).
-There is also a prior DLTK version 4.x which was open sourced on [GitHub](https://github.com/splunk/deep-learning-toolkit) but is not actively maintained. Please make use of the latest version 5.2.1
+Splunk App for Data Science and Deep Learning (DSDL) 5.2.3 formerly known as Deep Learning Toolkit for Splunk (DLTK) versions 2.3.0 - 3.9.0 and (DSDL) 5.0.0 - 5.2.3 published on [splunkbase](https://splunkbase.splunk.com/app/4607/).
+There is also a prior DLTK version 4.x which was open sourced on [GitHub](https://github.com/splunk/deep-learning-toolkit) but is not actively maintained. Please make use of the latest version 5.2.3
 
 Copyright (C) 2005-2025 Splunk Inc. All rights reserved.  
 Author: [Philipp Drieger]()
@@ -70,12 +70,12 @@ There are a number of scripts in this repo which can help in various tasks when 
 
 | Script Name | Description | Example | Notes |
 | --- | --- | --- | --- |
-| `build.sh` | Build a container using a configuration tag found in `tag_mapping.csv` | `./build.sh minimal-cpu splunk/ 5.2.1` | |
-| `bulk_build.sh` | Build all containers in a tag list | `./bulk_build.sh tag_mapping.csv splunk/ 5.2.1` | |
-| `compile_image_python_requirements.sh` | Use a base image and simplified dockerfile to pre-compute the python dependancy versions for all libraries listed in the tag's referenced requirements files | `./compile_image_python_requirements.sh minimal-cpu` | If the Dockerfile for the tag is not specified, the script looks for the tags Dockerfile plus the `.requirements` extension. If this does not exist, please create a requirements dockerfile or specifiy and appropriate requirements dockerfile. An example can be found in /dockerfiles/Dockerfile.debian.requirements |
+| `build.sh` | Build a container using a configuration tag found in `tag_mapping.csv` | `./build.sh golden-cpu splunk/ 5.2.3` | |
+| `bulk_build.sh` | Build all containers in a tag list | `./bulk_build.sh tag_mapping.csv splunk/ 5.2.3` | |
+| `compile_image_python_requirements.sh` | Use a base image and simplified dockerfile to pre-compute the python dependancy versions for all libraries listed in the tag's referenced requirements files | `./compile_image_python_requirements.sh golden-cpu` | If the Dockerfile for the tag is not specified, the script looks for the tags Dockerfile plus the `.requirements` extension. If this does not exist, please create a requirements dockerfile or specifiy and appropriate requirements dockerfile. An example can be found in /dockerfiles/Dockerfile.debian.requirements |
 | `bulk_compile.sh` | Attempt to pre-compile python dependancy versions for all containers in a tag list | `./bulk_build.sh tag_mapping.csv` | Makes assumptions about dockerfile names as described above. |
-| `scan_container.sh` | Scan a built container for vulnerabilities and produce a report with Trivy | `./scan_container.sh minimal-cpu splunk/ 5.2.1` | Downloads the Trivy container to run the scan. |
-| `test_container.sh` | Run a set of simulated tests using Playwright on a built container. | `./test_container.sh minimal-cpu splunk/ 5.2.1` | Requires the setup of a python virtual environment that can run Playwright. Specific python versions and dependancies may be required at the system level. |
+| `scan_container.sh` | Scan a built container for vulnerabilities and produce a report with Trivy | `./scan_container.sh golden-cpu splunk/ 5.2.3` | Downloads the Trivy container to run the scan. |
+| `test_container.sh` | Run a set of simulated tests using Playwright on a built container. | `./test_container.sh golden-cpu splunk/ 5.2.3` | Requires the setup of a python virtual environment that can run Playwright. Specific python versions and dependancies may be required at the system level. |
 
 ### Compile requirements for an image
 In some cases, dependancy resolution can take a long time for an image with many python libraries. In this case you may find it faster to pre-compile python requirements. `compile_image_python_requirements.sh` and `bulk_compile.sh` scripts are provided for you to do this. Most pre-existing images will have compiled requirements shipped in this repo. If you need to rebuild an existing container with new libraries, please delete the associated compiled requirements file.
@@ -89,7 +89,7 @@ Note: for an image to be deployed it must be made available to the docker or k8s
 For development purposes the container images create self-signed certificates for HTTPS. You can replace the `dltk.key` and `dltk.pem` filed by editing the Dockerfile to build a container with your own certificates. This is one possibility to use your own certificates. There are also other options to configure your container environment with your own certificates.
 
 ### Run and test your container locally
-You can run your container locally, e.g. with `docker run -it --rm --name mltk-container-golden-image-cpu -p 5000:5000 -p 8888:8888 -p 6006:6006 -v mltk-container-data:/srv splunk/mltk-container-golden-image-cpu:5.2.1`
+You can run your container locally, e.g. with `docker run -it --rm --name mltk-container-golden-cpu -p 5000:5000 -p 8888:8888 -p 6006:6006 -v mltk-container-data:/srv splunk/mltk-container-golden-cpu:5.2.3`
 
 ## Further documentation and usage
 Please find further information and documentation on splunkbase: [Download and install the Splunk App for Data Science and Deep Learning](https://splunkbase.splunk.com/app/4607/) and refer to the [official documentation pages](https://docs.splunk.com/Documentation/DSDL) on how to install and use the app.
