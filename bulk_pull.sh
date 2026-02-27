@@ -26,7 +26,7 @@ else
 fi
 
 if [ -z "$3" ]; then
-  version="5.2.1"
+  version="5.2.3"
   echo "No version specified. Using version: ${version}"
 else
   version="$3"

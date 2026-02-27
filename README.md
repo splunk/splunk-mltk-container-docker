@@ -1,11 +1,11 @@
 # Splunk App for Data Science and Deep Learning
 
-Splunk App for Data Science and Deep Learning (DSDL) 5.2.1 formerly known as Deep Learning Toolkit for Splunk (DLTK) versions 2.3.0 - 3.9.0 and (DSDL) 5.0.0 - 5.2.1 published on [splunkbase](https://splunkbase.splunk.com/app/4607/).
-There is also a prior DLTK version 4.x which was open sourced on [GitHub](https://github.com/splunk/deep-learning-toolkit) but is not actively maintained. Please make use of the latest version 5.2.1
+Splunk App for Data Science and Deep Learning (DSDL) 5.2.3 formerly known as Deep Learning Toolkit for Splunk (DLTK) versions 2.3.0 - 3.9.0 and (DSDL) 5.0.0 - 5.2.3 published on [splunkbase](https://splunkbase.splunk.com/app/4607/).
+There is also a prior DLTK version 4.x which was open sourced on [GitHub](https://github.com/splunk/deep-learning-toolkit) but is not actively maintained. Please make use of the latest version 5.2.3
 
-Copyright (C) 2005-2025 Splunk Inc. All rights reserved.  
+Copyright (C) 2005-2026 Splunk Inc. All rights reserved.  
 Author: [Philipp Drieger]()
-Contributors: [Josh Cowling](https://www.linkedin.com/in/josh-cowling/), [Huaibo Zhao](), [Tatsu Murata]() 
+Contributors: [Josh Cowling](), [Huaibo Zhao](), [Tatsu Murata]() 
 
 # About
 This repository contains the collection of resources, scripts, and testing frameworks that are used build and deploy the default container images used by the DSDL app. It can be used to modify, secure, update and change these containers and their build process to meet the needs of your enterprise environment.
@@ -32,19 +32,20 @@ To build the default golden cpu image locally, simply run:
 or specify additional arguments:
 `./build.sh golden-cpu local_build/ 1.0.0`
 
-In this latest version of this repository the following tags are available, but customizations can easily be made and added to `tag_mapping.csv` file for custom builds:
+For the current v5.2.3 release, the following tags are available in `tag_mapping.csv`. You can still add custom entries for your own builds:
 
 | `build configuration tag` | Description |
 | --- | --- |
-| minimal-cpu | Debian bullseye based with a minimal data-science environment (numpy,scipi,pandas,scikit-learn,matplotlib,etc). Notably this does not include tensorflow or pytorch which significantly bloat image size. |
-| minimal-gpu | Debian bullseye based with a minimal data-science environment (numpy,scipi,pandas,scikit-learn,matplotlib,etc). Notably this does not include tensorflow or pytorch which significantly bloat image size. Does include jupyter nvidia dashboards for GPU resource monitoring. |
-| golden-cpu | Debian bullseye based with a wide range of data science libraries and tools. (all of the above including tensorflow, pytorch, umap-learn, datashader, dask, spacy, networkx and many more see `requirements_files/specific_golden_cpu.txt` for more details). Excludes tensorflow and torch GPU functionality where possible | 
-| golden-gpu | The same as golden-cpu but with tensorflow and pytorch GPU libraries |
-| ubi-functional-cpu | Redhat UBI9 based image. Contains only the specific libraries needed to have a functional conntection between the DSDL app and an external container. Most suitable for building custom enterprise-ready images on top of. |
-| ubi-minimal-cpu | Redhat UBI9 based image with a basic data science environment. |
-| ubi-golden-cpu | Redhat UBI9 based image with a wide range of data science libraries and tools. Spacy excluded due to build issues on redhat. |
-| golden-gpu-transformers | Variation on the Debian golden CPU image which supports the use of certain transformer models, including GPU suppport |
-| golden-gpu-rapids | Variation on the Debian golden CPU image which supports the use of rapids on a GPU enabled image |
+| golden-cpu | Red Hat UBI Golden CPU (5.2.3) |
+| golden-gpu | Golden Image GPU (5.2.3) |
+| golden-cpu-transformers | Transformers CPU (5.2.3) |
+| golden-gpu-transformers | Transformers GPU (5.2.3) |
+| golden-gpu-rapids | Rapids 24.04 (5.2.3) |
+| ubi-llm-rag | Red Hat LLM RAG CPU (5.2.3) |
+| escu-cpu | ESCU (5.2.3) |
+| spark | Spark 3.5.0 (5.2.3) |
+| golden-cpu-arm | Red Hat UBI Golden CPU ARM64 (5.2.3) |
+| agentic-ai | Agentic AI (5.2.3) |
 
 When building images the build script creates an images.conf which will be placed in the `<splunk>/etc/apps/mltk-container/local` directory to make the image available for use in the DSDL app.
 
@@ -62,6 +63,7 @@ To do this add an entry to the `tag_mapping.csv` file which references a `base i
 | base_requirements / specific_requirements | These columns specify the names of requirements files to use from the `./requirements_files/` directory | For consistency  python requirements files are spit into two. For most images `base_requirements` can be set to use the `base_functional.txt` requirements file, which contains all of the basic libraries needed for DSDL to function. `specifc_requirements` may then be set to install libraries appropriate for your particualr use-case or environment. For the majority of examples in the DSDL app to function you must have the libraries listed in `specific_golden_cpu.txt` installed. Note: the build scipt will only use these files if a compiled requirements file has not been created for that image. If you make changes to an existing requirements file please ensure you delete any compiled requirements files (./requirements_files/compiled_*) before beginning a new build.
 | runtime | This may be set to only two values: `none` or `nvidia` | `nvidia` only required if you are intending to use GPU functionality |
 | requirements_dockerfile | This is only used if you are pre-compiling python requirements. Set this to a dockerfile with a minimal environment which will work with the proposed base image. Debian and Redhat variants are provided, see `./dockerfiles/Dockerfile.*.(redhat\|debian).requirements` for examples. Others may be added as needed. | |
+| stanza_name | Display title used in generated image stanza output (for example, in `images_conf_files/*-images.txt`) | `build.sh` reads this as the title for the image configuration. |
 
 Example requirements files and dockerfiles can be found in `requirements_files/` and `dockerfiles/` directories.
 
@@ -70,12 +72,12 @@ There are a number of scripts in this repo which can help in various tasks when 
 
 | Script Name | Description | Example | Notes |
 | --- | --- | --- | --- |
-| `build.sh` | Build a container using a configuration tag found in `tag_mapping.csv` | `./build.sh minimal-cpu splunk/ 5.2.1` | |
-| `bulk_build.sh` | Build all containers in a tag list | `./bulk_build.sh tag_mapping.csv splunk/ 5.2.1` | |
-| `compile_image_python_requirements.sh` | Use a base image and simplified dockerfile to pre-compute the python dependancy versions for all libraries listed in the tag's referenced requirements files | `./compile_image_python_requirements.sh minimal-cpu` | If the Dockerfile for the tag is not specified, the script looks for the tags Dockerfile plus the `.requirements` extension. If this does not exist, please create a requirements dockerfile or specifiy and appropriate requirements dockerfile. An example can be found in /dockerfiles/Dockerfile.debian.requirements |
+| `build.sh` | Build a container using a configuration tag found in `tag_mapping.csv` | `./build.sh golden-cpu splunk/ 5.2.3` | |
+| `bulk_build.sh` | Build all containers in a tag list | `./bulk_build.sh tag_mapping.csv splunk/ 5.2.3` | |
+| `compile_image_python_requirements.sh` | Use a base image and simplified dockerfile to pre-compute the python dependancy versions for all libraries listed in the tag's referenced requirements files | `./compile_image_python_requirements.sh golden-cpu` | If the Dockerfile for the tag is not specified, the script looks for the tags Dockerfile plus the `.requirements` extension. If this does not exist, please create a requirements dockerfile or specifiy and appropriate requirements dockerfile. An example can be found in /dockerfiles/Dockerfile.debian.requirements |
 | `bulk_compile.sh` | Attempt to pre-compile python dependancy versions for all containers in a tag list | `./bulk_build.sh tag_mapping.csv` | Makes assumptions about dockerfile names as described above. |
-| `scan_container.sh` | Scan a built container for vulnerabilities and produce a report with Trivy | `./scan_container.sh minimal-cpu splunk/ 5.2.1` | Downloads the Trivy container to run the scan. |
-| `test_container.sh` | Run a set of simulated tests using Playwright on a built container. | `./test_container.sh minimal-cpu splunk/ 5.2.1` | Requires the setup of a python virtual environment that can run Playwright. Specific python versions and dependancies may be required at the system level. |
+| `scan_container.sh` | Scan a built container for vulnerabilities and produce a report with Trivy | `./scan_container.sh golden-cpu splunk/ 5.2.3` | Downloads the Trivy container to run the scan. |
+| `test_container.sh` | Run a set of simulated tests using Playwright on a built container. | `./test_container.sh golden-cpu splunk/ 5.2.3` | Requires the setup of a python virtual environment that can run Playwright. Specific python versions and dependancies may be required at the system level. |
 
 ### Compile requirements for an image
 In some cases, dependancy resolution can take a long time for an image with many python libraries. In this case you may find it faster to pre-compile python requirements. `compile_image_python_requirements.sh` and `bulk_compile.sh` scripts are provided for you to do this. Most pre-existing images will have compiled requirements shipped in this repo. If you need to rebuild an existing container with new libraries, please delete the associated compiled requirements file.
@@ -89,7 +91,7 @@ Note: for an image to be deployed it must be made available to the docker or k8s
 For development purposes the container images create self-signed certificates for HTTPS. You can replace the `dltk.key` and `dltk.pem` filed by editing the Dockerfile to build a container with your own certificates. This is one possibility to use your own certificates. There are also other options to configure your container environment with your own certificates.
 
 ### Run and test your container locally
-You can run your container locally, e.g. with `docker run -it --rm --name mltk-container-golden-image-cpu -p 5000:5000 -p 8888:8888 -p 6006:6006 -v mltk-container-data:/srv splunk/mltk-container-golden-image-cpu:5.2.1`
+You can run your container locally, e.g. with `docker run -it --rm --name mltk-container-golden-cpu -p 5000:5000 -p 8888:8888 -p 6006:6006 -v mltk-container-data:/srv splunk/mltk-container-golden-cpu:5.2.3`
 
 ## Further documentation and usage
 Please find further information and documentation on splunkbase: [Download and install the Splunk App for Data Science and Deep Learning](https://splunkbase.splunk.com/app/4607/) and refer to the [official documentation pages](https://docs.splunk.com/Documentation/DSDL) on how to install and use the app.
