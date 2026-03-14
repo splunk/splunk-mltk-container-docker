@@ -40,6 +40,8 @@ llama-index-llms-ollama
 llama-index-vector-stores-milvus
 llama-index-embeddings-huggingface
 llama-index-embeddings-instructor
+langchain-ollama
+langchain-core
 sentence-transformers
 pydantic
 PyPDF2

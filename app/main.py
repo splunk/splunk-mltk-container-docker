@@ -10,7 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, ORJSONResponse
 from app.model.llm_utils_chat import create_llm
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+try:
+    from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+    HAS_langchain=True
+except: HAS_langchain=False
 
 from importlib import import_module, reload
 import pandas as pd
@@ -55,16 +58,17 @@ try:
 except:
     DEFAULT_LLM = 'bedrock'
 
-try:
-    SYSTEM_PROMPT = os.environ['SYSTEM_PROMPT'].strip('"')
-    if len(SYSTEM_PROMPT) > 0:
-        system_prompt_chat = SystemMessage(content=SYSTEM_PROMPT)
-    else:
+if HAS_langchain:
+    try:
+        SYSTEM_PROMPT = os.environ['SYSTEM_PROMPT'].strip('"')
+        if len(SYSTEM_PROMPT) > 0:
+            system_prompt_chat = SystemMessage(content=SYSTEM_PROMPT)
+        else:
+            system_prompt_chat = SystemMessage(
+                '''You are a friendly chatbot that is well-verse in Splunk and logs. You are here to help people ''')
+    except:
         system_prompt_chat = SystemMessage(
             '''You are a friendly chatbot that is well-verse in Splunk and logs. You are here to help people ''')
-except:
-    system_prompt_chat = SystemMessage(
-        '''You are a friendly chatbot that is well-verse in Splunk and logs. You are here to help people ''')
 
 LLM_LIST = ['ollama', 'bedrock', 'azure_openai', 'openai', 'gemini']
 llm_clients = {}
@@ -151,52 +155,53 @@ def count_tokens_vectorized(logs_list, log):
 @app.post("/logReview")
 @app.post("/logReview")
 async def logReview(req: Request):
-    try:
-        body = orjson.loads(await req.body())
-        userSession = body.get("sessionID")
-        userRawData = body.get("logs", [])
+    if HAS_langchain:
+        try:
+            body = orjson.loads(await req.body())
+            userSession = body.get("sessionID")
+            userRawData = body.get("logs", [])
 
-        log = get_logger(userName=body.get("userName"), userSession=userSession, base_dir=base_dir)
-        touch_session(userSession)
-        cleanup_expired_sessions()
+            log = get_logger(userName=body.get("userName"), userSession=userSession, base_dir=base_dir)
+            touch_session(userSession)
+            cleanup_expired_sessions()
 
-        # 1. Vectorized token counting
-        userRawData = count_tokens_vectorized(userRawData, log)
+            # 1. Vectorized token counting
+            userRawData = count_tokens_vectorized(userRawData, log)
 
-        # 2. Vectorized cleaning: Use regex to remove both { and } in one pass
-        df_temp = pd.DataFrame(userRawData)
-        if not df_temp.empty:
-            # CPU Optimization: Combined regex replace is faster than two separate calls
-            cleaned_series = df_temp['_raw'].str.replace(r'[{}]', '', regex=True)
-            append_Raw_Logs = "\n".join(cleaned_series.tolist())
-        else:
-            append_Raw_Logs = ""
+            # 2. Vectorized cleaning: Use regex to remove both { and } in one pass
+            df_temp = pd.DataFrame(userRawData)
+            if not df_temp.empty:
+                # CPU Optimization: Combined regex replace is faster than two separate calls
+                cleaned_series = df_temp['_raw'].str.replace(r'[{}]', '', regex=True)
+                append_Raw_Logs = "\n".join(cleaned_series.tolist())
+            else:
+                append_Raw_Logs = ""
 
-        append_Raw_Logs_to_LLM = f"Raw Logs: \n{append_Raw_Logs}"
+            append_Raw_Logs_to_LLM = f"Raw Logs: \n{append_Raw_Logs}"
 
-        query = HumanMessage(f"Here is my log set from Splunk. {append_Raw_Logs_to_LLM}")
-        summarise_logs_query = AIMessage(f"I received {len(userRawData)} lines. Would you like a summary?")
+            query = HumanMessage(f"Here is my log set from Splunk. {append_Raw_Logs_to_LLM}")
+            summarise_logs_query = AIMessage(f"I received {len(userRawData)} lines. Would you like a summary?")
 
-        # Session history management
-        if userSession not in manage_session_states_history:
-            manage_session_states_history[userSession] = [system_prompt_chat, query, summarise_logs_query]
-        else:
-            manage_session_states_history[userSession].extend([query, summarise_logs_query])
+            # Session history management
+            if userSession not in manage_session_states_history:
+                manage_session_states_history[userSession] = [system_prompt_chat, query, summarise_logs_query]
+            else:
+                manage_session_states_history[userSession].extend([query, summarise_logs_query])
 
-        manage_session_states_history[userSession] = trim_history(manage_session_states_history[userSession])
-        log.info(f"------------------------- Received Logs -------------------------")
-        log.info(f"\nLogs!! HumanMessage: {query}\n")
-        log.info(f"AIMessage: {summarise_logs_query}")
-        log.info(f"------------------------- End Logs -------------------------")
-        # Cleanup local heavy objects
-        del df_temp
-        gc.collect()
+            manage_session_states_history[userSession] = trim_history(manage_session_states_history[userSession])
+            log.info(f"------------------------- Received Logs -------------------------")
+            log.info(f"\nLogs!! HumanMessage: {query}\n")
+            log.info(f"AIMessage: {summarise_logs_query}")
+            log.info(f"------------------------- End Logs -------------------------")
+            # Cleanup local heavy objects
+            del df_temp
+            gc.collect()
 
-        return {"status": "received", "data": summarise_logs_query.content}
-    except Exception as e:
-        print("Error:", str(e))
-        log.error(f"Error in /logReview: {str(e)}\n")
-        return {"status": "error", "error": str(e)}
+            return {"status": "received", "data": summarise_logs_query.content}
+        except Exception as e:
+            print("Error:", str(e))
+            log.error(f"Error in /logReview: {str(e)}\n")
+            return {"status": "error", "error": str(e)}
 
 ## Function to organise the LLM prompt for invocation.
 async def chatbox_callLLM(human_msg, userSession, llm_option):
@@ -227,44 +232,45 @@ async def chatbox_callLLM(human_msg, userSession, llm_option):
 ## Endpoint for the chatbox
 @app.post("/chatbox")
 async def chat(req: Request):
-    try:
-        # MEMORY/CPU: Faster JSON parsing
-        body = orjson.loads(await req.body())
-        userName = body.get("userName")
-        userSession = body.get("sessionID")
-        user_query = body.get("message", "")
-        llm_option = body.get("llmOption", DEFAULT_LLM)
+    if HAS_langchain:
+        try:
+            # MEMORY/CPU: Faster JSON parsing
+            body = orjson.loads(await req.body())
+            userName = body.get("userName")
+            userSession = body.get("sessionID")
+            user_query = body.get("message", "")
+            llm_option = body.get("llmOption", DEFAULT_LLM)
 
-        ## Setup logger
-        log = get_logger(userName=userName, userSession=userSession, base_dir=base_dir)
-        touch_session(userSession)
-        cleanup_expired_sessions()
-        ## Check if user history exists. If not, templatise it.
-        if userSession not in manage_session_states_history:
-            # first_human_msg = HumanMessage(user_query)
-            manage_session_states_history[userSession] = []
-            # Append system prompt first
-            manage_session_states_history[userSession].append(system_prompt_chat)
+            ## Setup logger
+            log = get_logger(userName=userName, userSession=userSession, base_dir=base_dir)
+            touch_session(userSession)
+            cleanup_expired_sessions()
+            ## Check if user history exists. If not, templatise it.
+            if userSession not in manage_session_states_history:
+                # first_human_msg = HumanMessage(user_query)
+                manage_session_states_history[userSession] = []
+                # Append system prompt first
+                manage_session_states_history[userSession].append(system_prompt_chat)
 
-        human_msg = HumanMessage(user_query)  # Convert it into the langchain HumanMessage template for prompt.
-        ai_response = await chatbox_callLLM(human_msg, userSession, llm_option)
+            human_msg = HumanMessage(user_query)  # Convert it into the langchain HumanMessage template for prompt.
+            ai_response = await chatbox_callLLM(human_msg, userSession, llm_option)
 
-        log.info("------------------------------- Start: Chatbox API Call -------------------------------")
-        log.info(f"LLM option: {llm_option}")
-        log.info(f"HumanMessage: {human_msg}")
-        log.info(f"AIMessage: {ai_response}")
-        log.info("------------------------------- End:Chatbox API Call -------------------------------")
+            log.info("------------------------------- Start: Chatbox API Call -------------------------------")
+            log.info(f"LLM option: {llm_option}")
+            log.info(f"HumanMessage: {human_msg}")
+            log.info(f"AIMessage: {ai_response}")
+            log.info("------------------------------- End:Chatbox API Call -------------------------------")
 
-        # MEMORY OPTIMIZATION
-        del body
-        gc.collect()
+            # MEMORY OPTIMIZATION
+            del body
+            gc.collect()
 
-        return {"status": "received", "data": ai_response.content}
+            return {"status": "received", "data": ai_response.content}
 
-    except Exception as e:
-        print(f"Error in CHATBOX: {e}")
-        log.error(f"Error in /chatbox endpoint: {str(e)}\n")
-        return {"status": "error", "data": "Problem occured in chatbox endpoint"}
+        except Exception as e:
+            print(f"Error in CHATBOX: {e}")
+            log.error(f"Error in /chatbox endpoint: {str(e)}\n")
+            return {"status": "error", "data": "Problem occured in chatbox endpoint"}
 
 
 ################################################################################################################

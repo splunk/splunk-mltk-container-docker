@@ -1,13 +1,34 @@
-from langchain_ollama import ChatOllama
-from langchain_aws import ChatBedrockConverse
-from langchain_openai import ChatOpenAI, AzureChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
-
 import json
 import os
+# Initialisation
+HAS_OLLAMA = HAS_AWS = HAS_OPENAI = HAS_GOOGLE = False
+
+try:
+    from langchain_ollama import ChatOllama
+    HAS_OLLAMA = True
+except ImportError:
+    pass
+try:
+    from langchain_aws import ChatBedrockConverse
+    HAS_AWS = True
+except ImportError:
+    pass
+try:
+    from langchain_openai import ChatOpenAI, AzureChatOpenAI
+    HAS_OPENAI = True
+except ImportError:
+    pass
+try:
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    HAS_GOOGLE = True
+except ImportError:
+    pass
+
 
 
 def create_llm(service=None, model=None):
+
+
     config = json.loads(os.environ['llm_config'])
     service_list = ['ollama','azure_openai','openai','bedrock','gemini']
     if service in service_list:
@@ -39,7 +60,7 @@ def create_llm(service=None, model=None):
         print(f"No model specified at the input. Using configured model {llm_config_item['model']}.")
     del llm_config_item["is_configured"]
     
-    if service == 'ollama':
+    if service == 'ollama' and HAS_OLLAMA:
         try:
             if model:
                 # Use user-specified model in case of Ollama
@@ -49,7 +70,7 @@ def create_llm(service=None, model=None):
             err = f"Failed at creating LLM object from {service}. Details: {e}."
             return None, err
 
-    elif service == 'azure_openai':
+    elif service == 'azure_openai' and HAS_OPENAI:
         try:
             if not os.getenv("AZURE_OPENAI_API_KEY"):
                 os.environ["AZURE_OPENAI_API_KEY"] = llm_config_item['api_key']
@@ -62,7 +83,7 @@ def create_llm(service=None, model=None):
             err = f"Failed at creating LLM object from {service}. Details: {e}."
             return None, err
 
-    elif service == 'openai':
+    elif service == 'openai' and HAS_OPENAI:
         try:
             llm_config_item['openai_api_key'] = llm_config_item.pop('api_key')
             llm = ChatOpenAI(**llm_config_item)
@@ -70,7 +91,7 @@ def create_llm(service=None, model=None):
             err = f"Failed at creating LLM object from {service}. Details: {e}."
             return None, err
 
-    elif service == 'bedrock':
+    elif service == 'bedrock' and HAS_AWS:
         try:
             llm = ChatBedrockConverse(**llm_config_item)
         except Exception as e:
@@ -79,7 +100,7 @@ def create_llm(service=None, model=None):
 
     else:
         try:
-            if "GOOGLE_API_KEY" not in os.environ:
+            if "GOOGLE_API_KEY" not in os.environ and HAS_GOOGLE:
                 os.environ["GOOGLE_API_KEY"] = llm_config_item['api_key']
             llm = ChatGoogleGenerativeAI(model=llm_config_item['model'])
         except Exception as e:
