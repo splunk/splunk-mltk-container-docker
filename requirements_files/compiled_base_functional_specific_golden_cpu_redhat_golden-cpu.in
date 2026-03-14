@@ -3,7 +3,8 @@ fastapi>=0.109.1
 pydantic
 uvicorn
 aiofiles
-pyopenssl 
+pyopenssl
+orjson
 
 # jupyter
 jupyterlab>4.0.0
@@ -17,7 +18,7 @@ matplotlib
 # splunk functionality dependancies
 splunk-sdk
 splunk-opentelemetry
-opentelemetry-instrumentation-fastapi==0.33b0
+#opentelemetry-instrumentation-fastapi==0.33b0
 
 # basic data-science libraries
 pandas
