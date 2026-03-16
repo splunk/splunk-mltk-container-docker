@@ -197,7 +197,7 @@ async def logReview(req: Request):
          del df_temp
          gc.collect()
          return {"status": "received", "data": summarise_logs_query.content}
-     except Exception as e:
+    except Exception as e:
          print("Error:", str(e))
          if log:
              log.error(f"Error in /logReview: {str(e)}\n")
@@ -266,7 +266,7 @@ async def chat(req: Request):
         return {"status": "received", "data": ai_response.content}
     except Exception as e:
         print(f"Error in CHATBOX: {e}")
-        if log
+        if log:
             log.error(f"Error in /chatbox endpoint: {str(e)}\n")
         return {"status": "error", "data": "Problem occured in chatbox endpoint"}
 
@@ -303,6 +303,38 @@ app.mount("/graphics", StaticFiles(directory=app.graphics_path), name="graphics"
 # helper function: clean param
 def get_clean_param(p):
     return p.lstrip('\"').rstrip('\"')
+
+import sys
+import gc
+
+def cleanup_memory():
+    """
+    Force to clean memory (RAM and VRAM GPU) 
+    TensorFlow and PyTorch
+    """
+    # 2. Clean PyTorch GPU
+    if 'torch' in sys.modules:
+        try:
+            torch = sys.modules['torch']
+            # Clean VRAM cache GPU
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                torch.cuda.ipc_collect()
+            # Clean VRAM on  Mac Apple Silicon (M1/M2/M3)
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                torch.mps.empty_cache()
+        except Exception as e:
+            print(f"ERROR  clean PyTorch memory: {e}")
+    # 3. Clean TensorFlow / Keras 
+    if 'tensorflow' in sys.modules:
+        try:
+            tf = sys.modules['tensorflow']
+            # Remove graph in RAM/VRAM
+            tf.keras.backend.clear_session()
+        except Exception as e:
+            print(f"ERROR clean TensorFlow memory: {e}")
+    # 4 Del all no use var in RAM
+    gc.collect()
 
 
 # perform token validation
@@ -385,13 +417,13 @@ async def set_fit(request: Request, authorization: str = Header(None)):
         response["message"] += 'unauthorized: invalid or missing token'
         return response
 
-
+    error_msg =""
     try:
         # 1. validate input POST data
         error_msg ='unable to parse json from POST data. Provide a JSON object with structure { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}. Ended with exception: '
         # Use orjson for heavy payload parsing
         dp = orjson.loads(await request.body())
-        app.Model["data"] = dp["data"]
+        raw = dp["data"]
         app.Model["meta"] = dp["meta"]
         del dp  # Free request body memory
 
@@ -400,10 +432,10 @@ async def set_fit(request: Request, authorization: str = Header(None)):
         error_msg='unable to convert raw data to pandas dataframe. Ended with exception: '
         from io import StringIO
         # CPU/MEMORY: Read CSV and immediately delete the raw string
-        app.Model["df"] = pd.read_csv(StringIO(app.Model["data"]))
-        print("/fit: dataframe shape: ", str(app.Model["df"].shape))
+        df_local = pd.read_csv(StringIO(raw))
+        print("/fit: dataframe shape: ", str(df_local.shape))
         # free memory from raw data
-        del (app.Model["data"])
+        del raw
         # memorize model name
         app.Model["model_name"] = app.Model["meta"]["options"].get("model_name", "default")
         print("/fit: model name: " + app.Model["model_name"])
@@ -416,7 +448,7 @@ async def set_fit(request: Request, authorization: str = Header(None)):
             if get_clean_param(params.get('mode', '')) == "stage":
                 print("/fit: in staging mode: staging input dataframe for model (" + app.Model["model_name"] + ")")
                 path = f"{app.NotebookDataPath}{app.Model['model_name']}.csv"
-                app.Model["df"].to_csv(path, index=False)
+                df_local.to_csv(path, index=False)
                 path_json = f"{app.NotebookDataPath}{app.Model['model_name']}.json"
                 with open(path_json, 'wb') as f:
                     f.write(orjson.dumps(app.Model["meta"]))
@@ -444,7 +476,7 @@ async def set_fit(request: Request, authorization: str = Header(None)):
 
         # 5. init model from algo module
         error_msg = 'unable to initialize module. Ended with exception: '
-        app.Model["model"] = app.Model["algo"].init(app.Model["df"], app.Model["meta"])
+        app.Model["model"] = app.Model["algo"].init(df_local, app.Model["meta"])
         print("/fit: " + str(app.Model["model"]) + "")
         model_summary = app.Model["algo"].summary(app.Model["model"])
         if "summary" in model_summary:
@@ -453,7 +485,7 @@ async def set_fit(request: Request, authorization: str = Header(None)):
 
         # 6. fit model
         error_msg='unable to fit model. Ended with exception: '
-        app.Model["fit_info"] = app.Model["algo"].fit(app.Model["model"], app.Model["df"], app.Model["meta"])
+        app.Model["fit_info"] = app.Model["algo"].fit(app.Model["model"], df_local, app.Model["meta"])
         print("/fit: " + str(app.Model["fit_info"]) + "")
 
 
@@ -465,18 +497,23 @@ async def set_fit(request: Request, authorization: str = Header(None)):
 
         # Apply and cleanup
         error_msg='unable to apply model. Ended with exception: '
-        df_result = pd.DataFrame(app.Model["algo"].apply(app.Model["model"], app.Model["df"], app.Model["meta"]))
+        df_result = pd.DataFrame(app.Model["algo"].apply(app.Model["model"], df_local, app.Model["meta"]))
         response["results"] = df_result.to_csv(index=False)
-        del df_result
+        del df_local, df_result
+
+
+        # end with a successful response
+        response['status']= 'success'
+        response['message']= '/fit done successfully'
+        gc.collect()  # Final memory sweep
+        return response
+    
     except Exception as e:
         response["message"] += error_msg + str(e)
         return response
-
-    # end with a successful response
-    response['status']= 'success'
-    response['message']= '/fit done successfully'
-    gc.collect()  # Final memory sweep
-    return response
+    
+    finally:
+        cleanup_memory()
 
 
 # -------------------------------------------------------------------------------
@@ -490,13 +527,13 @@ async def set_apply(request: Request, authorization: str = Header(None)):
         response["message"] += 'unauthorized: invalid or missing token'
         return response
 
-
+    error_msg =""
     try:
         # 1. validate input POST data
         error_msg='unable to parse json from POST data. Provide a JSON object with structure { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}. Ended with exception: '
         dp = orjson.loads(await request.body())
-        app.Model["data"] = dp["data"]
-        print("/apply: raw data size: ", len(str(app.Model["data"])))
+        raw = dp["data"]
+        print("/apply: raw data size: ", len(str(raw)))
         app.Model["meta"] = dp["meta"]
         print("/apply: meta info: ", str(app.Model["meta"]))
 
@@ -507,10 +544,10 @@ async def set_apply(request: Request, authorization: str = Header(None)):
             from pd.compat import StringIO
         except ImportError:
             from io import StringIO
-        app.Model["df"] = pd.read_csv(StringIO(app.Model["data"]))
-        print("/apply: dataframe shape: ", str(app.Model["df"].shape))
+        df_local = pd.read_csv(StringIO(raw))
+        print("/apply: dataframe shape: ", str(df_local.shape))
         # free memory from raw data
-        del (app.Model["data"])
+        del raw
         # memorize model name
         app.Model["model_name"] = app.Model["meta"]["options"].get("model_name", "default")
 
@@ -535,21 +572,25 @@ async def set_apply(request: Request, authorization: str = Header(None)):
         # 3. apply model
         error_msg='unable to apply model. Ended with exception: '
         if "algo" in app.Model:
-            df_result = pd.DataFrame(app.Model["algo"].apply(app.Model["model"], app.Model["df"], app.Model["meta"]))
+            df_result = pd.DataFrame(app.Model["algo"].apply(app.Model["model"], df_local, app.Model["meta"]))
             response["results"] = df_result.to_csv(index=False)
             response["status"] = "success"
             response["message"] = "/apply done successfully"
             print("/apply: returned result dataframe with shape " + str(df_result.shape) + "")
-            del df_result
+            del df_result, df_local
+
+
+        response['status']= 'success'
+        response['message']= '/apply done successfully'
+    
+        return response
+    
     except Exception as e:
         response["message"] += error_msg + str(e)
         return response
-
-    response['status']= 'success'
-    response['message']= '/apply done successfully'
-    gc.collect()
-    return response
-
+    
+    finally:
+        cleanup_memory()
 
 # -------------------------------------------------------------------------------
 # compute routine (experimental)
@@ -558,22 +599,22 @@ async def set_apply(request: Request, authorization: str = Header(None)):
 async def set_compute(request: Request):
     response = {"status": "error", "message": "/compute: ERROR: "}
 
-
+    error_msg =""
     try:
         # 1. validate input POST data
         error_msg= 'unable to parse json from POST data. Provide a JSON object with structure { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}. Ended with exception: '
         dp = orjson.loads(await request.body())
-        app.Model["data"] = dp["data"]
-        print("/compute: raw data type: ", str(type(app.Model["data"])))
-        print("/compute: raw data size: ", len(str(app.Model["data"])))
+        raw = dp["data"]
+        print("/compute: raw data type: ", str(type(raw)))
+        print("/compute: raw data size: ", len(str(raw)))
         app.Model["meta"] = dp["meta"]
         print("/compute: meta info: ", str(app.Model["meta"]))
 
 
         # 2. convert to dataframe
         error_msg='unable to convert raw data to DictReader object. Ended with exception: '
-        app.Model["df"] = app.Model["data"]
-        del (app.Model["data"])
+        df_local = raw
+        del raw
         # memorize model name
         app.Model["algo_name"] = app.Model["meta"]['algo']
         app.Model["algo"] = import_module("app.model." + app.Model["algo_name"])
@@ -581,16 +622,20 @@ async def set_compute(request: Request):
         #    app.Model["model_name"] = app.Model["meta"]["options"]["model_name"]
         print("/compute: model name: " + app.Model["algo_name"])
 
+
+        # CPU/RAM: Direct computation with minimal object copying
+        df_result = app.Model["algo"].compute(None, df_local, app.Model["meta"])
+        response["results"] = orjson.dumps(df_result)
+        response['status']= 'success'
+        response['message']= '/compute done successfully'
+        del df_result, df_local
+
+        return response
+
     except Exception as e:
         response["message"] += error_msg+ str(e)
         print("/compute: conversion error: " + str(e))
         return response
-
-    # CPU/RAM: Direct computation with minimal object copying
-    df_result = app.Model["algo"].compute(None, app.Model["df"], app.Model["meta"])
-    response["results"] = orjson.dumps(df_result)
-    response['status']= 'success'
-    response['message']= '/compute done successfully'
-
-    gc.collect()
-    return response
+    
+    finally:
+        cleanup_memory()
