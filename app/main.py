@@ -70,7 +70,7 @@ if HAS_langchain:
         system_prompt_chat = SystemMessage(
             '''You are a friendly chatbot that is well-verse in Splunk and logs. You are here to help people ''')
 else:
-    print("WARNING: longchain_core is not installed; chat features is disabled.")
+    print("WARNING: langchain_core is not installed; chat features is disabled.")
 
 
 LLM_LIST = ['ollama', 'bedrock', 'azure_openai', 'openai', 'gemini']
@@ -156,13 +156,13 @@ def count_tokens_vectorized(logs_list, log):
 
 ## API endpoint for the Logs in the SPL to be recorded.
 @app.post("/logReview")
-@app.post("/logReview")
 async def logReview(req: Request):
     if not HAS_langchain:
-        error_msg="ERROR: longchain_core is not installed; chat features is disabled."
+        error_msg="ERROR: langchain_core is not installed; chat features is disabled."
         print(error_msg)
         return {"status": "error", "error": error_msg}
-
+    
+    log=None
     try:
          body = orjson.loads(await req.body())
          userSession = body.get("sessionID")
@@ -233,9 +233,11 @@ async def chatbox_callLLM(human_msg, userSession, llm_option):
 @app.post("/chatbox")
 async def chat(req: Request):
     if not HAS_langchain:
-        error_msg = "ERROR: longchain_core is not installed; chat features is disabled."
+        error_msg = "ERROR: langchain_core is not installed; chat features is disabled."
         print(error_msg)
         return {"status": "error", "error": error_msg}
+    
+    log=None
     try:
         # MEMORY/CPU: Faster JSON parsing
         body = orjson.loads(await req.body())
@@ -312,7 +314,7 @@ def cleanup_memory():
     Force to clean memory (RAM and VRAM GPU) 
     TensorFlow and PyTorch
     """
-    # 2. Clean PyTorch GPU
+    # 1) Clean PyTorch GPU
     if 'torch' in sys.modules:
         try:
             torch = sys.modules['torch']
@@ -325,7 +327,7 @@ def cleanup_memory():
                 torch.mps.empty_cache()
         except Exception as e:
             print(f"ERROR  clean PyTorch memory: {e}")
-    # 3. Clean TensorFlow / Keras 
+    # 2) Clean TensorFlow / Keras 
     if 'tensorflow' in sys.modules:
         try:
             tf = sys.modules['tensorflow']
@@ -333,7 +335,7 @@ def cleanup_memory():
             tf.keras.backend.clear_session()
         except Exception as e:
             print(f"ERROR clean TensorFlow memory: {e}")
-    # 4 Del all no use var in RAM
+    # 3) Del all no use var in RAM
     gc.collect()
 
 
