@@ -5,7 +5,7 @@
 # 2018-2026
 # -------------------------------------------------------------------------------
 
-from fastapi import FastAPI, Request, Header, HTTPException, status
+from fastapi import FastAPI, Request, Header, HTTPException, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, ORJSONResponse
@@ -327,16 +327,11 @@ def cleanup_memory():
                 torch.mps.empty_cache()
         except Exception as e:
             print(f"ERROR  clean PyTorch memory: {e}")
-    # 2) Clean TensorFlow / Keras 
-    if 'tensorflow' in sys.modules:
-        try:
-            tf = sys.modules['tensorflow']
-            # Remove graph in RAM/VRAM
-            tf.keras.backend.clear_session()
-        except Exception as e:
-            print(f"ERROR clean TensorFlow memory: {e}")
-    # 3) Del all no use var in RAM
-    gc.collect()
+
+    # 2) Del all no use var in RAM
+    obj_collected=gc.collect()
+    print(f"Clean memory done, {obj_collected} destroyed")
+
 
 
 # perform token validation
@@ -412,7 +407,7 @@ def get_summary(authorization: str = Header(None)):
 # fit endpoint
 # expects json object { 'data' : '<string of csv serialized pandas dataframe>', 'meta' : {<json dict object for parameters>}}
 @app.post('/fit')
-async def set_fit(request: Request, authorization: str = Header(None)):
+async def set_fit(request: Request, background_tasks: BackgroundTasks, authorization: str = Header(None)):
     response = {'status': 'error', 'message': '/fit: ERROR: '}
     # 0. validate endpoint security token
     if not validate_token(authorization):
@@ -463,11 +458,16 @@ async def set_fit(request: Request, authorization: str = Header(None)):
         error_msg='unable to load algo code from module. Ended with exception: '
         if "algo" in app.Model["meta"]["options"]["params"]:
             algo_name = get_clean_param(app.Model["meta"]["options"]["params"]["algo"])
-            if "algo" in app.Model and app.Model.get("algo_name") == algo_name:
-                reload(app.Model["algo"])
-                print("/fit: algo reloaded from module " + algo_name + ")")
+            if "algo" in app.Model:
+                if app.Model.get("algo_name") == algo_name:
+                    reload(app.Model["algo"])
+                    print("/fit: algo reloaded from module " + algo_name + ")")
+                else:
+                    del (app.Model["algo"])
+                    app.Model["algo_name"] = algo_name
+                    app.Model["algo"] = import_module("app.model." + algo_name)
+                    print("/fit: algo loaded from module " + algo_name + ": " + str(app.Model["algo"]))
             else:
-                del (app.Model["algo"])
                 app.Model["algo_name"] = algo_name
                 app.Model["algo"] = import_module("app.model." + algo_name)
                 print("/fit: algo loaded from module " + algo_name + ": " + str(app.Model["algo"]))
@@ -512,17 +512,18 @@ async def set_fit(request: Request, authorization: str = Header(None)):
     
     except Exception as e:
         response["message"] += error_msg + str(e)
+        print(response["message"])
         return response
     
     finally:
-        cleanup_memory()
+        background_tasks.add_task(cleanup_memory)
 
 
 # -------------------------------------------------------------------------------
 # fit routine
 # expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
 @app.post('/apply')
-async def set_apply(request: Request, authorization: str = Header(None)):
+async def set_apply(request: Request, background_tasks: BackgroundTasks, authorization: str = Header(None)):
     response = {"status": "error", "message": "/apply: ERROR: "}
     # 0. validate endpoint security token
     if not validate_token(authorization):
@@ -589,16 +590,17 @@ async def set_apply(request: Request, authorization: str = Header(None)):
     
     except Exception as e:
         response["message"] += error_msg + str(e)
+        print(response["message"])
         return response
     
     finally:
-        cleanup_memory()
+        background_tasks.add_task(cleanup_memory)
 
 # -------------------------------------------------------------------------------
 # compute routine (experimental)
 # expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
 @app.post('/compute')
-async def set_compute(request: Request):
+async def set_compute(request: Request, background_tasks: BackgroundTasks):
     response = {"status": "error", "message": "/compute: ERROR: "}
 
     error_msg =""
@@ -640,4 +642,4 @@ async def set_compute(request: Request):
         return response
     
     finally:
-        cleanup_memory()
+        background_tasks.add_task(cleanup_memory)
