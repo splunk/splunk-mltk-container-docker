@@ -402,3 +402,15 @@ urllib3
 uuid_utils
 Werkzeug
 zstandard
+
+annotated-doc
+langchain-mcp-adapters==0.1.14
+langgraph
+langgraph-checkpoint
+langgraph-prebuilt
+langgraph-sdk
+ormsgpack
+xxhash
+
+
+

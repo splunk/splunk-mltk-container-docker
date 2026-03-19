@@ -1,5 +1,5 @@
 from langchain_ollama import ChatOllama
-from langchain_aws import ChatBedrockConverse
+from langchain_aws import ChatBedrockConverse, ChatAnthropicBedrock
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -72,7 +72,9 @@ def create_llm(service=None, model=None):
 
     elif service == 'bedrock':
         try:
-            llm = ChatBedrockConverse(**llm_config_item)
+            # llm = ChatBedrockConverse(**llm_config_item)
+            llm = ChatAnthropicBedrock(**llm_config_item)
+            
         except Exception as e:
             err = f"Failed at creating LLM object from {service}. Details: {e}."
             return None, err

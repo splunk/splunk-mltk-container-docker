@@ -6,9 +6,15 @@
 
 from fastapi import FastAPI, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from langgraph.types import Command
 from app.model.llm_utils_chat import create_llm
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from contextlib import asynccontextmanager
 # from dotenv import load_dotenv
+from app.libraries.logging_function import get_logger
+from app.libraries.agent_chatbot_langgraph import build_chatbot_graph
+from app.libraries.llm_mcp_factory import SplunkMCPManager
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 
@@ -21,19 +27,6 @@ import csv
 import os
 import time
 import uvicorn
-from app.libraries.logging_function import get_logger
-
-app = FastAPI()
-
-# CORS for Splunk JavaScript
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], 
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 
 try:
     MAX_MSGS = int(os.environ['MAX_MSGS']) 
@@ -64,31 +57,91 @@ try:
 except:
     system_prompt_chat = SystemMessage('''You are a friendly chatbot that is well-verse in Splunk and logs. You are here to help people ''')
 
-
-
-LLM_LIST = ['ollama', 'bedrock', 'azure_openai', 'openai', 'gemini']
-llm_clients = {}
-
-## manage_session_states_logs={userSession:[(Summary_of_Log_flag, raw logs, summary_of_log)]}
-manage_session_states_logs = {}
-## Manage_session_states_history = {userSession: [{"role": "user", "content": user_query}]}
-manage_session_states_history = {}
-## Manage "last seen" for users
-session_last_seen = {}
-
-
-for LLM in LLM_LIST:
-    try:
-        client, msg = create_llm(service=LLM)
-        print(msg)
-        llm_clients[f"llm_client_{LLM}"] = client
-    except Exception as e:
-        llm_clients[f"llm_client_{LLM}"] = None
+try:
+    mcp_list = []
+    for item in json.loads(os.environ["llm_config"])['mcp']:
+        if item["enabled"] == '1' or item["enabled"] == 'true' or item["enabled"] == True:
+            mcp_list.append(item)
+    SPLUNK_MCP_URL = mcp_list[0]["url"]
+    SPLUNK_MCP_TOKEN = mcp_list[0]["token"]
+except:
+    SPLUNK_MCP_URL = None
+    SPLUNK_MCP_TOKEN = None
 
 ## Base Directory for Logging
 base_dir = os.getcwd()
 
-######################################################## HOUSE KEEPING FUNCTIONS #############################################################
+## Initialise all the graphs
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # app.state.summarisation_graph = None
+    app.state.splunk_mcp = None
+    app.state.chatbot_graph_with_splunk_mcp_dict = {}
+    chatbot_graph_with_splunk_mcp_dict = {}
+    current_chatbox_backend_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    log = get_logger(userName="Chatbox_Container", userSession=current_chatbox_backend_time, base_dir=base_dir)
+    log.info(f"\n========================== CONTAINER STARTUP: {current_chatbox_backend_time} =========================\n")
+    print(f"\n========================== CONTAINER STARTUP: {current_chatbox_backend_time} =========================\n")
+    
+    try: 
+        # summarisation_graph = build_summarisation_graph()
+        # app.state.summarisation_graph = summarisation_graph
+        
+        app.state.splunk_mcp = SplunkMCPManager(
+            url=SPLUNK_MCP_URL,
+            token=SPLUNK_MCP_TOKEN,
+        )
+        log.info("Starting MCP Connection...")
+        print("Starting MCP Connection...")
+
+        tools = await app.state.splunk_mcp.connect(log=log)
+        log.info("Success: MCP Connection!")
+        print("Success: MCP Connection!")
+
+        log.info("Starting Testing of LLM Clients...")
+        print("Starting Testing of LLM Clients...")
+
+        llm = "ollama" ## No actual meaning. Return full set of LLMs.
+        llm_clients = await app.state.splunk_mcp.get_llm(tools=tools,llm=llm, log=log)
+        app.state.llm_clients = llm_clients
+        log.info("Success: LLM Clients Connected!")
+        print("Success: LLM Clients Connected!")
+        print(f"{llm_clients}")
+        log.info(f"LLM Clients: {llm_clients}")
+        log.info("Starting Langgraph buidling for Chatbot...")
+        print("Starting Langgraph buidling for Chatbot...")
+        for llm_name, value in llm_clients.items():
+            try:
+                log.info(f"Graph for {llm_name}...")
+                print(f"Graph for {llm_name}...")
+                chatbot_graph_with_splunk_mcp_dict[llm_name] = build_chatbot_graph(llm=value["llm_client"], llm_with_tools= value["llm_with_tools"],mcp_tools=tools, log=log)
+                log.info(f"Graph for {llm_name} Success!")
+                print(f"Graph for {llm_name} Success!")
+            except Exception as e:
+                log.info(f"Graph {llm_name} failed to build. Error: {e}")
+                print(f"Graph {llm_name} failed to build. Error: {e}")
+        app.state.chatbot_graph_with_splunk_mcp_dict = chatbot_graph_with_splunk_mcp_dict
+        yield
+        log.info("\n========================== CONTAINER Shutdown =========================\n")
+    finally:
+        if app.state.splunk_mcp is not None:
+            await app.state.splunk_mcp.close()
+
+app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+user_session_dict = {} ##"userSession": {"logs": [],"userName": userName,"convoHistory": [],"tool_call_flag": False,})
+## Manage "last seen" for users
+session_last_seen = {}
+
+######################################################## HOUSE KEEPING FUNCTIONS ##########################################
 ## Function to manage history for token
 def trim_history(hist):
     """Trims the conversation history after it goes past certain length of messages"""
@@ -114,8 +167,10 @@ def cleanup_expired_sessions() -> int:
 
     for sid in expired:
         session_last_seen.pop(sid, None)
-        manage_session_states_history.pop(sid, None)
+        user_session_dict.pop(sid, None)
 
+################################################################################################################
+## Function to limit the number of tokens coming from logs
 def count_tokens(logs_list, log):
     total_token_count = 0
     list_of_usable_logs = []
@@ -137,147 +192,178 @@ def count_tokens(logs_list, log):
     log.info(f"Logs: {list_of_usable_logs}")
     return list_of_usable_logs
 
-##############################################################################################################################################
+class ChatResponse(BaseModel):
+    data: str
+################################################################################################################
 
-######################################################## Endpoints and Functional Code ########################################################
 
-## API endpoint for the Logs in the SPL to be recorded.
+@app.get("/mcp/status")
+def mcp_status(request: Request):
+    mcp = request.app.state.splunk_mcp
+    # implement is_connected() in your manager
+    curr_llm_clients = app.state.llm_clients
+    # print(f"Type of LLM: {curr_llm_clients}")
+    ok =  mcp.is_connected
+    detail = mcp.num_of_tools
+    return {"connected": ok, "detail": f"{detail} tools", "llm_list": curr_llm_clients}
+
 @app.post("/logReview")
 async def logReview(req:Request):
-    try:
-        ## Getting the data from the API call.
-        body = await req.json()
-        # print(f"/logReview body: {body}")
-        userName = body.get("userName")
-        userSession = body.get("sessionID")
-        userRawData = body.get("logs", "")
-        # userRawData = json.dumps(temp_logs, indent=2)
-        # print(f"{type(temp_logs)}")
-        ## Setup logger
-        log = get_logger(userName=userName, userSession=userSession, base_dir=base_dir)
-        touch_session(userSession)
-        cleanup_expired_sessions()
-        ## Concatenating all the raw logs together into a string and removing curly braces.
-        append_Raw_Logs = ""
-        userRawData = count_tokens(userRawData, log)
-        for i in range(len(userRawData)):
-            userRawLogs = userRawData[i]['_raw']
-            if "{" in userRawLogs:
-                userRawLogs = userRawLogs.replace("{", "")
-            if "}" in userRawLogs:
-                userRawLogs = userRawLogs.replace("}", "")
-            append_Raw_Logs = append_Raw_Logs + "\n" + userRawLogs
-        append_Raw_Logs_to_LLM = "Raw Logs: \n" + append_Raw_Logs ## append_Raw_Logs_to_LLM is the finalised string to be used in prompts for logs.
+    body = await req.json()
+    userName = body.get("userName")
+    userSession = body.get("sessionID")
+    userRawData = body.get("logs", "")
+    log = get_logger(userName=userName, userSession=userSession, base_dir=base_dir)
+    print("\n========================== FASTAPI from LogReview API endpoint =========================\n")
+    log.info("\n========================== FASTAPI from LogReview API endpoint =========================\n")
+    ## Reset TTL for each user session
+    touch_session(userSession)
+    cleanup_expired_sessions()  #Clean up expired sessions
+    print(f"Request = {body}\n")
+    print(f"User: {userName}\n")
+    print(f"SessionID: {userSession}\n")
+    print(f"Logs: {userRawData}\n")
 
-        ## Setting up the history for each userSession
-        # Tactic: Set up the conversation chain Human->AI for asking of approval for log summary.
-        query = HumanMessage('Here is my log set from Splunk. ' + append_Raw_Logs_to_LLM) ## HumanMessage to be appended (Coversation chain for logs)
-        summarise_logs_query = AIMessage(f'I have received {len(userRawData)} lines of logs. Would you like to summarise the logs? I will return a summary of what happened within the logs in less than 200 words.') ## AI Message to be appended after HumanMessage(Conversation Chain simulating the LLM asking for summary)
+    log.info(f"User(Frontend) Logs:\nUser: {userName}\nSessionID: {userSession}\nLogs{userRawData}\n")
+    updated_logs_list = count_tokens(userRawData, log)
 
-        # Check if it is user's first time having the conversation.
-        # if userSession in manage_session_states_logs: # Not user's first time
-        #     manage_session_states_logs[userSession].append((False, append_Raw_Logs_to_LLM, llm_summary)) # Manage history of Splunk Results(logs)
-        if userSession not in manage_session_states_history: # If it is user's first time
-            manage_session_states_history[userSession] = []
-            manage_session_states_history[userSession].append(system_prompt_chat) # Add in the system prompt
-            manage_session_states_history[userSession].append(query) # Add in the human message about the raw logs
-            manage_session_states_history[userSession].append(summarise_logs_query) # Add in the AI message about the logs
-        # Not the user's first message        
-        else:  
-            manage_session_states_history[userSession].append(query) # Append the Human message about the raw logs
-            manage_session_states_history[userSession].append(summarise_logs_query) # Append the AI message about the logs.
+    print(f"Updated_logs_list: {updated_logs_list}\n Type of updated_logs_list: {type(updated_logs_list)}")
+    log.info(f"Updated_logs_list: {updated_logs_list}\n Type of updated_logs_list: {type(updated_logs_list)}")
+    append_Raw_Logs = ""
 
-        # Manage History Length
-        # print(type(manage_session_states_history[userSession]))
-        manage_session_states_history[userSession] = trim_history(manage_session_states_history[userSession])
+    for i in range(len(updated_logs_list)):
+        userRawLogs = userRawData[i]['_raw']
+        if "{" in userRawLogs:
+            userRawLogs = userRawLogs.replace("{", "")
+        if "}" in userRawLogs:
+            userRawLogs = userRawLogs.replace("}", "")
+        append_Raw_Logs = append_Raw_Logs + "\n" + userRawLogs
+    append_Raw_Logs_to_LLM = "Raw Logs: \n" + append_Raw_Logs ## append_Raw_Logs_to_LLM is the finalised string to be used in prompts for logs.
 
-        # print("############################# Summary of user session's list of logs ##############################")
-        # print(f"User session Number: {userSession} \n")
-        # print(f"Number of Raw Logs: {len(userRawData)}")
-        # print(f"Conversation history of {userSession}: {manage_session_states_history[userSession]}")
-        # print(f"\nAI message returning back to user: {summarise_logs_query.content}")
-        log.info(f"------------------------- Received Logs -------------------------")
-        log.info(f"\nLogs!! HumanMessage: {query}\n")
-        log.info(f"AIMessage: {summarise_logs_query}")
-        log.info(f"------------------------- End Logs -------------------------")
+    ## Setting up the history for each userSession
+    # Tactic: Set up the conversation chain Human->AI for asking of approval for log summary.
+    query = HumanMessage('Here is my log set from Splunk. ' + append_Raw_Logs_to_LLM) ## HumanMessage to be appended (Coversation chain for logs)
+    summarise_logs_query = AIMessage('Would you like to summarise the logs? I will return a summary of what happened within the logs in less than 200 words.') ## AI Message to be appended after HumanMessage(Conversation Chain simulating the LLM asking for summary)
 
-        return {"status": "received", "data": summarise_logs_query.content}
-    except Exception as e:
-        print("Error:", str(e))
-        log.error(f"Error in /logReview: {str(e)}\n")
-        return {"status": "error", "error": str(e)}
-    
-## Function to organise the LLM prompt for invocation.
-async def chatbox_callLLM(human_msg, userSession, llm_option):
-    # print("################################################################ LLM Initialised ##############################################################")
-    manage_session_states_history[userSession].append(human_msg) # Append the Userquery (Human Message) into the history
-    history = manage_session_states_history[userSession] # Extract the full Conversation History to be used as the prompt
-    # print(f"Final prompt to LLM: {history}")
-    try:
-        llm_client = llm_clients[f"llm_client_{llm_option}"]
+    # last_msg = final_state["final_output"]
+    # print(f"\n\nOutput from LLM: {last_msg}")
 
-        if llm_client is None:
-            raise RuntimeError(f"SYSTEM: LLM option {llm_option} has not been successfully configured. Please try another LLM option.")
-        print(f"LLM client {llm_option} is available")
-    except Exception as e:
-        raise RuntimeError(f"SYSTEM: Failed to initiate LLM option {llm_option}. The following error occurred: {e}.  Please switch to a different LLM. ")
-    result = await llm_client.ainvoke(history) # Send the Conversation History to the Client.
-    # print("################################################################ LLM Reply ##############################################################")
-    # print(f"LLM Reply: {result}")
-    # print("###############################################################User History###############################################################")
-    manage_session_states_history[userSession].append(result) # Append AI's reply to the Conversation History
+    current_session = user_session_dict.setdefault(userSession, {
+    "logs": [],
+    "userName": userName,
+    "convoHistory": [],
+    "tool_call_flag": False,
+    })
+    # Update Logs History for current user
+    current_session["logs"].append(updated_logs_list)
+    # Update conversation history for current user
+    current_session["convoHistory"].append(query)
+    current_session["convoHistory"].append(summarise_logs_query)
+
     # Manage History Length
     # print(type(manage_session_states_history[userSession]))
-    manage_session_states_history[userSession] = trim_history(manage_session_states_history[userSession])
+    current_session["convoHistory"] = trim_history(current_session["convoHistory"])
 
-    # print(f"{manage_session_states_history[userSession]}")
-    return result
+    log.info(f"------------------------- Finalised Query -------------------------")
+    print(f"Current Session Details: {current_session}\n")
+    log.info(f"\nLogs!! HumanMessage: {query}\n")
+    log.info(f"AIMessage: {summarise_logs_query}")
+    log.info(f"------------------------- End Query -------------------------")
+
+    print(f"\n\nCurrentSession Convo History: {current_session}")
+    print("===========================================================================\n")
+    log.info(f"===========================================================================\n")
+    return ChatResponse(data=summarise_logs_query.content)
 
 
-## Endpoint for the chatbox
+
 @app.post("/chatbox")
 async def chat(req:Request):
-    try:
-        body = await req.json()
-        # print(f"Request body: {body}")
-        userName = body.get("userName")
-        userSession = body.get("sessionID")
-        user_query = body.get("message", "")
-        llm_option = body.get("llmOption", DEFAULT_LLM)
-
-        ## Setup logger
-        log = get_logger(userName=userName, userSession=userSession, base_dir=base_dir)
-        touch_session(userSession)
-        cleanup_expired_sessions()
-        ## Check if user history exists. If not, templatise it.
-        if userSession not in manage_session_states_history:
-            # first_human_msg = HumanMessage(user_query)
-            manage_session_states_history[userSession] = []
-            # Append system prompt first
-            manage_session_states_history[userSession].append(system_prompt_chat)
-        # print("------------------------------- START of DATA RETRIEVAL:Chatbox API Call -------------------------------")
-        # print(f"\nUser's Name: {userName}\n")
-        # print(f"Current user session ID: {userSession}\n")
-        # print(f"Current user query: {user_query}\n")
-        # print("------------------------------- END of DATA RETRIEVAL:Chatbox API Call -------------------------------")
-        # print("################################################################ Enter AI Function ##############################################################")
-        human_msg = HumanMessage(user_query) # Convert it into the langchain HumanMessage template for prompt.
-        ai_response = await chatbox_callLLM(human_msg, userSession, llm_option)
-
-        log.info("------------------------------- Start: Chatbox API Call -------------------------------")
-        log.info(f"LLM option: {llm_option}")
-        log.info(f"HumanMessage: {human_msg}")
-        log.info(f"AIMessage: {ai_response}")
-        log.info("------------------------------- End:Chatbox API Call -------------------------------")
-
-
-        return {"status": "received", "data": ai_response.content}
-
-    except Exception as e:
-        print(f"Error in CHATBOX: {e}")
-        log.error(f"Error in /chatbox endpoint: {str(e)}\n")
-        return {"status": "error", "data": "Problem occured in chatbox endpoint"}
+    print("\n========================== FASTAPI from Chatbot Endpoint =========================\n")
+    body = await req.json()
+    userName = body.get("userName")
+    userSession = body.get("sessionID")
+    userMessage = body.get("message", "")
+    llm_option = body.get("llmOption")
+    # currentUser = body.get("currentUser", "default")
     
+    ## Setup logger
+    log = get_logger(userName=userName, userSession=userSession, base_dir=base_dir)
+    log.info(f"\n========================== FASTAPI from Chatbot Endpoint =========================\n")
+    log.info(f"User(Frontend) Query:\nUser: {userName}\nSessionID: {userSession}\nMessage: {userMessage}\nLLM Option: {llm_option}")
+    touch_session(userSession)
+    cleanup_expired_sessions()
+    print(f"Request = {body}\n")
+    print(f"User: {userName}\n")
+    print(f"SessionID: {userSession}\n")
+    print(f"Type for User Message {type(userMessage)}")
+    print(f"User Message: {userMessage}\n")
+    print(f"LLM Option: {llm_option}")
+    if llm_option == None or llm_option == "":
+        log.error(f"LLM Option not selected! Informing user to select LLM!\n")
+        log.info(f"===========================================================================\n")
+        return ChatResponse(data="Please select your LLM Option!")
+    else:
+        print("===========================================================================\n")
+        llm_client_graph = app.state.chatbot_graph_with_splunk_mcp_dict[llm_option]
+        current_session = user_session_dict.setdefault(userSession, {
+        "logs": [],
+        "userName": userName,
+        "convoHistory": [],
+        "tool_call_flag": False,
+        })
+        log.info(f"LLM Graph Chosen: {llm_client_graph}\n")
+        log.info(f"Current User Session Details: {current_session}\n")
+        #Check if there is tool call approval in progress.
+        if current_session["tool_call_flag"]:
+            log.info(f"Current Session has tool approval in progress.\n")
+            current_session["tool_call_flag"]=False
+            final_state = await llm_client_graph.ainvoke(
+                Command(resume=userMessage),
+                config={"configurable": {"thread_id": userSession}},
+            )
+        else:
+            log.info(f"Current Session has NO tool approval in progress.\n")
+            state = {
+                "messages": current_session["convoHistory"] + [HumanMessage(content=userMessage)],
+                "summarisation_agent_bool": False,
+                "solution_agent_bool": False,
+                "final_output": ""
+            }
+
+            final_state = await llm_client_graph.ainvoke(
+                state,
+                config={"configurable": {"thread_id": userSession}}
+            )
+            interrupts = final_state.get("__interrupt__", [])
+            log.info(f"LLM Agent decision on tool call or not: {interrupts}")
+            print(f"Exited the interrupt: {interrupts}")
+            if interrupts:
+                current_session["tool_call_flag"]=True
+                payload = interrupts[0].value
+                payload_question=payload.get("question")
+                payload_details = payload.get("details")
+                tool_msg = payload_question + "\n" + payload_details
+                log.info(f"Interrupted! Tool Message: {tool_msg}")
+                print(f"\n\n\nINTERRUPTED!!!! Tool Message: {tool_msg}")
+                return ChatResponse(data=tool_msg)
+            else:
+                log.info(f"No interrupts.")
+                print(f"\n\n\nNot Interrupted \n\n\n")
+                current_session["tool_call_flag"]=False
+        log.info(f"Current User's Final state in graph: {final_state}")
+        print(f"\n\nFinal State after seeking approval: {final_state}")
+        llm_output = final_state["messages"][-1]
+        message = llm_output.content
+        print(f"\nFinal States: {final_state['messages']}\n")
+        print(f"\n\nOutput from LLM: {message}\n\n")
+        print(f"Type of last output: {type(message)}")
+
+        current_session['convoHistory'] = final_state['messages']
+        print("\n\n------------------------------------Convo History------------------------------------\n\n")
+        print(f"{current_session['convoHistory']}")
+        print("------------------------------------------------------------------------")
+        return ChatResponse(data=message)
 ################################################################################################################
 # -------------------------------------------------------------------------------
 # GLOBAL variables 
@@ -657,4 +743,3 @@ async def set_compute(request : Request):
     response["status"] = "success"
     response["message"] = "/compute done successfully"
     return response
-

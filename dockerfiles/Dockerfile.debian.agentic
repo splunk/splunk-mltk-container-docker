@@ -8,7 +8,7 @@ ARG REQUIREMENTS_PYTHON_SPECIFIC
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 # keep python version in sync with base image!
 ENV PATH /dltk/.local/bin:/dltk/.local/lib/python3.12/site-packages/:$PATH
-ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC 
+ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC
 
 # curl not installed in some images :(
 RUN apt-get update
@@ -35,7 +35,8 @@ RUN pip3 install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_BASE}
 # install specific python requirements
 COPY ./requirements_files/${REQUIREMENTS_PYTHON_SPECIFIC} /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
 RUN pip3 install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
-
+RUN pip3 install --upgrade "langchain-aws[anthropic]"
+RUN pip3 install --upgrade "langchain-mcp-adapters"
 # configure spacy if it was installed
 RUN if pip3 freeze | grep -q spacy;\
     then echo 'Spacy is installed, downloading language file...';\
