@@ -1,0 +1,111 @@
+<form version="1.1">
+  <label>Example for Bayesian Online Change Point Detection</label>
+  <fieldset submitButton="true">
+    <input type="text" token="hazard">
+      <label>Hazard</label>
+      <default>100</default>
+    </input>
+    <input type="text" token="mu">
+      <label>mu</label>
+      <default>0</default>
+    </input>
+    <input type="text" token="kappa">
+      <label>kappa</label>
+      <default>1</default>
+    </input>
+    <input type="text" token="alpha">
+      <label>alpha</label>
+      <default>1</default>
+    </input>
+    <input type="text" token="beta">
+      <label>beta</label>
+      <default>1</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html>
+        <img src="/static/app/$env:app$/icons/mining.png" style="width:5%; height:5%; float:right;"/>
+        <h1>Drift Detection</h1>
+        <p>This example shows how you can use the python library <a href="https://github.com/y-bar/bocd" target="_blank">bocd</a> to detect drift in time series data. It uses bayesian change point detection as described in this <a href="https://arxiv.org/abs/0710.3742" target="_blank">paper</a>.</p>
+        <p>The analysis below shows how this approach can be used for detecting change points or drift in a time series. This can be useful to detect severe changes in a derived KPI or operational metrics and help to detect anomalies.</p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Example for detecting drift in network round trip time measurements</title>
+        <search>
+          <query>| inputlookup network_rtt.csv 
+| rex field=ping "icmp_seq[=|\s](?&lt;t&gt;\d+)" 
+| rex field=ping "time=(?&lt;rtt&gt;.*)\sms" 
+| eval _time=now()-512+t 
+| timechart span=1s max(rtt) as rtt
+| fillnull
+| fit AITKContainer algo=drift_detection hazard=$hazard$ mu=$mu$ kappa=$kappa$ alpha=$alpha$ beta=$beta$ rtt from _time | table _time rtt drift</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">1</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.overlayFields">rtt</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">284</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Raw data</title>
+        <search>
+          <query>| inputlookup network_rtt.csv 
+| rex field=ping "icmp_seq[=|\s](?&lt;t&gt;\d+)" 
+| rex field=ping "time=(?&lt;rtt&gt;.*)\sms" 
+| eval _time=now()-512+t
+| fields - t</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">10</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>

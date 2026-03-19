@@ -1,0 +1,122 @@
+<form version="1.1">
+  <label>Autoencoder</label>
+  <fieldset submitButton="true">
+    <input type="dropdown" token="epochs">
+      <label>Epochs</label>
+      <choice value="10">10</choice>
+      <choice value="100">100</choice>
+      <choice value="1000">1000</choice>
+      <choice value="10000">10000</choice>
+      <default>100</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html>
+      <img src="/static/app/$env:app$/icons/cluster.png" style="width:5%; height:5%; float:right;"/>
+        <h1>Example for TensorFlow</h1>
+        <p>This example shows a simple autoencoder applied to the iris dataset with reconstruction error measurements and retrieval of encoding from the hidden layer.</p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Reconstruction errors R2</title>
+      <single>
+        <search base="base">
+          <query>| score r2_score petal_length petal_width sepal_length sepal_width against predicted_reconstruction_0 predicted_reconstruction_1 predicted_reconstruction_2 predicted_reconstruction_3
+| table Act* *score
+| transpose 0 header_field="Actual field" column_name="Metric"
+| fields - Metric</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">242</option>
+        <option name="numberPrecision">0.0000</option>
+        <option name="rangeColors">["0xdc4e41","0xf1813f","0x006d9c","0x53a051"]</option>
+        <option name="rangeValues">[0.5,0.75,0.9]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">large</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Plot of hidden layer representation by species with reconstruction error represented by point sizes</title>
+      <chart>
+        <search base="base">
+          <query>| table species predicted_hidden* error</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">bubble</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">409</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Dataset with Autoencoder results</title>
+      <table>
+        <search id="base">
+          <query>| inputlookup iris.csv 
+| fit AITKContainer algo=autoencoder epochs=$epochs$ batch_size=5 components=2 petal_length petal_width sepal_length sepal_width into app:iris_autoencoder
+| eval error_petal_length = petal_length - predicted_reconstruction_0
+| eval error_petal_width = petal_width - predicted_reconstruction_1
+| eval error_sepal_length = sepal_length - predicted_reconstruction_2
+| eval error_sepal_width = sepal_width - predicted_reconstruction_3
+| eval error = 0
+| foreach error_* [eval error = error + pow(&lt;&lt;FIELD&gt;&gt;,2)]
+| eval error = sqrt(error)</query>
+          <earliest>-60m@m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">5</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>

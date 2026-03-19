@@ -1,0 +1,82 @@
+<form version="1.1">
+  <label>Deep Neural Network Regressor</label>
+  <description>Deprecation note: this dashboard and associated algorithms got deprecated due to consolidation efforts and to improve DSDL app experience. You can still make this example work by building a custom container image. Please refer to the public DSDL github repository.</description>
+  <fieldset submitButton="true">
+    <input type="dropdown" token="epochs">
+      <label>Epochs</label>
+      <choice value="10">10</choice>
+      <choice value="100">100</choice>
+      <choice value="1000">1000</choice>
+      <choice value="10000">10000</choice>
+      <default>10</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html>
+      <img src="/static/app/$env:app$/icons/regressor.png" style="width:5%; height:5%; float:right;"/>
+        <h1>Example for TensorFlow</h1>
+        <p>This example shows a simple regression using the TensorFlow Deep Neural Network (DNN) estimator class</p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <viz type="Splunk_ML_Toolkit.ScatterLineViz">
+        <search base="base">
+          <query>
+| table median_house_value predicted_median_house_value</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">large</option>
+      </viz>
+    </panel>
+    <panel>
+      <single>
+        <search base="base">
+          <query>| multireport
+[| score r2_score median_house_value against predicted_median_house_value]
+[| score mean_squared_error median_house_value against predicted_median_house_value]
+| stats max(mean_squared_error) as mean_squared_error  max(r2_score) as r2_score</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="numberPrecision">0.000</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">large</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search id="base">
+          <query>| inputlookup housing.csv 
+| fit StandardScaler "crime_rate" "land_zone" "nitric_oxide_concentration" "avg_rooms_per_dwelling" "units_prior_1940" "distance_to_employment_center" "highway_accessibility_index" "property_tax_rate" "pupil_teacher_ratio" with_mean=t with_std=t
+| fit AITKContainer algo=dnn_regressor epochs=$epochs$ batch_size=16 "median_house_value" from SS_* into app:housing_dnn_regressor_scaled</query>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">5</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>

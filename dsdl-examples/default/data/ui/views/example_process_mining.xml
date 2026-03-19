@@ -1,0 +1,125 @@
+<dashboard script="plot.js" version="1.1">
+  <label>Example for Process Mining with PM4Py</label>
+  <row>
+    <panel>
+      <html>
+        <img src="/static/app/$env:app$/icons/mining.png" style="width:5%; height:5%; float:right;"/>
+        <h1>Information on Process Mining</h1>
+        <p>This example shows how you can use results of the python library <a href="https://pm4py.fit.fraunhofer.de/" target="_blank">PM4Py</a> - developed and maintained by the <a href="https://www.fit.fraunhofer.de/en.html" target="_blank">Fraunhofer Institute FIT</a> - please see further information below how to run this example.
+        </p>
+        <p>Please install the <a href="https://github.com/splunk/process_flow_diagram_app">Process Flow Diagram App for Splunk</a> for the process diagram visualization below to work.</p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <viz type="process_flow_diagram_app.process_flow_diagram">
+        <search>
+          <query>| makeresults count=1
+| eval dot="digraph \"imdf_net_1608545301.1652305\" {
+	graph [bgcolor=transparent rankdir=LR]
+	node [shape=box]
+	139644171819600 [label=\"- (177)\" border=1 fillcolor=\"#F8F8FF\" style=filled]
+	139644172179344 [label=\"admin (2037)\" border=1 fillcolor=\"#9B9BFF\" style=filled]
+	139644171819088 [label=\"splunk-system-user (927)\" border=1 fillcolor=\"#D2D2FF\" style=filled]
+	139644171818512 [label=\"\" fillcolor=black style=filled]
+	139644172179920 [label=\"\" fillcolor=black style=filled]
+	139644171820304 [label=\"\" fillcolor=black style=filled]
+	139644171818192 [label=\"\" fillcolor=black style=filled]
+	139644172178512 [label=\"\" fillcolor=black style=filled]
+	139644172181328 [label=\"\" fillcolor=black style=filled]
+	139644172180368 [label=\"\" fillcolor=black style=filled]
+	139644172179088 [label=\"\" fillcolor=black style=filled]
+	139644172178768 [label=\"\" fillcolor=black style=filled]
+	139644171820816 [label=\"\" fillcolor=black style=filled]
+	139644171817232 [label=\"\" fillcolor=black style=filled]
+	139644171817168 [label=\"\" fillcolor=black style=filled]
+	139644288961424 [label=\"\" fillcolor=black style=filled]
+	139644288961552 [label=\"\" fillcolor=black style=filled]
+	node [fixedsize=true shape=circle width=0.75]
+	139644288962384 [label=1 fillcolor=green style=filled]
+	139644171821008 [label=\"\"]
+	139644171817808 [label=\"\"]
+	139644171818384 [label=\"\"]
+	139644171818896 [label=\"\"]
+	139644171818000 [label=\"\"]
+	139644172180688 [label=\"\"]
+	139644172179600 [label=\"\"]
+	139644172179536 [label=\"\"]
+	139644288962128 [label=\"\"]
+	139644171820880 [label=\"\"]
+	139644171820240 [label=\"\"]
+	139644171820176 [label=\"\"]
+	139644288961040 [label=\"\" fillcolor=orange style=filled]
+	139644172179344 -&gt; 139644172179536 [label=1574 penwidth=2.5460337192627502]
+	139644171819088 -&gt; 139644171818896 [label=43 penwidth=1.015990006146221]
+	139644171819600 -&gt; 139644171820176 [label=73 penwidth=1.0459712676703856]
+	139644171818512 -&gt; 139644171818384 [label=43 penwidth=1.015990006146221]
+	139644172179920 -&gt; 139644172179600 [label=1574 penwidth=2.5460337192627502]
+	139644171820304 -&gt; 139644171820240 [label=73 penwidth=1.0459712676703856]
+	139644171821008 -&gt; 139644171818512 [label=43 penwidth=1.015990006146221]
+	139644171821008 -&gt; 139644171818192 [label=1585 penwidth=2.5570268484882774]
+	139644171817808 -&gt; 139644288961424 [label=1628 penwidth=2.5999999900062463]
+	139644171818384 -&gt; 139644171819088 [label=43 penwidth=1.015990006146221]
+	139644171818896 -&gt; 139644172178512 [label=27 penwidth=1.0]
+	139644171818896 -&gt; 139644172181328 [label=43 penwidth=1.015990006146221]
+	139644171818000 -&gt; 139644172179920 [label=1574 penwidth=2.5460337192627502]
+	139644171818000 -&gt; 139644172180368 [label=54 penwidth=1.026983135371748]
+	139644172180688 -&gt; 139644288961424 [label=1628 penwidth=2.5999999900062463]
+	139644172179600 -&gt; 139644172179344 [label=1574 penwidth=2.5460337192627502]
+	139644172179536 -&gt; 139644172179088 [label=75 penwidth=1.0479700184386633]
+	139644172179536 -&gt; 139644172178768 [label=1574 penwidth=2.5460337192627502]
+	139644288962128 -&gt; 139644171820304 [label=73 penwidth=1.0459712676703856]
+	139644288962128 -&gt; 139644171820816 [label=1555 penwidth=2.5270455869641126]
+	139644171820880 -&gt; 139644288961424 [label=1628 penwidth=2.5999999900062463]
+	139644171820240 -&gt; 139644171819600 [label=73 penwidth=1.0459712676703856]
+	139644171820176 -&gt; 139644171817232 [label=44 penwidth=1.01698938153036]
+	139644171820176 -&gt; 139644171817168 [label=73 penwidth=1.0459712676703856]
+	139644171818192 -&gt; 139644171817808 [label=1585 penwidth=2.5570268484882774]
+	139644172178512 -&gt; 139644171818384 [label=27 penwidth=1.0]
+	139644172181328 -&gt; 139644171817808 [label=43 penwidth=1.015990006146221]
+	139644172180368 -&gt; 139644172180688 [label=54 penwidth=1.026983135371748]
+	139644172179088 -&gt; 139644172179600 [label=75 penwidth=1.0479700184386633]
+	139644172178768 -&gt; 139644172180688 [label=1574 penwidth=2.5460337192627502]
+	139644171820816 -&gt; 139644171820880 [label=1555 penwidth=2.5270455869641126]
+	139644171817232 -&gt; 139644171820240 [label=44 penwidth=1.01698938153036]
+	139644171817168 -&gt; 139644171820880 [label=73 penwidth=1.0459712676703856]
+	139644288962384 -&gt; 139644288961552 [label=1628 penwidth=2.5999999900062463]
+	139644288961424 -&gt; 139644288961040 [label=1628 penwidth=2.5999999900062463]
+	139644288961552 -&gt; 139644171821008 [label=1628 penwidth=2.5999999900062463]
+	139644288961552 -&gt; 139644171818000 [label=1628 penwidth=2.5999999900062463]
+	139644288961552 -&gt; 139644288962128 [label=1628 penwidth=2.5999999900062463]
+	overlap=false
+	fontsize=11
+}"
+| table dot</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="height">700</option>
+        <option name="process_flow_diagram_app.process_flow_diagram.aggregationMethod">mean</option>
+        <option name="process_flow_diagram_app.process_flow_diagram.layoutEdgeSep">80</option>
+        <option name="process_flow_diagram_app.process_flow_diagram.layoutNodeSep">50</option>
+        <option name="process_flow_diagram_app.process_flow_diagram.layoutOrientation">TB</option>
+        <option name="process_flow_diagram_app.process_flow_diagram.linkVertices">true</option>
+        <option name="process_flow_diagram_app.process_flow_diagram.modeDOT">true</option>
+        <option name="process_flow_diagram_app.process_flow_diagram.stepsMaxColor">#003D5E</option>
+        <option name="process_flow_diagram_app.process_flow_diagram.stepsMinColor">#ECF8FF</option>
+        <option name="process_flow_diagram_app.process_flow_diagram.stepsMode">gradient</option>
+        <option name="process_flow_diagram_app.process_flow_diagram.variableStrokeWidth">true</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </viz>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <h1>How to setup DLTK with PM4Py</h1>
+        <p>Please refer to the install guide and artifacts available on <a href="https://github.com/pdrieger/dltk-example-pm4py" target="_blank">GitHub</a> to develop your own process mining approaches with DLTK.</p>
+      </html>
+    </panel>
+  </row></dashboard>

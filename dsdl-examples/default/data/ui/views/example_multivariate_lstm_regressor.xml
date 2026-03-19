@@ -1,0 +1,141 @@
+<form version="1.1">
+  <label>Multivariate LSTM Regressor</label>
+  <description>On this dashboard there is an example of how a multivariate Long Short-Term Memory (LSTM) network can be used to predict AC power on an example dataset from the MLTK. Select the number of epochs you want the network to be trained for and also select the number of steps (records) that will be used to make each prediction.</description>
+  <fieldset submitButton="true">
+    <input type="dropdown" token="epochs">
+      <label>Select Epochs:</label>
+      <choice value="5">5</choice>
+      <choice value="10">10</choice>
+      <choice value="20">20</choice>
+      <choice value="50">50</choice>
+      <choice value="100">100</choice>
+      <choice value="250">250</choice>
+      <choice value="500">500</choice>
+      <choice value="750">750</choice>
+      <choice value="1000">1000</choice>
+      <default>10</default>
+      <initialValue>10</initialValue>
+    </input>
+    <input type="dropdown" token="lookback">
+      <label>Select Number of Steps:</label>
+      <choice value="1">1</choice>
+      <choice value="2">2</choice>
+      <choice value="3">3</choice>
+      <choice value="4">4</choice>
+      <choice value="5">5</choice>
+      <default>2</default>
+      <initialValue>2</initialValue>
+    </input>
+    <input type="dropdown" token="batch_size">
+      <label>Select Batch Size:</label>
+      <choice value="5">1</choice>
+      <choice value="10">10</choice>
+      <choice value="128">128</choice>
+      <choice value="256">256</choice>
+      <choice value="1024">1024</choice>
+      <choice value="4096">4096</choice>
+      <default>10</default>
+      <initialValue>10</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel depends="$alwaysHide$">
+      <table>
+        <search id="base">
+          <query>| inputlookup server_power.csv
+| streamstats count
+| eventstats max(count) as records
+| eval train_split=round(records*0.7)
+| appendpipe [| where count&lt;train_split | fit AITKContainer algo=multivariate_lstm "ac_power" from "total-unhalted_core_cycles" "total-instructions_retired" "total-last_level_cache_references" "total-memory_bus_transactions" "total-cpu-utilization" "total-disk-accesses" "total-disk-blocks" "total-disk-utilization" epochs=$epochs$ batch_size=$batch_size$ previous_steps=$lookback$ into app:lstm_ac_power]
+| where count&gt;=train_split AND isnull(predicted_ac_power)
+| fields - predicted_ac_power
+| apply lstm_ac_power</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Predictions</title>
+        <search base="base">
+          <query>| table *
+| where count&gt;(train_split+1+$lookback$)
+| table _time ac_power predicted_ac_power</query>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Residuals Histogram</title>
+      <chart>
+        <search base="base">
+          <query>| table *
+| where count&gt;(train_split+1+$lookback$)
+| table _time ac_power predicted_ac_power
+| eval residual=ac_power-predicted_ac_power
+| `histogram(residual,500)`</query>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Actuals against Predictions</title>
+      <chart>
+        <search base="base">
+          <query>| table *
+| where count&gt;(train_split+1+$lookback$)
+| table ac_power predicted_ac_power</query>
+        </search>
+        <option name="charting.chart">scatter</option>
+        <option name="charting.chart.markerSize">2</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Performance Statistics</title>
+      <single>
+        <title>Accuracy</title>
+        <search base="base">
+          <query>| table *
+| where count&gt;(train_split+1+$lookback$)
+| table _time ac_power predicted_ac_power
+| score r2_score ac_power against predicted_ac_power</query>
+        </search>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">R Squared</option>
+      </single>
+      <single>
+        <title>Average Error</title>
+        <search base="base">
+          <query>| table *
+| where count&gt;(train_split+1+$lookback$)
+| table _time ac_power predicted_ac_power
+| score mean_squared_error ac_power against predicted_ac_power
+| eval rmse=sqrt(mean_squared_error) | table rmse</query>
+        </search>
+        <option name="numberPrecision">0.00</option>
+        <option name="rangeColors">["0x53a051","0x0877a6","0xf8be34","0xf1813f","0xdc4e41"]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="underLabel">RMSE</option>
+      </single>
+    </panel>
+  </row>
+</form>

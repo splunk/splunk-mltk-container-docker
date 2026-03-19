@@ -1,0 +1,33 @@
+<dashboard version="1.1">
+  <label>Clustering with UMAP and DBSCAN</label>
+  <row>
+    <panel>
+      <html>
+      <img src="/static/app/$env:app$/icons/cluster.png" style="width:5%; height:5%; float:right;"/>
+        <h1>Example for UMAP based Clustering</h1>
+        <p>This example shows the dimensionality reduction technique <a href="https://umap-learn.readthedocs.io/en/latest/index.html" target="_blank">UMAP (Uniform Manifold Approximation and Projection for Dimension Reduction)</a> in combination with DBSCAN for distance based clustering.</p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <viz type="Splunk_ML_Toolkit.Scatter3dViz">
+        <search>
+          <query>| inputlookup diabetes.csv 
+| fit AITKContainer algo=umap n_components=3 BMI age blood_pressure diabetes_pedigree glucose_concentration number_pregnant serum_insulin skin_thickness into app:diabetes_umap as umap
+| fit DBSCAN umap_* eps=1.0
+| eval clusterId=cluster
+| rename umap_0 as x umap_1 as y umap_2 as z
+| table clusterId x y z</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </viz>
+    </panel>
+  </row>
+</dashboard>

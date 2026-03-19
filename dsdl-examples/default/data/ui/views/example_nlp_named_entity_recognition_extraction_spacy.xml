@@ -1,0 +1,82 @@
+<form version="1.1">
+  <label>Entity Recognition and Extraction Example using the spaCy Library</label>
+  <fieldset submitButton="false">
+    <html>
+      <style>
+        #text5 .splunk-textinput
+        {
+          width: 1300px !important;
+        }
+        #text5 .splunk-textinput input{
+          width: 1300px !important;
+        }
+      </style>
+    </html>
+    <input id="text5 " type="text" token="text">
+      <label>Enter Text:</label>
+      <default>Baroness is an American heavy metal band from Savannah, Georgia whose original members grew up together in Lexington, Virginia.Baroness formed in mid-2003, founded by former members of the punk/metal band Johnny Welfare and the Paychecks. Singer John Dyer Baizley creates the artwork for all Baroness albums, and has done artwork for other bands.;From 2004 to 2007, Baroness recorded and released three EPs, named First, Second and A Grey Sigh in a Flower Husk (aka Third), with the third one being a split album with Unpersons.;Baroness started recording their first full-length album in March 2007. Phillip Cope from Kylesa continued to produce Baroness on this album. The Red Album was released on September 4, 2007, and met positive reception. Heavy metal magazine Revolver named it Album of the Year. On December 1, 2007, Baroness performed at New York City's Bowery Ballroom. On September 20, 2008, the band announced via MySpace Brian Blickle would be parting ways with the band, while also introducing a new guitarist named Peter Adams, also of Virginia-based band Valkyrie.;Throughout 2007–9, Baroness toured and shared the stage with many bands including Converge, The Red Chord, High on Fire, Opeth, Coheed and Cambria, Coliseum, Mastodon, Minsk and Clutch.;On May 18, 2009 Baroness entered The Track Studio in Plano, Texas, to record their second full-length album, Blue Record, produced by John Congleton (The Roots, Explosions in the Sky, Black Mountain, The Polyphonic Spree). It was released via Relapse Records on October 13, 2009.;In February and March 2010 Baroness played in the Australian Soundwave Festival, alongside bands such as Clutch, Isis, Meshuggah, Janes Addiction and Faith No More, and toured Japan in March 2010 with Isis.;Baroness have toured with many other prominent bands, such as supporting Mastodon on their US headlining tour in April–May 2010, Deftones for August–September 2010. In addition, Baroness was selected as one of two support acts (the other being Lamb of God) for Metallica on their tour of Australia and New Zealand in late 2010.;Baroness also performed at Coachella and Bonnaroo in 2010.;Blue Record would later be named the 20th Greatest Metal Album in History by 'LA Weekly' in 2013.;On May 23, 2011, the band launched their official website. The first content released on the new page gave hints to work on a new album being produced again by John Congleton. On May 14, 2012, the single 'Take My Bones Away' from the new album was released over YouTube, along with an album teaser.;On August 15, 2012, nine passengers were injured (two seriously) when the German-registered coach in which the band were traveling fell from a viaduct near Bath, England. Emergency services were called to Brassknocker Hill in Monkton Combe after the coach fell 30 ft (9m) from the viaduct. Avon Fire and Rescue Service said the incident happened at 11:30BST; due to heavy rain and reduced visibility it was not possible for the air ambulance to land. Emergency services said two people were transported to Frenchay Hospital in Bristol while seven others went to the Royal United Hospital (RUH) in Bath. As a result of the crash, frontman John Baizley suffered a broken left arm and broken left leg. Allen Blickle and Matt Maggioni each suffered fractured vertebrae. Peter Adams was treated and released from the hospital on August 16, 2012.;During the subsequent months of recovery, Baroness began scheduling tour dates once more. John Baizley performed an acoustic set and artwork exhibition on March 14, 15, and 16, 2013 at SXSW in Austin, Texas. In addition, Baroness made plans to perform at festivals such as Chaos in Tejas, Free Press Summer Festival, and Heavy MTL in Montreal, Quebec.;On March 25, 2013, through a statement posted on Baroness' official website, it was announced that both Allen Blickle (drums) and Matt Maggioni (bass guitar) had left Baroness.;On April 1, 2013, the first leg of Baroness' 2013 US Headlining Tour was announced, featuring the debut of bass guitarist Nick Jost, and drummer Sebastian Thomson of Trans Am.;On September 27, 2013 they started their European Tour in Tilburg, Netherlands.;On August 28, 2015 towards the end of a two-week tour in Europe they released the song 'Chlorine &amp; Wine' and announced that their new album Purple would be released December 18, 2015 on their own newly formed label Abraxan Hymns.;Purple was recorded with Dave Fridmann at Tarbox Road Studios in Cassadaga, New York.;On September 24, 2015, Baroness released the official music video for 'Chlorine &amp; Wine' and announced a North American small venue tour for the fall of 2015.;On November 15, 2015, the band released the first official single 'Shock Me' from the forthcoming album Purple, which debuted on BBC Radio 1's Rock Show with Daniel P. Carter.;Purple's track 'Shock Me' was nominated for Grammy Award for Best Metal Performance at the 2017 Grammy Awards.;On April 26, 2017, in an interview in Teamrock, John Baizley stated that they had begun writing material for their fifth studio album. Baizley stated: 'We've started writing a few tunes that we’re working on. The really cool thing now is that Sebastian and Nick have been in the band long enough that they understand what we do.';On June 1, 2017, it was announced that Peter Adams was amicably leaving the band to focus his energy at home, and not on the road. Gina Gleason was announced as his replacement.;On March 9, 2019, the band began teasing the release of a new album, entitled Gold &amp; Grey. Three days later on March 12, they released the album art on their social media accounts stating, 'This painting was born from a deeply personal reflection on the past 12 years of this band’s history, and will stand as the 6th and final piece in our chromatically-themed records.';Gold &amp; Grey was released to overwhelmingly positive reviews, achieving a score of 94 on metacritic with 9 reviews. Critics praised the album's artistry, the instrumental musicianship, and the use of vocal harmonies as well as stylist breadth that builds upon elements from the band's past works while also incorporating new stylistic elements.</default>
+      <initialValue>Baroness is an American heavy metal band from Savannah, Georgia whose original members grew up together in Lexington, Virginia.Baroness formed in mid-2003, founded by former members of the punk/metal band Johnny Welfare and the Paychecks. Singer John Dyer Baizley creates the artwork for all Baroness albums, and has done artwork for other bands.;From 2004 to 2007, Baroness recorded and released three EPs, named First, Second and A Grey Sigh in a Flower Husk (aka Third), with the third one being a split album with Unpersons.;Baroness started recording their first full-length album in March 2007. Phillip Cope from Kylesa continued to produce Baroness on this album. The Red Album was released on September 4, 2007, and met positive reception. Heavy metal magazine Revolver named it Album of the Year. On December 1, 2007, Baroness performed at New York City's Bowery Ballroom. On September 20, 2008, the band announced via MySpace Brian Blickle would be parting ways with the band, while also introducing a new guitarist named Peter Adams, also of Virginia-based band Valkyrie.;Throughout 2007–9, Baroness toured and shared the stage with many bands including Converge, The Red Chord, High on Fire, Opeth, Coheed and Cambria, Coliseum, Mastodon, Minsk and Clutch.;On May 18, 2009 Baroness entered The Track Studio in Plano, Texas, to record their second full-length album, Blue Record, produced by John Congleton (The Roots, Explosions in the Sky, Black Mountain, The Polyphonic Spree). It was released via Relapse Records on October 13, 2009.;In February and March 2010 Baroness played in the Australian Soundwave Festival, alongside bands such as Clutch, Isis, Meshuggah, Janes Addiction and Faith No More, and toured Japan in March 2010 with Isis.;Baroness have toured with many other prominent bands, such as supporting Mastodon on their US headlining tour in April–May 2010, Deftones for August–September 2010. In addition, Baroness was selected as one of two support acts (the other being Lamb of God) for Metallica on their tour of Australia and New Zealand in late 2010.;Baroness also performed at Coachella and Bonnaroo in 2010.;Blue Record would later be named the 20th Greatest Metal Album in History by 'LA Weekly' in 2013.;On May 23, 2011, the band launched their official website. The first content released on the new page gave hints to work on a new album being produced again by John Congleton. On May 14, 2012, the single 'Take My Bones Away' from the new album was released over YouTube, along with an album teaser.;On August 15, 2012, nine passengers were injured (two seriously) when the German-registered coach in which the band were traveling fell from a viaduct near Bath, England. Emergency services were called to Brassknocker Hill in Monkton Combe after the coach fell 30 ft (9m) from the viaduct. Avon Fire and Rescue Service said the incident happened at 11:30BST; due to heavy rain and reduced visibility it was not possible for the air ambulance to land. Emergency services said two people were transported to Frenchay Hospital in Bristol while seven others went to the Royal United Hospital (RUH) in Bath. As a result of the crash, frontman John Baizley suffered a broken left arm and broken left leg. Allen Blickle and Matt Maggioni each suffered fractured vertebrae. Peter Adams was treated and released from the hospital on August 16, 2012.;During the subsequent months of recovery, Baroness began scheduling tour dates once more. John Baizley performed an acoustic set and artwork exhibition on March 14, 15, and 16, 2013 at SXSW in Austin, Texas. In addition, Baroness made plans to perform at festivals such as Chaos in Tejas, Free Press Summer Festival, and Heavy MTL in Montreal, Quebec.;On March 25, 2013, through a statement posted on Baroness' official website, it was announced that both Allen Blickle (drums) and Matt Maggioni (bass guitar) had left Baroness.;On April 1, 2013, the first leg of Baroness' 2013 US Headlining Tour was announced, featuring the debut of bass guitarist Nick Jost, and drummer Sebastian Thomson of Trans Am.;On September 27, 2013 they started their European Tour in Tilburg, Netherlands.;On August 28, 2015 towards the end of a two-week tour in Europe they released the song 'Chlorine &amp; Wine' and announced that their new album Purple would be released December 18, 2015 on their own newly formed label Abraxan Hymns.;Purple was recorded with Dave Fridmann at Tarbox Road Studios in Cassadaga, New York.;On September 24, 2015, Baroness released the official music video for 'Chlorine &amp; Wine' and announced a North American small venue tour for the fall of 2015.;On November 15, 2015, the band released the first official single 'Shock Me' from the forthcoming album Purple, which debuted on BBC Radio 1's Rock Show with Daniel P. Carter.;Purple's track 'Shock Me' was nominated for Grammy Award for Best Metal Performance at the 2017 Grammy Awards.;On April 26, 2017, in an interview in Teamrock, John Baizley stated that they had begun writing material for their fifth studio album. Baizley stated: 'We've started writing a few tunes that we’re working on. The really cool thing now is that Sebastian and Nick have been in the band long enough that they understand what we do.';On June 1, 2017, it was announced that Peter Adams was amicably leaving the band to focus his energy at home, and not on the road. Gina Gleason was announced as his replacement.;On March 9, 2019, the band began teasing the release of a new album, entitled Gold &amp; Grey. Three days later on March 12, they released the album art on their social media accounts stating, 'This painting was born from a deeply personal reflection on the past 12 years of this band’s history, and will stand as the 6th and final piece in our chromatically-themed records.';Gold &amp; Grey was released to overwhelmingly positive reviews, achieving a score of 94 on metacritic with 9 reviews. Critics praised the album's artistry, the instrumental musicianship, and the use of vocal harmonies as well as stylist breadth that builds upon elements from the band's past works while also incorporating new stylistic elements.</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Raw Data and Extracted Entities</title>
+      <table>
+        <search id="base_entity_extraction">
+          <query>| makeresults
+| eval text = "$text$"
+| makemv text delim=";"
+| mvexpand text
+| fit AITKContainer algo=spacy_ner epochs=100 text into app:spacy_entity_extraction_model as extracted</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">3</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top Entities</title>
+      <table>
+        <search base="base_entity_extraction">
+          <query>| table *
+| makemv extracted_0 delim="|"
+| stats count as Entity_Count by extracted_0
+| rex field=extracted_0 "(?&lt;Entity&gt;.*)\:(?&lt;Entity_Type&gt;.*)"
+| eventstats count as Entity_Type_Count by Entity_Type
+| sort - Entity_Count
+| table extracted_0 Entity Entity_Count Entity_Type Entity_Type_Count</query>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="Entity_Count">
+          <colorPalette type="minMidMax" maxColor="#53A051" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Entity_Type_Count">
+          <colorPalette type="minMidMax" maxColor="#53A051" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Entity_Type">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+</form>

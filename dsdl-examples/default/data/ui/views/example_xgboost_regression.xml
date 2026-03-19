@@ -1,0 +1,168 @@
+<dashboard version="1.1">
+  <label>Example XGBoost Regression</label>
+  <row>
+    <panel>
+      <html>
+      <img src="/static/app/$env:app$/icons/regressor.png" style="width:5%; height:5%; float:right;"/>
+        <h1>Example for XGBoost</h1>
+        <p>This example shows how to build a XGBoost regression model on the server power dataset to predict power based influencing metrics.</p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>R^2 Score</title>
+        <search base="base">
+          <query>
+| score r2_score ac_power against predicted_ac_power
+| table r2_score</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">160</option>
+        <option name="numberPrecision">0.000</option>
+        <option name="rangeColors">["0xdc4e41","0xf1813f","0xf8be34","0x006d9c","0x53a051"]</option>
+        <option name="rangeValues">[0.2,0.4,0.6,0.8]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">large</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Mean Squared Error Score</title>
+        <search base="base">
+          <query>
+| score mean_squared_error ac_power against predicted_ac_power
+| table mean_squared_error</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">160</option>
+        <option name="numberPrecision">0.000</option>
+        <option name="rangeColors">["0x53a051","0x006d9c","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[4,8,16]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">large</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Explained Variance</title>
+        <search base="base">
+          <query>
+| score explained_variance_score ac_power against predicted_ac_power
+| table explained_variance_score</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">160</option>
+        <option name="numberPrecision">0.000</option>
+        <option name="rangeColors">["0xdc4e41","0xf1813f","0xf8be34","0x006d9c","0x53a051"]</option>
+        <option name="rangeValues">[0.2,0.4,0.6,0.8]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">large</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Results</title>
+        <search base="base">
+          <query>| table ac_power predicted_ac_power * | fields - set</query>
+        </search>
+        <option name="count">10</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="ac_power">
+          <colorPalette type="minMidMax" maxColor="#006D9C" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax" maxValue="350" minValue="200"></scale>
+        </format>
+        <format type="color" field="predicted_ac_power">
+          <colorPalette type="minMidMax" maxColor="#006D9C" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax" maxValue="350" minValue="200"></scale>
+        </format>
+        <format type="color" field="residual">
+          <colorPalette type="minMidMax" maxColor="#F1813F" midColor="#FFFFFF" minColor="#F1813F"></colorPalette>
+          <scale type="minMidMax" midValue="0"></scale>
+        </format>
+      </table>
+    </panel>
+    <panel>
+      <viz type="Splunk_ML_Toolkit.HistogramViz">
+        <title>Residuals Histogram</title>
+        <search base="base">
+          <query>
+| `histogram(residual, 100)`</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="height">483</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </viz>
+    </panel>
+    <panel>
+      <viz type="Splunk_ML_Toolkit.ScatterLineViz">
+        <title>Predicted vs. Actual Values</title>
+        <search id="base">
+          <query>| inputlookup server_power.csv 
+| fields - total-cpu-utilization 
+| fit AITKContainer algo=xgboost_regressor ac_power from total* into app:xgboost_regression_server_power 
+| eval residual= ac_power - predicted_ac_power
+| eval set="train"
+| table set ac_power predicted_ac_power *</query>
+          <earliest>0</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="Splunk_ML_Toolkit.ScatterLineViz.count">50000</option>
+        <option name="Splunk_ML_Toolkit.ScatterLineViz.identityLine">true</option>
+        <option name="Splunk_ML_Toolkit.ScatterLineViz.legendAlign">bottom</option>
+        <option name="Splunk_ML_Toolkit.ScatterLineViz.legendOrder">numeric</option>
+        <option name="Splunk_ML_Toolkit.ScatterLineViz.limit">50000</option>
+        <option name="Splunk_ML_Toolkit.ScatterLineViz.resultTruncationLimit">50000</option>
+        <option name="Splunk_ML_Toolkit.ScatterLineViz.showAxisLabels">true</option>
+        <option name="Splunk_ML_Toolkit.ScatterLineViz.showLegend">true</option>
+        <option name="drilldown">none</option>
+        <option name="height">610</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </viz>
+    </panel>
+  </row>
+</dashboard>

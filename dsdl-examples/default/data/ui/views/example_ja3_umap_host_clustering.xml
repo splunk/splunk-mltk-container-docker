@@ -1,0 +1,231 @@
+<form version="1.1">
+  <label>Example of Host Clustering using UMAP on JA3 Signatures</label>
+  <description>created by Josh Cowling</description>
+  <search id="base_dataset">
+    <query>| inputlookup zeek_sigs_ja3_sample.csv </query>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <search id="clustered_sigs">
+    <query>| inputlookup zeek_sigs_ja3_sample.csv | fit AITKContainer algo=ja3_encoder max_cols=100 umap_min_dist=$min_dist$ umap_neighbours=$n_neighbours$ ja3 into app:ja3_encoder 
+| fit $ja3_clustering_algo$ $ja3_clustering_options$ predicted_0 predicted_1  </query>
+    <done>
+      <set token="finished_DSDL_fit">app:ja3_encoder</set>
+    </done>
+    <earliest>-24h@h</earliest>
+    <latest>now</latest>
+  </search>
+  <search>
+    <query>| summary $finished_DSDL_fit$
+| rex field=summary "base64\': b\'(?&lt;base64&gt;[^']+)" 
+| rex field=summary "external_relative_path\': \'(?&lt;external_relative_path&gt;[^\']+)" 
+| eval image_url = api_url_external+"/"+external_relative_path 
+| fields image_url base64</query>
+    <done>
+      <set token="base64_token">$result.base64$</set>
+      <set token="image_url_token">$result.image_url$</set>
+    </done>
+  </search>
+  <search base="clustered_sigs" id="behavior_sigs">
+    <query>
+    | table host predicted_* cluster 
+| stats values(cluster) as behavior_signature by host 
+| mvexpand behavior_signature 
+| eval behavior_signature_{behavior_signature}=1 
+| fillnull value=0 
+| stats sum(behavior_signature_*) as behavior_signature_* by host 
+| eval compressed_behavior_signature="[" 
+| foreach behavior_signature_* 
+    [| eval compressed_behavior_signature=compressed_behavior_signature + if(&lt;&lt;FIELD&gt;&gt;==0," ","|") ] | eval compressed_behavior_signature=compressed_behavior_signature+"]"
+    </query>
+  </search>
+  <search base="behavior_sigs" id="clustered_behavior_sigs">
+    <query>
+    | fit $behav_clustering_algo$ $behav_clustering_options$ behavior_signature_* 
+    </query>
+  </search>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="dropdown" token="n_neighbours" searchWhenChanged="false">
+      <label>UMAP n_neighbours</label>
+      <default>50</default>
+      <initialValue>50</initialValue>
+      <fieldForLabel>count</fieldForLabel>
+      <fieldForValue>count</fieldForValue>
+      <search>
+        <query>| makeresults count=100 | streamstats count</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="min_dist" searchWhenChanged="false">
+      <label>UMAP min_dist</label>
+      <default>1</default>
+      <initialValue>1</initialValue>
+      <fieldForLabel>count</fieldForLabel>
+      <fieldForValue>count</fieldForValue>
+      <search>
+        <query>| makeresults count=21 | streamstats count | eval count=(count-1)/20</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="ja3_clustering_algo" searchWhenChanged="false">
+      <label>JA3 Clustering Algo</label>
+      <choice value="XMeans">XMeans</choice>
+      <choice value="GMeans">GMeans</choice>
+      <choice value="KMeans">KMeans</choice>
+      <choice value="DBSCAN">DBSCAN</choice>
+      <default>DBSCAN</default>
+      <initialValue>DBSCAN</initialValue>
+    </input>
+    <input type="text" token="ja3_clustering_options" searchWhenChanged="false">
+      <label>Clustering Arguments</label>
+      <default>eps=2</default>
+      <initialValue>eps=2</initialValue>
+    </input>
+    <input type="dropdown" token="behav_clustering_algo" searchWhenChanged="false">
+      <label>Behaviour Clustering Algo</label>
+      <choice value="XMeans">XMeans</choice>
+      <choice value="GMeans">GMeans</choice>
+      <choice value="KMeans">KMeans</choice>
+      <choice value="DBScan">DBScan</choice>
+      <default>GMeans</default>
+      <initialValue>GMeans</initialValue>
+    </input>
+    <input type="text" token="behav_clustering_options" searchWhenChanged="false">
+      <label>Clustering Arguments</label>
+      <default></default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <html>
+        <h1>JA3 Signature Data</h1>
+        <p>
+      This example demonstrates a use of the JA3 encoder notebook which uses UMAP to identify similarities and differences between JA3 signatures. <br/>
+      In this example we start with a sample of signatures collected from a number of different hosts in a homelab network.
+      </p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Sample Signature Data</title>
+      <table>
+        <search base="base_dataset">
+          <query>| table *</query>
+        </search>
+        <option name="count">15</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <h1>Dimensionality Reduction with UMAP and Clustering with $ja3_clustering_algo$</h1>
+        <p>
+      These signatures are converted into coordinates in 2 dimensions by the JA3 UMAP encoder. <br/>
+      These panels show scatter plots of the signature coordinates where colours represent each host name (left) or clustered similar signatures/behaviors in this space (right).
+      </p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Signatures Displayed in a UMAP Embedding (Coloured by host)</title>
+      <chart>
+        <title>This scatter graph shows each signature as a 2d point using a UMAP embedding and is coloured to show each individual host</title>
+        <search base="clustered_sigs">
+          <query>| table host predicted_*</query>
+        </search>
+        <option name="charting.chart">scatter</option>
+        <option name="charting.chart.bubbleMaximumSize">5</option>
+        <option name="charting.chart.bubbleMinimumSize">1</option>
+        <option name="charting.chart.markerSize">1</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="height">768</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Signatures Displayed in a UMAP Embedding (Coloured by Cluster)</title>
+      <chart>
+        <title>This scatter graph shows each signature as a 2d point using a UMAP embedding and is coloured to show clusters of similar signatures using GMeans clustering</title>
+        <search base="clustered_sigs">
+          <query>
+| table cluster predicted_* host</query>
+        </search>
+        <option name="charting.chart">scatter</option>
+        <option name="charting.chart.bubbleMaximumSize">5</option>
+        <option name="charting.chart.bubbleMinimumSize">1</option>
+        <option name="charting.chart.markerSize">1</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="height">768</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <h1>Deriving and Clustering "Behavior" Signatures</h1>
+        <p>
+      By using these clusters of similar JA3 signatures we can then derive a "behavior signature" for each host (Left).<br/>
+      The behavior signature is a list of elements which relate to each cluster in our UMAP derived space. Where the host has a signature that has been identified with a cluster we add a "|". This makes it easy to visually assess the behavior of different hosts by comparing the patterns in the behavior signatures. <br/>
+      These behavior signatures can then be clustered themselves to reveal which hosts are exhibiting similar patterns of communications, and thus those which are likely to have similar functions (Right)
+      </p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>One-hot Encoded "Behaviour Signatures" From Clustered JA3 Analysis</title>
+      <table>
+        <title>These one-hot encoded behaviour signatures describe all the ways that hosts communicate based on similar JA3 signatures used. Signatures are rendered with spaces and pipes to make it easy to visually compare the different hosts.</title>
+        <search base="behavior_sigs">
+          <query>
+| table host compressed_behavior_signature</query>
+        </search>
+        <option name="count">15</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Clusters of Hosts and Behaviour Signatures using $behav_clustering_algo$</title>
+      <table>
+        <title>This table shows collections of hosts that have been identified as communicating similarly using clustering against their behaviour signatures</title>
+        <search base="clustered_behavior_sigs">
+          <query>| stats list(host) as host list(compressed_behavior_signature) as compressed_behavior_signature  by cluster</query>
+        </search>
+        <option name="count">4</option>
+        <option name="drilldown">row</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <html>
+        <h1>Example of retrieving of graphics rendered in the model container</h1>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Example rendering of base64 encoded image from jupyter notebook</title>
+      <html>
+        <img src="data:image/jpeg;base64,$base64_token$"/>
+      </html>
+    </panel>
+    <panel>
+      <title>Example image served from external container</title>
+      <html>
+        <img src="$image_url_token$"/><br/>
+        <p>Image URL: <a href="$image_url_token$">$image_url_token$</a></p>
+      </html>
+    </panel>
+  </row>
+</form>

@@ -1,0 +1,59 @@
+<dashboard version="1.1">
+  <label>Anomaly Detection with PyOD</label>
+  <row>
+    <panel>
+      <html>
+        <img src="/static/app/$env:app$/icons/mining.png" style="width:5%; height:5%; float:right;"/>
+        <h1>Unsupervised Outlier Detection Using Empirical Cumulative Distribution Functions</h1>
+        <p>This example shows the application of a novel outlier detection technique ECOD. This is one of many other anomaly detection algorithms in the PyOD library. <a href="https://pyod.readthedocs.io/en/latest/index.html" target="_blank">PyOD is the most comprehensive and scalable Python toolkit for detecting outlying objects in multivariate data</a>. You can easily utilize any other algorithm in this library by changing your notebook code.</p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <search>
+          <query>| inputlookup hostperf.csv 
+| eval _time=strptime(_time, "%Y-%m-%dT%H:%M:%S.%3Q%z") 
+| timechart span=10m max(rtmax) as responsetime
+| fit AITKContainer algo=anomaly_detection_ecod responsetime into app:anomaly_detection_ecod_responsetime</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">1</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.overlayFields">responsetime</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">bottom</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">669</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+</dashboard>

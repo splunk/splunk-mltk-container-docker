@@ -1,0 +1,140 @@
+<form version="1.1">
+  <label>Recommendation System with Collaborative Filtering</label>
+  <fieldset submitButton="false"></fieldset>
+  <row>
+    <panel>
+      <html>
+      <img src="/static/app/$env:app$/icons/mining.png" style="width:5%; height:5%; float:right;"/>
+        <h1>Spark MLLib Collaborative Filtering</h1>
+        <p>This example shows how to train and apply <a href="https://spark.apache.org/docs/latest/mllib-collaborative-filtering.html" target="_blank">Collaborative Filtering</a> to get recommendations. To run this example you must have a Spark container running.</p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Dataset Shape and Cardinality Overview</title>
+      <single>
+        <search>
+          <query>| inputlookup supermarket.csv | stats dc(customer_id) as Customers dc(product_id) as Products | appendcols [| inputlookup supermarket.csv | stats count by customer_id product_id | stats count as "Combination Pairs"]</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">213</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x006d9c","0x53a051","0xf1813f","0xdc4e41"]</option>
+        <option name="rangeValues">[100,1000,5000]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trellis.enabled">1</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">large</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Collaborative Filtering Input Training Dataset and Recommendation Results</title>
+      <table>
+        <search>
+          <query>| inputlookup supermarket.csv 
+| stats count by customer_id product_id 
+| eval customer_id=replace(customer_id,"u","")
+| eval product_id=replace(product_id,"p","")
+| fit AITKContainer algo=spark_recommender rank=10 numIterations=5 customer_id product_id count into app:recommendation_system as recommendation | rename recommendation_0 as recommendation</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <condition match="$job.resultCount$&gt;0">
+              <set token="fit_finalized">recommendation</set>
+            </condition>
+            <condition>
+              <unset token="fit_finalized"></unset>
+            </condition>
+          </done>
+        </search>
+        <option name="count">5</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="recommendation_0">
+          <colorPalette type="minMidMax" maxColor="#53A051" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="recommendation">
+          <colorPalette type="minMidMax" maxColor="#53A051" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="product_id">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row depends="$fit_finalized$">
+    <panel>
+      <title>Get recommendations for selected customer ($customer$) and $sample$ random sampled products</title>
+      <input type="dropdown" token="customer">
+        <label>Select a Customer</label>
+        <choice value="*">*</choice>
+        <fieldForLabel>customer_id</fieldForLabel>
+        <fieldForValue>customer_id</fieldForValue>
+        <search>
+          <query>| inputlookup supermarket.csv 
+| stats count by customer_id</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+      </input>
+      <input type="dropdown" token="sample">
+        <label>Random Sample Size</label>
+        <choice value="5">5</choice>
+        <choice value="10">10</choice>
+        <choice value="20">20</choice>
+        <default>5</default>
+      </input>
+      <table>
+        <search>
+          <query>| inputlookup supermarket.csv where customer_id="$customer$" | sample $sample$ by customer_id
+| stats count by customer_id product_id
+| eval customer_id=replace(customer_id,"u","") 
+| eval product_id=replace(product_id,"p","") 
+| apply app:recommendation_system
+| rename recommendation_0 as recommendation
+| sort - recommendation
+| table customer_id product_id recommendation</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="recommendation">
+          <colorPalette type="minMidMax" maxColor="#53A051" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="product_id">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+</form>

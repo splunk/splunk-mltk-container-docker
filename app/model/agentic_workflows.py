@@ -74,7 +74,7 @@ MODEL_DIRECTORY = "/srv/app/model/data/"
 # Example chat workflow using Bedrock LLM
 # Example SPL:
 ## | makeresults
-## | fit MLTKContainer algo=agentic_workflow_execution workflow_name=SimpleLLMFlow query="What does Splunk do?" * into app:agentic_workflow_execution
+## | fit AITKContainer algo=agentic_workflow_execution workflow_name=SimpleLLMFlow query="What does Splunk do?" * into app:agentic_workflow_execution
 
 
 class SimpleLLMFlow(Workflow):
@@ -98,7 +98,7 @@ class SimpleLLMFlow(Workflow):
 # Please fill in the mcp_token and tenant_name variables and change LLM option if needed before execution
 # Example SPL:
 ## | makeresults
-## | fit MLTKContainer algo=agentic_workflow_execution workflow_name=SplunkMCPAgent query="What savesearches are there?" * into app:agentic_workflow_execution
+## | fit AITKContainer algo=agentic_workflow_execution workflow_name=SplunkMCPAgent query="What savesearches are there?" * into app:agentic_workflow_execution
 
 class InputEvent(Event):
     input: list[ChatMessage]

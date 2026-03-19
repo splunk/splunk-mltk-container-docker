@@ -1,0 +1,191 @@
+<dashboard theme="dark" version="1.1">
+  <label>Graph Analysis Example for Centrality Algorithms on Bitcoin Transactions</label>
+  <row>
+    <html>
+      <h1>Information</h1>
+      <p>Please install the <a href="https://splunkbase.splunk.com/app/4611/">3D Graph Network Topology visualization</a> to show the graph in the panel below.</p>
+    </html>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Eigenvector Centrality</title>
+        <search base="base">
+          <query>| stats max(graph_eigenvector_centrality) as eigenvector_centrality by src | sort - eigenvector_centrality | head 5</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Clustering Coefficient</title>
+        <search base="base">
+          <query>| stats max(graph_cluster_coefficient) as cluster_coefficient by src | sort - cluster_coefficient | head 5</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Betweenness Centrality</title>
+        <search base="base">
+          <query>| stats max(graph_betweenness_centrality) as betweenness_centrality by src | sort - betweenness_centrality | head 5</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">bar</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <viz type="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz">
+        <search base="base">
+          <query>
+| eval src_value = ln(value+1)
+| eventstats mean(graph_*) as mean_* max(graph_*) as max_* max(src_value) as max_src_value
+| eval src_weight_eigen=graph_eigenvector_centrality/max_eigenvector_centrality
+| eval src_weight_cluster=graph_cluster_coefficient/max_cluster_coefficient
+| eval src_weight_betweenness=graph_betweenness_centrality/max_betweenness_centrality
+| eval src_value=src_value/max_src_value
+| eval cB=replace(toString(floor(55+src_weight_eigen*200),"hex"),"0x","")
+| eval cB=substr("00", 0, max(2-len(cB), 0)).cB
+| eval cG=replace(toString(floor(55+src_weight_cluster*200),"hex"),"0x","")
+| eval cG=substr("00", 0, max(2-len(cG), 0)).cG
+| eval cR=replace(toString(floor(55+src_weight_betweenness*200),"hex"),"0x","")
+| eval cR=substr("00", 0, max(2-len(cR), 0)).cR
+| eval cE=replace(toString(floor(55+src_value*200),"hex"),"0x","")
+| eval cE=substr("00", 0, max(2-len(cE), 0)).cE
+| eval color_src="#".cR.cG.cB
+| eval edge_color="#".cE."4444"
+| eval edge_weight=1.0+4.0*src_value
+| eval weight_src=7.0*(src_weight_eigen+src_weight_cluster+src_weight_betweenness)+1.0
+| table src dest color_src weight_src edge_color edge_weight</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="height">517</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.bgColor">#333333</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.cameraController">trackball</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.dagMode">null</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.enable3D">0</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.lkColor">#bbbbbb</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.ndColor">#999999</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.showAnimationBar">1</option>
+      </viz>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Data</title>
+      <table>
+        <search id="base">
+          <query>| inputlookup bitcoin_transactions.csv
+| head 1000
+| rename user_id_from as src user_id_to as dest
+| fit AITKContainer algo=graph_algo compute="eigenvector_centrality,cluster_coefficient,betweenness_centrality" from src dest into app:bitcoin_graph as graph</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

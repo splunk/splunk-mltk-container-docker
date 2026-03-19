@@ -1,0 +1,105 @@
+<dashboard theme="dark" version="1.1">
+  <label>Graph Analysis Example for Community Detection with Louvain Modularity</label>
+  <row>
+    <panel>
+      <html>
+      <p>The is a method to extract communities from large networks.</p>
+      <p>This example uses Rapids cuGraph implementation of <a href="https://en.wikipedia.org/wiki/Louvain_modularity">Louvain Modularity</a> method for community detection running on GPU. You must start the Rapids container image with nvidia runtime to run this example.</p>
+      <p>Please install the <a href="https://splunkbase.splunk.com/app/4611/">3D Graph Network Topology visualization</a> to show the graph in the panel below.</p>
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Graph Visualization with Nodes coloured by Community</title>
+      <viz type="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz">
+        <search base="base">
+          <query>
+| eval color_src="#".upper(substr(md5(labeled_community),0,6))
+| eval color_dest=color_src 
+| table src dest color_src color_dest</query>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="height">513</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.bgColor">#222527</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.cameraController">trackball</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.dagMode">null</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.enable3D">0</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.lkColor">#777777</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.ndColor">#999999</option>
+        <option name="splunk-3D-graph-network-topology-viz.3d_graph_network_topology_viz.showAnimationBar">1</option>
+      </viz>
+    </panel>
+    <panel>
+      <title>Connections by Community</title>
+      <chart>
+        <search base="base">
+          <query>
+| stats sum(count) as connections by labeled_community</query>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">510</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search id="base">
+          <query>| inputlookup bitcoin_transactions.csv
+| rename user_id_from as src user_id_to as dest
+| stats count by src dest
+| fit AITKContainer algo=graph_algo_louvain from src dest into app:bitcoin_graph_louvain as graph
+| rename graph_src_partition as labeled_community
+| table src dest count labeled_community
+| head 2000</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="labeled_community">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+</dashboard>

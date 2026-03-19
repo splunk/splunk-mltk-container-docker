@@ -1,0 +1,7 @@
+[]
+access = read : [ * ], write : [ admin, sc_admin, power ]
+export = system
+
+[viewstates]
+access = read : [ * ], write : [ * ]
+export = system

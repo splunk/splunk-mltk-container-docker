@@ -27,13 +27,13 @@
         <search>
           <query>source="whatismybrowser-user-agent-database.csv" host="wimb_sample" index="dsdl_testing_josh" sourcetype="wimb_csv"
 | table user_agent
-| fit MLTKContainer algo=hashing_encoder vector_length=$vector_length$ user_agent
+| fit AITKContainer algo=hashing_encoder vector_length=$vector_length$ user_agent
 | rename predicted_* as encoded_*
-| fit MLTKContainer algo=hashing_encoder_distance comparison_string="$ref_ua$" vector_length=$vector_length$ return_vector=0 user_agent
+| fit AITKContainer algo=hashing_encoder_distance comparison_string="$ref_ua$" vector_length=$vector_length$ return_vector=0 user_agent
 | rename predicted_distance as distance
 | sort distance
 | head 100
-| fit MLTKContainer algo=hashing_encoder_difference comparison_string="$ref_ua$" user_agent
+| fit AITKContainer algo=hashing_encoder_difference comparison_string="$ref_ua$" user_agent
 | table user_agent distance predicted_*</query>
         </search>
         <option name="count">5</option>
@@ -51,9 +51,9 @@
         <search>
           <query>source="whatismybrowser-user-agent-database.csv" host="wimb_sample" index="dsdl_testing_josh" sourcetype="wimb_csv"
 | table user_agent
-| fit MLTKContainer algo=hashing_encoder vector_length=$vector_length$ user_agent
+| fit AITKContainer algo=hashing_encoder vector_length=$vector_length$ user_agent
 | rename predicted_* as encoded_*
-| fit MLTKContainer algo=hashing_encoder_distance comparison_string="$ref_ua$" vector_length=$vector_length$ return_vector=0 user_agent
+| fit AITKContainer algo=hashing_encoder_distance comparison_string="$ref_ua$" vector_length=$vector_length$ return_vector=0 user_agent
 | rename predicted_distance as distance
 | sort distance
 | streamstats count
@@ -62,7 +62,7 @@
 | eval size=1
 | eval size=if(label=="reference",5,size)
 | eval size=if(label=="near",3,size)
-| fit MLTKContainer algo=umap encoded_*
+| fit AITKContainer algo=umap encoded_*
 | rename predicted_* as embedded_*
 | table label embedded_* size
 | sort label</query>

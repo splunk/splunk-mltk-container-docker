@@ -3,7 +3,7 @@
   <search id="base_all">
     <query>source="whatismybrowser-user-agent-database.csv" host="wimb_sample" index="dsdl_testing_josh" sourcetype="wimb_csv" 
 | table user_agent 
-| fit MLTKContainer algo=hashing_encoder vector_length=$vector_length$ user_agent 
+| fit AITKContainer algo=hashing_encoder vector_length=$vector_length$ user_agent 
 | rename predicted_* as encoded_* 
 
 </query>
@@ -13,8 +13,8 @@
   <search id="umap_all">
     <query>source="whatismybrowser-user-agent-database.csv" host="wimb_sample" index="dsdl_testing_josh" sourcetype="wimb_csv" 
 | table user_agent 
-| fit MLTKContainer algo=hashing_encoder vector_length=$vector_length$ user_agent 
-| rename predicted_* as encoded_* | fit MLTKContainer algo=umap encoded_* 
+| fit AITKContainer algo=hashing_encoder vector_length=$vector_length$ user_agent 
+| rename predicted_* as encoded_* | fit AITKContainer algo=umap encoded_* 
 | rename predicted_* as embedded_* 
 </query>
   </search>

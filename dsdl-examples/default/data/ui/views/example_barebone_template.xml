@@ -1,0 +1,41 @@
+<dashboard version="1.1" theme="light">
+  <label>Example for Barebone Template Notebook Interaction</label>
+  <description>Generated search results with index counting field "i" should match the returned resulting column "predicted_index" from the pandas dataframe as defined in the logic of the barebone_template.ipynb Jupyter notebook.</description>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>| makeresults count=10
+| streamstats c as i
+| eval s = i%3
+| eval feature_{s}=0
+| foreach feature_* [eval &lt;&lt;FIELD&gt;&gt;=random()/pow(2,31)]
+| fit AITKContainer algo=barebone_template _time feature* i into app:barebone_template
+| eval predicted_index=predicted_index+1
+| eval test=if('predicted_index'='i',"Success","Mismatch")</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="test">
+          <colorPalette type="map">{"Success":#118832}</colorPalette>
+        </format>
+        <format type="color" field="i">
+          <colorPalette type="minMidMax" maxColor="#1182F3" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="predicted_index">
+          <colorPalette type="minMidMax" maxColor="#1182F3" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+</dashboard>

@@ -1,0 +1,62 @@
+<nav color="#ed028b">
+  <collection label="Examples">
+    <view name="examples" label="Examples" default="true" />
+    <collection label="Classifier">
+      <view name="example_neural_network_classifier" />
+      <view name="example_logistic_regression_classifier" />
+      <view name="example_neural_network_classifier_pytorch" />
+      <view name="example_neural_network_classifier_dga" />
+      <view name="example_spark_gradient_boosting_classifier_dga" />
+      <view name="example_xgboost_shap" />
+    </collection>
+    <collection label="Regression">
+      <view name="example_xgboost_regression" />
+      <view name="example_grid_search_svm" />
+      <view name="example_multivariate_lstm_regressor" />
+    </collection>
+    <collection label="Forecasting">
+      <view name="example_cnn_forecast" />
+      <view name="example_lstm_forecast" />
+      <view name="example_forecast_prophet" />
+    </collection>
+    <collection label="Clustering">
+      <view name="example_autoencoder" />
+      <view name="example_dask_kmeans" />
+      <view name="example_umap_clustering" />
+      <view name="example_ja3_umap_host_clustering" />
+    </collection>
+    <collection label="NLP">
+      <view name="example_nlp_named_entity_recognition_extraction_spacy" />
+      <view name="example_nlp_sentiment_analysis_using_spacy" />
+    </collection>
+    <collection label="Graphs">
+      <view name="example_graph_centrality_algorithms" />
+      <view name="example_graph_rapids_louvain" />
+    </collection>
+    <collection label="Data Mining">
+      <view name="example_frequent_itemsets_shopping_analysis" />
+      <view name="example_collaborative_filtering_recommendations" />
+      <view name="example_rapids_umap_dga" />
+      <view name="example_process_mining" />
+      <view name="example_time_series_anomalies_stumpy" />
+      <view name="example_changepoint_detection" />
+      <view name="example_random_cut_forest" />
+      <view name="example_hidden_markov_model_on_punct" />
+      <view name="example_anomaly_detection_with_pyod" />
+    </collection>
+    <collection label="Basic">
+      <view name="example_correlation_matrix_plot" />
+      <view name="example_barebone_template" />
+      <view name="example_spark_pi" />
+      <view name="example_stl" />
+    </collection>
+    <collection label="Deprecated">
+      <view name="example_autosklearn_classification" />
+      <view name="example_linear_regression" />
+      <view name="example_dnn_regressor" />
+      <view name="example_causal_inference" />
+      <view name="example_online_learning_anomaly_detection" />
+      <view name="example_nlp_named_entity_recognition_extraction_spacy_ginza" />
+    </collection>
+  </collection>
+</nav>

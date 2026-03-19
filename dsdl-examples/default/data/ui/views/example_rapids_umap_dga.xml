@@ -1,0 +1,146 @@
+<dashboard script="plot.js" version="1.1">
+  <label>Rapids UMAP on GPU</label>
+  <row>
+    <panel>
+      <html>
+        <img src="/static/app/$env:app$/icons/mining.png" style="width:5%; height:5%; float:right;"/>
+        <h1>Example for Rapids UMAP and Datashader</h1>
+        <p>This example shows how to accelerate UMAP computation with<a href="https://rapids.ai" target="_blank">Rapids on GPU</a>. Please install and setup the <a href="https://splunkbase.splunk.com/app/3559/" target="_blank">DGA App for Splunk</a> to have the data accessible and run this dashboard. To run this example you must have a GPU enabled Rapids container running.</p>
+      </html>
+    </panel>
+  </row>
+  <row depends="$fit_finalized$">
+    <panel>
+      <title>Scatterplot 10K sampled</title>
+      <chart>
+        <search base="base">
+          <query>| sample 4999 by class
+| table class UMAP1 UMAP2</query>
+          <done>
+            <condition match="$job.resultCount$>0">
+              <set token="fit_finalized">dga_rapids_umap</set>
+            </condition>
+            <condition>
+              <unset token="fit_finalized"></unset>
+            </condition>
+          </done>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">collapsed</option>
+        <option name="charting.axisTitleY.visibility">collapsed</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.abbreviation">none</option>
+        <option name="charting.axisX.maximumNumber">20</option>
+        <option name="charting.axisX.minimumNumber">-20</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisY.maximumNumber">20</option>
+        <option name="charting.axisY.minimumNumber">-20</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.abbreviation">none</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">scatter</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.markerSize">1</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">none</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.mode">standard</option>
+        <option name="charting.legend.placement">none</option>
+        <option name="charting.lineWidth">2</option>
+        <option name="height">626</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="trellis.enabled">0</option>
+        <option name="trellis.scales.shared">1</option>
+        <option name="trellis.size">medium</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Datashader 100K samples plot</title>
+      <html>
+        <div>
+          <img width="800px" height="600px" id="plot_matrix" src=""/>
+        </div>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Rapids UMAP Results</title>
+      <table>
+        <search id="base">
+          <query>| inputlookup dga_domains_features.csv
+| fit AITKContainer algo=rapids_umap_dga plot="datashader" class from ut* PC* into app:dga_rapids_umap</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">10</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="response">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="predicted_UMAP1">
+          <colorPalette type="minMidMax" maxColor="#DC4E41" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="predicted_UMAP2">
+          <colorPalette type="minMidMax" maxColor="#DC4E41" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$fit_finalized$">
+      <table>
+        <search>
+          <query>| summary $fit_finalized$
+| eval extract = json_extract(summary) 
+| eval text=split(extract,", 'plot_datashader'")
+| mvexpand text
+| table text
+| rex field=text "b'(?&lt;plot&gt;.*)'"
+| table plot
+| where isnotnull(plot)</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+          <done>
+            <condition match="$job.resultCount$&gt;0">
+              <set token="plot_matrix">$result.plot$</set>
+            </condition>
+            <condition>
+              <unset token="plot_matrix"></unset>
+            </condition>
+          </done>
+        </search>
+        <option name="count">1</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

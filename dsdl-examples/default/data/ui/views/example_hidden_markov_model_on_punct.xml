@@ -1,0 +1,60 @@
+<dashboard version="1.1">
+  <label>Example for Hidden Markov Models applied to punct notations</label>
+  <row>
+    <panel>
+      <html>
+        <img src="/static/app/$env:app$/icons/mining.png" style="width:5%; height:5%; float:right;"/>
+        <h1>Hidden Markov Models</h1>
+        <p>This example shows a very simple application of creating a Hidden Markov Model (HMM) based on the sequence of characters in punct notations. It uses the <a href="https://pomegranate.readthedocs.io/en/latest/HiddenMarkovModel.html" target="_blank">pomegranate</a> library to create a simple HMM from given punct notations and return the logarithmic probability of each punct that can be used for further analysis. You can leverage this approach for probabilistic modeling of sequences, e.g. by extracting sequences of attributes in your event data in Splunk to either find anomaleous sequences or get predictions from that model. </p>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>index=_internal
+| table _time host punct
+| eventstats count as total_by_host by host
+| eventstats count as count_by_host by host punct
+| eval punct_freq_by_host=count_by_host/total_by_host
+| where len(punct)&gt;0
+| fit AITKContainer algo=hidden_markov_model punct into app:hidden_markov_model
+| stats avg(predicted_punct_log_probability) as punct_log_probability avg(punct_freq_by_host) as punct_freq by punct
+| sort punct_log_probability</query>
+          <earliest>-15m</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="punct">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+        <format type="color" field="avg(predicted_punct_log_probability)">
+          <colorPalette type="minMidMax" maxColor="#FFFFFF" minColor="#006D9C"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="avg(punct_freq_by_host)">
+          <colorPalette type="minMidMax" maxColor="#53A051" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="punct_log_probability">
+          <colorPalette type="minMidMax" maxColor="#FFFFFF" minColor="#006D9C"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="punct_freq">
+          <colorPalette type="minMidMax" maxColor="#FFFFFF" minColor="#53A051"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+</dashboard>

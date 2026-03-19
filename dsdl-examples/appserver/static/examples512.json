@@ -1,0 +1,391 @@
+[
+{
+    "id": "example_neural_network_classifier",
+    "title": "Neural Network Classifier",
+    "short-description": "This example shows how to use a binary neural network classifier build on keras and TensorFlow™",
+    "description-icon": "classifier.png",
+    "version-tag" : "Golden Image CPU/GPU",
+    "tags" : ["TensorFlow™", "Neural Network"],
+    "category": "Classifier"
+}
+,
+{
+    "id": "example_logistic_regression_classifier",
+    "title": "Logistic Regression",
+    "short-description": "This example shows a simple logistic regression using PyTorch",
+    "description-icon": "classifier.png",
+    "version-tag" : "Golden Image CPU/GPU",
+    "tags" : ["PyTorch", "Logistic Regression"],
+    "category": "Classifier"
+}
+,
+{
+    "id": "example_neural_network_classifier_pytorch",
+    "title": "Neural Network Classifier",
+    "short-description": "This example shows a simple multi class neural network classifier using PyTorch with GPU",
+    "description-icon": "classifier.png",
+    "version-tag" : "Golden Image CPU/GPU",
+    "tags" : ["PyTorch", "Neural Network"],
+    "category": "Classifier"
+}
+,
+{
+    "id": "example_neural_network_classifier_dga",
+    "title": "Neural Network Classifier DGA",
+    "short-description": "This example shows a simple neural network example using PyTorch for building a multiclass classifier applied to the DGA dataset.",
+    "description-icon": "classifier.png",
+    "version-tag" : "Golden Image CPU/GPU",
+    "tags" : ["PyTorch", "Neural Network"],
+    "category": "Classifier"
+}
+,
+{
+    "id": "example_spark_gradient_boosting_classifier_dga",
+    "title": "Spark Gradient Boosting Classifier DGA",
+    "short-description": "This example shows a simple gradient boosting model with Spark's MLLib applied to the DGA dataset.",
+    "description-icon": "classifier.png",
+    "version-tag" : "Spark",
+    "tags" : ["MLLib", "GBM"],
+    "category": "Classifier"
+}
+,
+{
+    "id": "example_xgboost_shap",
+    "title": "Explainable Machine Learning with XGBoost and SHAP",
+    "short-description": "This example shows how to introduce explainability in machine learning models with the help of SHAP.",
+    "description-icon": "classifier.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["XGBoost", "SHAP"],
+    "category": "Classifier"
+}
+,
+{
+    "id": "example_xgboost_regression",
+    "title": "XGBoost Regressor",
+    "short-description": "This example shows a simple regression example with XGBoost",
+    "description-icon": "regressor.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["XGBoost"],
+    "category": "Regressor"
+}
+,
+{
+    "id": "example_grid_search_svm",
+    "title": "Grid Search Support Vector Regressor",
+    "short-description": "This example shows how grid search can be used with a Support Vector Regressor",
+    "description-icon": "regressor.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["scikit-learn", "SVM"],
+    "category": "Regressor"
+}
+,
+{
+    "id": "example_multivariate_lstm_regressor",
+    "title": "Multivariate LSTM Regressor",
+    "short-description": "This example shows a multivariate Long Short-Term Memory (LSTM) network to predict AC power on an example dataset from the MLTK",
+    "description-icon": "regressor.png",
+    "version-tag" : "Golden Image CPU/GPU",
+    "tags" : ["TensorFlow™", "LSTM"],
+    "category": "Regressor"
+}
+,
+{
+    "id": "example_cnn_forecast",
+    "title": "Forecast with Convolutional Neural Networks (CNN)",
+    "short-description": "This example showcases forecasting a univariate time series with a convolutional neural network using TensorFlow™",
+    "description-icon": "forecast.png",
+    "version-tag" : "Golden Image CPU/GPU",
+    "tags" : ["TensorFlow™", "CNN"],
+    "category": "Forecasting"
+}
+,
+{
+    "id": "example_lstm_forecast",
+    "title": "Forecast with Long Short Term Memory (LSTM) Neural Networks",
+    "short-description": "This example showcases forecasting a univariate time series with a long short term neural network using TensorFlow™",
+    "description-icon": "forecast.png",
+    "version-tag" : "Golden Image CPU/GPU",
+    "tags" : ["TensorFlow™", "LSTM"],
+    "category": "Forecasting"
+ }
+,
+{
+    "id": "example_forecast_prophet",
+    "title": "Forecast using Prophet",
+    "short-description": "This example shows how to use the Prophet library for forecasting",
+    "description-icon": "forecast.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["Prophet"],
+    "category": "Forecasting"
+ }
+,
+{
+   "id": "example_autoencoder",
+   "title": "Autoencoder",
+   "short-description": "This example shows a basic auto encoder using TensorFlow™ returning hidden layer representation and reconstruction loss measurements.",
+   "description-icon": "cluster.png",
+   "version-tag" : "Golden Image CPU/GPU",
+   "tags" : ["TensorFlow™", "Autoencoder"],
+   "category": "Clustering"
+}
+,
+{
+   "id": "example_dask_kmeans",
+   "title": "Distributed KMeans with Dask",
+   "short-description": "This example shows how to distribute algorithm execution with Dask using KMeans.",
+   "description-icon": "cluster.png",
+   "version-tag" : "Golden Image CPU",
+   "tags" : ["DASK", "KMeans"],
+   "category": "Clustering"
+}
+,
+{
+   "id": "example_umap_clustering",
+   "title": "Clustering with UMAP and DBSCAN",
+   "short-description": "This example shows the dimensionality reduction technique UMAP in combination with DBSCAN for distance based clustering.",
+   "description-icon": "cluster.png",
+   "version-tag" : "Golden Image CPU",
+   "tags" : ["UMAP"],
+   "category": "Clustering"
+}
+,
+{
+   "id": "example_ja3_umap_host_clustering",
+   "title": "Host Clustering using UMAP on JA3 Signatures",
+   "short-description": "This example demonstrates a use of the JA3 encoder notebook which uses UMAP to identify similarities and differences between JA3 signatures.",
+   "description-icon": "cluster.png",
+   "version-tag" : "Golden Image CPU",
+   "tags" : ["UMAP"],
+   "category": "Clustering"
+}
+,
+{
+   "id": "example_nlp_named_entity_recognition_extraction_spacy",
+   "title": "Named Entity Recognition and Extraction",
+   "short-description": "This example shows a simple NER (Named Entity Recognition) using spaCy",
+   "description-icon": "nlp.png",
+   "version-tag" : "Golden Image CPU",
+   "tags" : ["spaCy"],
+   "category": "NLP"
+}
+,
+{
+    "id": "example_nlp_sentiment_analysis_using_spacy",
+    "title": "Sentiment Analysis",
+    "short-description": "This example shows a simple sentiment analysis using spaCy",
+    "description-icon": "nlp.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["spaCy"],
+    "category": "NLP"
+ }
+ ,
+ {
+    "id": "example_graph_centrality_algorithms",
+    "title": "Graph Centrality Algorithms",
+    "short-description": "This example shows how to calculate centrality measures in a bitcoin transaction graph using NetworkX",
+    "description-icon": "graphs.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["NetworkX"],
+    "category": "Graphs"
+}
+,
+{
+    "id": "example_graph_rapids_louvain",
+    "title": "Graph Community Detection",
+    "short-description": "This example shows the Louvain Modularity method for community detection running on GPU",
+    "description-icon": "graphs.png",
+    "version-tag" : "Rapids",
+    "tags" : ["Louvain"],
+    "category": "Graphs"
+}
+,
+{
+    "id": "example_frequent_itemsets_shopping_analysis",
+    "title": "Frequent Itemset Mining",
+    "short-description": "This example shows how to find frequent itemsets using FP Growth algorithm from Spark MLLib",
+    "description-icon": "mining.png",
+    "version-tag" : "Spark",
+    "tags" : ["MLLib", "FPGrowth"],
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_collaborative_filtering_recommendations",
+    "title": "Recommendation System with Collaborative Filtering",
+    "short-description": "This example shows how to get recommendations using Collaborative Filtering from Spark MLLib",
+    "description-icon": "mining.png",
+    "version-tag" : "Spark",
+    "tags" : ["MLLib", "Collaborative Filter"],
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_rapids_umap_dga",
+    "title": "Rapids UMAP on GPU",
+    "short-description": "This example shows how to analyze the DGA dataset with Rapid's UMAP running on GPU",
+    "description-icon": "mining.png",
+    "version-tag" : "Rapids",
+    "tags" : ["UMAP"],
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_process_mining",
+    "title": "Process Mining with PM4Py",
+    "short-description": "This example shows how process mining with PM4Py can be integrated with DLTK",
+    "description-icon": "mining.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["PM4Py"],
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_time_series_anomalies_stumpy",
+    "title": "Time Series Anomalies with stumpy",
+    "short-description": "This example shows how to detect anomalies in time series using matrix profiles",
+    "description-icon": "mining.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["stumpy"],
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_changepoint_detection",
+    "title": "Change Point Detection for Time Series Anomalies",
+    "short-description": "This example shows how to detect change points or drift in time series using Bayesian Online Change Point Detection",
+    "description-icon": "mining.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["bocd"],
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_random_cut_forest",
+    "title": "Anomaly Detection with Random Cut Forest",
+    "short-description": "This example shows how to detect anomalies using the Random Cut Forest algorithm",
+    "description-icon": "mining.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["rrcf"],
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_hidden_markov_model_on_punct",
+    "title": "Hidden Markov Models",
+    "short-description": "This example shows a very simple application of creating a Hidden Markov Model (HMM) based on the sequence of characters in punct notations.",
+    "description-icon": "mining.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["pomegranate", "HMM"],
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_anomaly_detection_with_pyod",
+    "title": "Anomaly Detection with PyOD",
+    "short-description": "This example shows an Unsupervised Outlier Detection Using Empirical Cumulative Distribution Functions utilizing the PyOD library.",
+    "description-icon": "mining.png",
+    "version-tag" : "Golden Image CPU 3.9",
+    "tags" : ["PyOD", "ECOD"],
+    "category": "Data Mining"
+}
+,
+{
+    "id": "example_correlation_matrix_plot",
+    "title": "Correlation Matrix and Pair Plot",
+    "short-description": "This example shows how to do a simple correlation matrix and embed graphic plots from seaborn",
+    "description-icon": "basic.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["Pandas"],
+    "category": "Basic"
+}
+,
+{
+    "id": "example_barebone_template",
+    "title": "Example for Barebone Template Notebook Interaction",
+    "short-description": "This example does a basic test of interacting with the barebone template Jupyter notebook",
+    "description-icon": "basic.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["Pandas"],
+    "category": "Basic"
+}
+,
+{
+    "id": "example_spark_pi",
+    "title": "Spark Pi",
+    "short-description": "This shows a very basic hello world example for Spark's Pi Example",
+    "description-icon": "basic.png",
+    "version-tag" : "Spark",
+    "tags" : ["Spark"],
+    "category": "Basic"
+}
+,
+{
+    "id": "example_stl",
+    "title": "Seasonality and Trend Decomposition (STL)",
+    "short-description": "This example shows how to decompose a time series into its trend and seasonality components",
+    "description-icon": "basic.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["statsmodels"],
+    "category": "Basic"
+}
+,
+{
+    "id": "example_autosklearn_classification",
+    "title": "Automated Machine Learning",
+    "short-description": "This example shows an automated machine learning approach to generate a classifier with autosklearn.",
+    "description-icon": "classifier.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["autosklearn"],
+    "category": "Deprecated"
+}
+,
+{
+   "id": "example_linear_regression",
+   "title": "Linear Regressor",
+   "short-description": "This example shows the a simple linear regression using the TensorFlow™ estimator class",
+   "description-icon": "regressor.png",
+   "version-tag" : "Golden Image CPU/GPU",
+   "tags" : ["TensorFlow™", "Linear Regression"],
+   "category": "Deprecated"
+}
+,
+{
+    "id": "example_dnn_regressor",
+    "title": "Deep Neural Network Regressor",
+    "short-description": "This example shows a simple regression using the TensorFlow™ Deep Neural Network (DNN) estimator class",
+    "description-icon": "regressor.png",
+    "version-tag" : "Golden Image CPU/GPU",
+    "tags" : ["TensorFlow™", "DNN"],
+    "category": "Deprecated"
+}
+,
+{
+    "id": "example_causal_inference",
+    "title": "Causal Inference",
+    "short-description": "This example shows how you can use Bayesian Networks to combine machine learning and domain expertise for causal reasoning.",
+    "description-icon": "graphs.png",
+    "version-tag" : "Golden Image CPU",
+    "tags" : ["Causalnex"],
+    "category": "Deprecated"
+}
+,
+{
+    "id": "example_online_learning_anomaly_detection",
+    "title": "Online Learning Anomaly Detection",
+    "short-description": "This example shows how to utilize an online learning anomaly detection model using the HalfSpaceTree algorithm in River.",
+    "description-icon": "mining.png",
+    "version-tag" : "River 0.8.0",
+    "tags" : ["River", "HalfSpaceTree"],
+    "category": "Deprecated"
+}
+,
+{
+   "id": "example_nlp_named_entity_recognition_extraction_spacy_ginza",
+   "title": "Named Entity Recognition and Extraction for Japanese",
+   "short-description": "This example shows a simple NER (Named Entity Recognition) for Japanese using spaCy + Ginza",
+   "description-icon": "nlp.png",
+   "version-tag" : "Golden Image CPU",
+   "tags" : ["spaCy"],
+   "category": "Deprecated"
+}
+]

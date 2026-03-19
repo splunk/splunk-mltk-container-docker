@@ -1,0 +1,83 @@
+<form version="1.1">
+  <label>Entity Recognition and Extraction Example for Japanese using spaCy + Ginza Library</label>
+  <description>Deprecation note: this dashboard and associated algorithms got deprecated due to consolidation efforts and to improve DSDL app experience. You can still make this example work by building a custom container image. Please refer to the public DSDL github repository.</description>
+  <fieldset submitButton="false">
+    <html>
+      <style>
+        #text5 .splunk-textinput
+        {
+          width: 1300px !important;
+        }
+        #text5 .splunk-textinput input{
+          width: 1300px !important;
+        }
+      </style>
+    </html>
+    <input id="text5 " type="text" token="text">
+      <label>Enter Text:</label>
+      <default>アメリカのトランプ大統領は、新型コロナウイルス対策で制限を受けている経済活動について、20日から、テキサス州などで一部再開すると発表した。トランプ大統領「テキサス州とバーモント州では、20日に一部のビジネスを開始するだろうが、引き続き、感染予防としてソーシャルディスタンスを求める」。またトランプ大統領は、モンタナ州では、24日に経済活動の規制を解除し、5月1日からは、オハイオ、ノースダコタ、それにアイダホの各州で、段階的に経済活動再開の準備を進めていることを明らかにした。トランプ大統領が公表した、経済活動を3段階に分けて再開するとしたガイドラインでは、第1段階で、テレワークを継続しながら通勤も可能などとしているが、「安全を優先させるべき」と慎重な声も多くある。</default>
+      <initialValue>アメリカのトランプ大統領は、新型コロナウイルス対策で制限を受けている経済活動について、20日から、テキサス州などで一部再開すると発表した。トランプ大統領「テキサス州とバーモント州では、20日に一部のビジネスを開始するだろうが、引き続き、感染予防としてソーシャルディスタンスを求める」。またトランプ大統領は、モンタナ州では、24日に経済活動の規制を解除し、5月1日からは、オハイオ、ノースダコタ、それにアイダホの各州で、段階的に経済活動再開の準備を進めていることを明らかにした。トランプ大統領が公表した、経済活動を3段階に分けて再開するとしたガイドラインでは、第1段階で、テレワークを継続しながら通勤も可能などとしているが、「安全を優先させるべき」と慎重な声も多くある。</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Raw Data and Extracted Entities</title>
+      <table>
+        <search id="base_entity_extraction">
+          <query>| makeresults
+| eval text = "$text$"
+| makemv text delim="。"
+| mvexpand text
+| fit AITKContainer algo=spacy_ner_ja epochs=100 text into app:spacy_ginza_entity_extraction_model as extracted</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">3</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Top Entities</title>
+      <table>
+        <search base="base_entity_extraction">
+          <query>| table *
+| makemv extracted_0 delim="|"
+| stats count as Entity_Count by extracted_0
+| rex field=extracted_0 "(?&lt;Entity&gt;.*)\:(?&lt;Entity_Type&gt;.*)"
+| eventstats count as Entity_Type_Count by Entity_Type
+| sort - Entity_Count
+| table extracted_0 Entity Entity_Count Entity_Type Entity_Type_Count</query>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="percentagesRow">false</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="Entity_Count">
+          <colorPalette type="minMidMax" maxColor="#53A051" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Entity_Type_Count">
+          <colorPalette type="minMidMax" maxColor="#53A051" minColor="#FFFFFF"></colorPalette>
+          <scale type="minMidMax"></scale>
+        </format>
+        <format type="color" field="Entity_Type">
+          <colorPalette type="sharedList"></colorPalette>
+          <scale type="sharedCategory"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+</form>
