@@ -40,7 +40,7 @@ echo "Scanning $container_name"
 
 docker run -q\
         -v /var/run/docker.sock:/var/run/docker.sock\
-        aquasec/trivy:latest\
+        aquasec/trivy:0.69.3\
         image $container_name --scanners vuln\
         >> $output_path
 
