@@ -335,22 +335,22 @@ async def chat(req:Request):
                 state,
                 config={"configurable": {"thread_id": userSession}}
             )
-            interrupts = final_state.get("__interrupt__", [])
-            log.info(f"LLM Agent decision on tool call or not: {interrupts}")
-            print(f"Exited the interrupt: {interrupts}")
-            if interrupts:
-                current_session["tool_call_flag"]=True
-                payload = interrupts[0].value
-                payload_question=payload.get("question")
-                payload_details = payload.get("details")
-                tool_msg = payload_question + "\n" + payload_details
-                log.info(f"Interrupted! Tool Message: {tool_msg}")
-                print(f"\n\n\nINTERRUPTED!!!! Tool Message: {tool_msg}")
-                return ChatResponse(data=tool_msg)
-            else:
-                log.info(f"No interrupts.")
-                print(f"\n\n\nNot Interrupted \n\n\n")
-                current_session["tool_call_flag"]=False
+        interrupts = final_state.get("__interrupt__", [])
+        log.info(f"LLM Agent decision on tool call or not: {interrupts}")
+        print(f"Exited the interrupt: {interrupts}")
+        if interrupts:
+            current_session["tool_call_flag"]=True
+            payload = interrupts[0].value
+            payload_question = (payload or {}).get("question", "")
+            payload_details = (payload or {}).get("details", "")
+            tool_msg = "\n".join(part for part in [payload_question, payload_details] if part).strip()
+            log.info(f"Interrupted! Tool Message: {tool_msg}")
+            print(f"\n\n\nINTERRUPTED!!!! Tool Message: {tool_msg}")
+            return ChatResponse(data=tool_msg)
+        else:
+            log.info(f"No interrupts.")
+            print(f"\n\n\nNot Interrupted \n\n\n")
+            current_session["tool_call_flag"]=False
         log.info(f"Current User's Final state in graph: {final_state}")
         print(f"\n\nFinal State after seeking approval: {final_state}")
         llm_output = final_state["messages"][-1]
