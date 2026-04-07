@@ -14,7 +14,7 @@ This repository contains the collection of resources, scripts, and testing frame
 This repository contains the container endpoint (`./app`), jupyter notebook configuration (`./config`) and examples (`./notebooks`), build scripts and the main Dockerfiles to create the [existing pre-built container images](https://hub.docker.com/u/splunk?page=1&search=mltk-container) for TensorFlow, PyTorch, NLP libraries and many other data science libraries for CPU and GPU.
 
 ### Building containers 
-You can  your own containers with the `build.sh` script.
+You can build your own containers with the `build.sh` script.
 
 The `build.sh` script is invoked with at least one and up to three arguments:
 `./build.sh <build_configuration_tag> <repo_name> <version>`
