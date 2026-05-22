@@ -138,10 +138,11 @@ def save(model,name):
 
 # load model from name in expected convention "<algo_name>_<model_name>"
 def load(name):
-    model = {}
-    from joblib import dump, load
-    model = load(model, MODEL_DIRECTORY + name + '.joblib')
-    return model
+    # Use `import joblib` (not `from joblib import load`) to avoid shadowing
+    # this enclosing `load` function. joblib.load expects a path-like first
+    # argument and returns the deserialized object directly.
+    import joblib
+    return joblib.load(MODEL_DIRECTORY + name + '.joblib')
 
 
 
