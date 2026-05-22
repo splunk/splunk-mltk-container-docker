@@ -9,7 +9,7 @@ RUN apt-get update && apt-get upgrade -y
 
 RUN mkdir /temp
 
-RUN apt-get install -y python3 python3-pip
+RUN apt-get install -y python3 python3-pip libxml2-dev libxslt-dev pkg-config libopenblas-dev build-essential gfortran
 RUN pip3 install -U pip setuptools wheel pip-tools
 
 COPY ./requirements_files/${COMPILED_REQUIREMENTS_FILE} /temp/${COMPILED_REQUIREMENTS_FILE}

@@ -1,5 +1,5 @@
 from langchain_ollama import ChatOllama
-from langchain_aws import ChatBedrockConverse, ChatAnthropicBedrock
+from langchain_aws import ChatBedrockConverse
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -72,9 +72,11 @@ def create_llm(service=None, model=None):
 
     elif service == 'bedrock':
         try:
-            # llm = ChatBedrockConverse(**llm_config_item)
-            llm = ChatAnthropicBedrock(**llm_config_item)
-            
+            # ChatBedrockConverse is the canonical langchain-aws chat class
+            # for all Bedrock-hosted models, including Anthropic Claude. It
+            # uses the Bedrock Converse API which supports tool use, system
+            # prompts, and streaming uniformly across model families.
+            llm = ChatBedrockConverse(**llm_config_item)
         except Exception as e:
             err = f"Failed at creating LLM object from {service}. Details: {e}."
             return None, err

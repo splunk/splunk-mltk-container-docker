@@ -1,0 +1,83 @@
+ARG BASE_IMAGE
+# Match the platform of the runtime image (Dockerfile.redhat.agentic). uv's
+# --python-platform flag drives resolution independent of host arch, so this
+# is not strictly required for correctness, but pinning here keeps the
+# compile-time container and the runtime container on the same platform and
+# avoids subtle wheel-cache mismatches.
+FROM --platform=linux/amd64 ${BASE_IMAGE}
+ARG TAG
+ARG COMPILED_REQUIREMENTS_FILE
+
+RUN yum update -y
+RUN yum upgrade -y
+
+# Install Python 3.11 from the UBI9 AppStream (matches the runtime image)
+RUN yum install -y python3.11 python3.11-devel python3.11-pip
+
+# Native toolchain and headers needed by pip-compile's sdist fallback for
+# packages without a manylinux wheel (lxml, scipy, blas-backed builds, etc.).
+RUN yum install -y \
+        gcc gcc-c++ gcc-gfortran make pkgconfig \
+        libxml2-devel libxslt-devel \
+        openssl-devel openblas-devel \
+        libffi-devel zlib-devel
+
+# Make python3 / pip3 resolve to the 3.11 stream we just installed.
+RUN alternatives --set python3 /usr/bin/python3.11 || true
+
+RUN python3.11 -m ensurepip --upgrade
+RUN python3.11 -m pip install -U pip setuptools wheel
+
+# Use Astral's `uv` for dependency resolution. uv's PubGrub-based resolver is
+# dramatically faster than pip-tools' pip-backed resolver and avoids the
+# pip._internal.exceptions.ResolutionTooDeepError that pip-compile hits on the
+# agentic-ai graph (~165 top-level packages with heavily overlapping spines).
+# uv writes a pip-tools-compatible pinned-requirements lockfile that build.sh
+# consumes verbatim.
+RUN python3.11 -m pip install -U uv
+
+RUN mkdir /temp
+
+COPY ./requirements_files/${COMPILED_REQUIREMENTS_FILE} /temp/${COMPILED_REQUIREMENTS_FILE}
+RUN cat /temp/${COMPILED_REQUIREMENTS_FILE}
+
+# --no-strip-extras                  preserve `pkg[extra]` markers in the lock
+#                                    so downstream installs match what was
+#                                    requested.
+# --python-version 3.11              resolve against the same interpreter the
+#                                    runtime image uses (UBI9 python3.11), not
+#                                    the build host.
+# --python-platform linux            pick manylinux wheels deterministically.
+# --index-strategy unsafe-best-match consider versions of a package across
+#                                    every configured index (PyPI + the
+#                                    PyTorch CPU index). uv's default
+#                                    `first-match` is a dependency-confusion
+#                                    defense that locks each package to the
+#                                    first index it appears in; that pins us
+#                                    to the PyTorch CPU index's stale mirror
+#                                    of `requests`/`setuptools` and breaks
+#                                    resolution against modern llama-index /
+#                                    mlflow-skinny. PyPI + the official
+#                                    PyTorch CPU index are both first-party,
+#                                    so this matches pip-tools' historical
+#                                    behaviour used by the ubi-llm-rag image.
+# --output-file                      write to the path build.sh later
+#                                    docker-cps out.
+# --emit-index-url                   write the `--extra-index-url` directive
+#                                    into the top of the compiled lockfile.
+#                                    uv strips this by default (unlike
+#                                    pip-tools); without it, the runtime
+#                                    `pip install -r <lockfile>` only sees
+#                                    PyPI and cannot resolve torch==X.Y.Z+cpu
+#                                    which only exists on
+#                                    https://download.pytorch.org/whl/cpu.
+RUN INPUT="/temp/${COMPILED_REQUIREMENTS_FILE}" && \
+    OUTPUT="/temp/$(basename ${COMPILED_REQUIREMENTS_FILE} .in).txt" && \
+    uv pip compile \
+        --no-strip-extras \
+        --python-version 3.11 \
+        --python-platform x86_64-unknown-linux-gnu \
+        --index-strategy unsafe-best-match \
+        --emit-index-url \
+        --output-file "${OUTPUT}" \
+        "${INPUT}"
