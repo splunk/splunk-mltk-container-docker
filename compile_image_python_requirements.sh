@@ -44,6 +44,16 @@ if [ "$line" != "" ]; then
     runtime=$(echo $line | cut -d',' -f6) 
     requirements_dockerfile=$(echo $line | cut -d',' -f7) 
 
+    # Pick the build target platform (mirrors build.sh). The requirements
+    # compile container resolves wheels for this platform — so the resulting
+    # lockfile is platform-correct for the eventual runtime image. Tags ending
+    # in "-arm" → linux/arm64; everything else → linux/amd64 (with qemu
+    # emulation on Apple Silicon dev machines).
+    case "$tag" in
+      *-arm) build_platform="linux/arm64" ;;
+      *)     build_platform="linux/amd64" ;;
+    esac
+
     echo "Tag: $tag"
     echo "Base Image: $base_image"
     echo "Dockerfile: $dockerfile"
@@ -51,6 +61,7 @@ if [ "$line" != "" ]; then
     echo "Specific Requirements File: $specific_requirements"
     echo "Runtime Options: $runtime"
     echo "Requirements Dockerfile: $requirements_dockerfile"
+    echo "Build Platform: $build_platform"
 
     base_requirements="${base_requirements%.*}"
     specific_requirements="${specific_requirements%.*}"
@@ -67,7 +78,7 @@ if [ "$line" != "" ]; then
     container_name=temp-requirements-compile-$tag
 
     echo "Building container to compute compiled requirements"
-    docker build --rm -t $image_name \
+    docker build --rm --platform=$build_platform -t $image_name \
         --build-arg BASE_IMAGE=$base_image \
         --build-arg TAG=$tag \
         --build-arg COMPILED_REQUIREMENTS_FILE=$compiled_requirements_id.in \
@@ -75,7 +86,7 @@ if [ "$line" != "" ]; then
         .
 
     echo "Running container to copy compiled requirements"
-    docker run --name $container_name $image_name
+    docker run --platform=$build_platform --name $container_name $image_name
     docker cp $container_name:/temp/$compiled_requirements_id.txt ./requirements_files/$compiled_requirements_id.txt
 
     docker stop $container_name
