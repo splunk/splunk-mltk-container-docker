@@ -58,6 +58,12 @@ RUN mkdir /dltk/.jupyter/; mv dltk.key /dltk/.jupyter/dltk.key; mv dltk.pem /dlt
 COPY ./bootstrap_scripts/bootstrap_fast.sh /dltk/
 COPY ./bootstrap_scripts/bootstrap_backup.sh /dltk/
 COPY app /dltk/app
+# Activate the agentic FastAPI entrypoint for this image. The default
+# /dltk/app/main.py (classic 5.2.4) does not import langgraph or
+# langchain_mcp_adapters and is used by all non-agentic images. The agentic
+# variant — which imports those plus the SplunkMCP / chatbot graph layers —
+# ships as main_agentic.py and is promoted to main.py here.
+RUN mv /dltk/app/main_agentic.py /dltk/app/main.py
 COPY notebooks /dltk/notebooks
 
 # Install dos2unix, then convert windows-like line endings to linux-like
