@@ -66,6 +66,10 @@ RUN if [ -s "/dltk/${REQUIREMENTS_PYTHON_SPECIFIC}" ]; then \
         --extra-index-url https://download.pytorch.org/whl/cpu \
         -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}; fi
 
+# accommodate new tool calling format to contain splunk search results
+RUN python3.11 -m pip install --upgrade "langchain-aws[anthropic]"
+RUN python3.11 -m pip install --upgrade "langchain-mcp-adapters"
+
 # configure spacy if it was installed (spacy is not part of the agentic stack on
 # UBI9 because of blis/thinc build issues, kept as a no-op for parity).
 RUN if python3.11 -m pip freeze | grep -q spacy;\

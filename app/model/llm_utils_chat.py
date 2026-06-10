@@ -80,7 +80,11 @@ def create_llm(service=None, model=None):
         except Exception as e:
             err = f"Failed at creating LLM object from {service}. Details: {e}."
             return None, err
-
+        try:
+            from langchain_aws import ChatAnthropicBedrock
+            llm = ChatAnthropicBedrock(**llm_config_item)
+        except Exception as e:
+            pass
     else:
         try:
             if "GOOGLE_API_KEY" not in os.environ:
