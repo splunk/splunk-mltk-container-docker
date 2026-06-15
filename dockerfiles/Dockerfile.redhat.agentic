@@ -1,0 +1,130 @@
+ARG BASE_IMAGE
+# Pin the image platform to linux/amd64. The compiled lockfile
+# (compiled_base_functional_specific_llm_agentic_agentic-ai.txt) is resolved
+# for x86_64 (uv `--python-platform x86_64-unknown-linux-gnu`) and pins
+# torch==X.Y.Z+cpu, which only exists on https://download.pytorch.org/whl/cpu
+# for x86_64. Building on a non-amd64 host (e.g. Apple Silicon) without this
+# pin causes pip to look for the +cpu wheel on aarch64 and fail. On Linux
+# amd64 hosts/CI this is a no-op; on Apple Silicon Docker Desktop runs the
+# build under QEMU emulation.
+FROM --platform=linux/amd64 ${BASE_IMAGE}
+ARG TAG
+ARG REQUIREMENTS_PYTHON_BASE
+ARG REQUIREMENTS_PYTHON_SPECIFIC
+
+# setup environment
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+# Python 3.11 from the UBI9 AppStream is the supported interpreter for this image.
+ENV PATH=/dltk/.local/bin:/dltk/.local/lib/python3.11/site-packages/:$PATH
+
+# package management
+RUN yum install -y wget bzip2 git ca-certificates
+RUN yum install -y nodejs
+
+# Python 3.11 + headers and the native toolchain needed by wheels that fall back
+# to sdists (lxml, openblas-backed builds, anything compiling C/C++).
+RUN yum install -y python3.11 python3.11-devel python3.11-pip
+RUN yum install -y \
+        gcc gcc-c++ gcc-gfortran make pkgconfig \
+        libxml2-devel libxslt-devel \
+        openssl-devel openblas-devel \
+        libffi-devel zlib-devel
+
+# Make python3 / pip3 resolve to 3.11.
+RUN alternatives --set python3 /usr/bin/python3.11 || true
+
+# setup python+pip
+RUN python3.11 -m ensurepip --upgrade
+RUN python3.11 -m pip install -U pip setuptools wheel
+
+# update everything
+RUN yum update -y
+RUN yum upgrade -y
+RUN yum remove vim-minimal -y
+RUN yum autoremove -y
+
+# configure file system
+WORKDIR /srv
+RUN mkdir /dltk
+
+# install base python requirements
+# Note: --extra-index-url is required because the compiled lockfile pins
+# torch==X.Y.Z+cpu, which only exists on the official PyTorch CPU index. uv
+# strips --extra-index-url directives from compiled lockfiles by default
+# (unlike pip-tools), so we re-supply it here at install time. See
+# Dockerfile.redhat.agentic.requirements where --emit-index-url is set so
+# future recompiles keep the directive inside the lockfile itself.
+COPY ./requirements_files/${REQUIREMENTS_PYTHON_BASE} /dltk/${REQUIREMENTS_PYTHON_BASE}
+RUN python3.11 -m pip install --no-cache-dir --upgrade \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
+    -r /dltk/${REQUIREMENTS_PYTHON_BASE}
+
+# install specific python requirements
+COPY ./requirements_files/${REQUIREMENTS_PYTHON_SPECIFIC} /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
+RUN if [ -s "/dltk/${REQUIREMENTS_PYTHON_SPECIFIC}" ]; then \
+    python3.11 -m pip install --no-cache-dir --upgrade \
+        --extra-index-url https://download.pytorch.org/whl/cpu \
+        -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}; fi
+
+# accommodate new tool calling format to contain splunk search results
+RUN python3.11 -m pip install --upgrade "langchain-aws[anthropic]"
+RUN python3.11 -m pip install --upgrade "langchain-mcp-adapters"
+
+# configure spacy if it was installed (spacy is not part of the agentic stack on
+# UBI9 because of blis/thinc build issues, kept as a no-op for parity).
+RUN if python3.11 -m pip freeze | grep -q spacy;\
+    then echo 'Spacy is installed, downloading language file...';\
+    python3.11 -m spacy download en_core_web_sm;\
+    else echo 'Spacy is not installed'; fi
+
+# creating new self signed certs and/or copy custom certs
+RUN openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout dltk.key -out dltk.pem -subj="/CN=dsdl"
+COPY certificates .
+RUN mkdir /dltk/.jupyter/; mv dltk.key /dltk/.jupyter/dltk.key; mv dltk.pem /dltk/.jupyter/dltk.pem; rm -f README.md
+
+# Copy bootstrap entry point script
+COPY ./bootstrap_scripts/bootstrap_fast.sh /dltk/
+COPY ./bootstrap_scripts/bootstrap_backup.sh /dltk/
+COPY app /dltk/app
+# Activate the agentic FastAPI entrypoint for this image. The default
+# /dltk/app/main.py (classic 5.2.4) does not import langgraph or
+# langchain_mcp_adapters and is used by all non-agentic images. The agentic
+# variant — which imports those plus the SplunkMCP / chatbot graph layers —
+# ships as main_agentic.py and is promoted to main.py here.
+RUN mv /dltk/app/main_agentic.py /dltk/app/main.py
+COPY notebooks /dltk/notebooks
+
+# Install dos2unix, then convert windows-like line endings to linux-like
+# The bootstrap script won't run otherwise if the image was build on a windows machine
+# Finally, remove dos2unix again
+RUN yum install -y dos2unix
+RUN find /dltk/ -name 'bootstrap_*.sh' -type f -exec dos2unix {} \;
+RUN yum remove -y dos2unix && yum clean all
+
+# Install local DSDL supporting functions
+RUN mkdir /dltk/packages
+COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
+RUN python3.11 -m pip install /dltk/packages/dsdlsupport-1.0.0.tar.gz
+
+# Copy jupyter config
+COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py
+
+# Since JupyterLab 3 jupyter server config needs to be set
+COPY config/jupyter_server_config.py /dltk/.jupyter/jupyter_server_config.py
+
+# Copy jupyter notebook conversion template to export python module
+COPY config/jupyter_notebook_template.tpl /dltk/.jupyter/jupyter_notebook_conversion.tpl
+COPY config/null.tpl /dltk/.jupyter/null.tpl
+
+# Handle user rights
+RUN chgrp -R 0 /dltk && \
+    chmod -R g=u /dltk
+RUN chgrp -R 0 /srv && \
+    chmod -R g=u /srv
+RUN chmod g+w /etc/passwd
+USER 1001
+
+# Expose container port 5000 (MLTK Container Service) and 8888 (Notebook)
+EXPOSE 5000 8888
+# Define bootstrap as entry point to start container
+ENTRYPOINT ["/dltk/bootstrap_fast.sh"]

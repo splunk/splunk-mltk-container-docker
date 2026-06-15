@@ -45,6 +45,20 @@ if [ "$line" != "" ]; then
     requirements_dockerfile=$(echo $line | cut -d',' -f7) 
     title=$(echo $line | cut -d',' -f8) 
 
+    # Pick the build target platform.
+    # Default: linux/amd64 — every DSDL image ships to x86_64 production hosts,
+    # so we pin the platform here to guarantee reproducible builds whether the
+    # build runs on x86_64 Linux/Windows or on an Apple Silicon (arm64) dev
+    # machine. On arm64 hosts this engages qemu emulation under Docker
+    # Desktop / containerd; the trade-off is slower builds in exchange for
+    # artifacts that exactly match what runs in production.
+    # Exception: any tag ending in "-arm" (today: golden-cpu-arm) is built
+    # natively for linux/arm64 so it can be deployed on arm64 hosts.
+    case "$tag" in
+      *-arm) build_platform="linux/arm64" ;;
+      *)     build_platform="linux/amd64" ;;
+    esac
+
     echo "Tag: $tag"
     echo "Base Image: $base_image"
     echo "Dockerfile: $dockerfile"
@@ -53,6 +67,7 @@ if [ "$line" != "" ]; then
     echo "Runtime Options: $runtime"
     echo "Requirements Dockerfile: $requirements_dockerfile"
     echo "Title: $title"
+    echo "Build Platform: $build_platform"
 else
     echo "No match found for tag: $tag"
     exit
@@ -83,7 +98,7 @@ if [[ -f $compiled_requirements_filename ]]; then
   specific_requirements="empty".txt
 fi
 
-docker build --rm -t $container_name:$version\
+docker build --rm --platform=$build_platform -t $container_name:$version\
   --build-arg BASE_IMAGE=$base_image \
   --build-arg TAG=$tag \
   --build-arg REQUIREMENTS_PYTHON_BASE=$base_requirements \

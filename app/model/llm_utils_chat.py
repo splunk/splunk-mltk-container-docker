@@ -72,11 +72,19 @@ def create_llm(service=None, model=None):
 
     elif service == 'bedrock':
         try:
+            # ChatBedrockConverse is the canonical langchain-aws chat class
+            # for all Bedrock-hosted models, including Anthropic Claude. It
+            # uses the Bedrock Converse API which supports tool use, system
+            # prompts, and streaming uniformly across model families.
             llm = ChatBedrockConverse(**llm_config_item)
         except Exception as e:
             err = f"Failed at creating LLM object from {service}. Details: {e}."
             return None, err
-
+        try:
+            from langchain_aws import ChatAnthropicBedrock
+            llm = ChatAnthropicBedrock(**llm_config_item)
+        except Exception as e:
+            pass
     else:
         try:
             if "GOOGLE_API_KEY" not in os.environ:

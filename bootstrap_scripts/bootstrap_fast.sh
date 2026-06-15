@@ -4,7 +4,18 @@ export LANG=C.UTF-8
 
 umask 002
 /dltk/bootstrap_backup.sh
-cp -R /dltk/app /srv
+
+# Refresh /srv/app from the image's /dltk/app on every container start.
+# /srv is a persistent Docker volume (mltk-container-data), so if we just do
+# `cp -R /dltk/app /srv` we risk: (1) stale .pyc files in /srv/app/**/__pycache__
+# loading before the .py is re-checked, (2) files removed from /dltk/app
+# lingering in /srv/app forever. Wipe /srv/app's __pycache__ trees and then
+# overlay the image's /dltk/app on top (cp -RT forces dst-is-target semantics
+# instead of nesting /srv/app/app/). Notebooks are intentionally left as a
+# merging copy because users edit them and expect persistence.
+mkdir -p /srv/app
+find /srv/app -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
+cp -RT /dltk/app /srv/app
 cp -R /dltk/notebooks /srv
 if [ -w /etc/passwd ]; then
   echo "dltk:x:$(id -u):0:dltk user:/dltk:/sbin/nologin" >> /etc/passwd
