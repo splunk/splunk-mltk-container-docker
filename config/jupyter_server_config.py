@@ -1,4 +1,5 @@
 import os
+import hashlib
 from subprocess import check_call
 
 def post_save(model, os_path, contents_manager):
@@ -28,9 +29,13 @@ def post_save(model, os_path, contents_manager):
 
 c.FileContentsManager.post_save_hook = post_save
 
-#c.ServerApp.password = u'sha1:f7432152c71d:e8520c26b9d960e838d562768c1d24ef5b9b76c7'
-# default PW from app or the provided PW hash from the user defined hashed password in the ENV var
-c.ServerApp.password = os.getenv('JUPYTER_PASSWD','sha1:f7432152c71d:e8520c26b9d960e838d562768c1d24ef5b9b76c7')
+DEFAULT_JUPYTER_PASSWORD_SHA256 = '8bd001ab84cb8c74a23ca56471f830222b74afa08423487d9ddd1eba0f695ae7'
+jupyter_password = os.getenv('JUPYTER_PASSWD')
+if not jupyter_password:
+    raise RuntimeError('JUPYTER_PASSWD must be set to start Jupyter Lab.')
+if hashlib.sha256(jupyter_password.encode('utf-8')).hexdigest() == DEFAULT_JUPYTER_PASSWORD_SHA256:
+    raise RuntimeError('JUPYTER_PASSWD must not use the bundled default password hash.')
+c.ServerApp.password = jupyter_password
 
 c.ServerApp.ip = '0.0.0.0'
 c.ServerApp.port = int(os.getenv('JUPYTER_PORT', 8888))

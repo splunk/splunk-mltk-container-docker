@@ -2,7 +2,7 @@
 # Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2026
 # -------------------------------------------------------------------------------
 
-from fastapi import FastAPI, Request, Header
+from fastapi import FastAPI, Request, Header, Depends
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 
@@ -81,6 +81,9 @@ def validate_token(header):
     # success if we did not fail and raise exceptions on the steps before
     return True
 
+def require_api_token(authorization: str = Header(None)):
+    return validate_token(authorization)
+
 # -------------------------------------------------------------------------------
 # MAIN APP enpoint definitions
 # -------------------------------------------------------------------------------
@@ -116,7 +119,7 @@ def get_summary(authorization: str = Header(None)):
 # -------------------------------------------------------------------------------
 # fit endpoint 
 # expects json object { 'data' : '<string of csv serialized pandas dataframe>', 'meta' : {<json dict object for parameters>}}
-@app.post('/fit')
+@app.post('/fit', dependencies=[Depends(require_api_token)])
 async def set_fit(request : Request, authorization: str = Header(None)):
     # prepare a return object
     response = {}
@@ -258,7 +261,7 @@ async def set_fit(request : Request, authorization: str = Header(None)):
 # -------------------------------------------------------------------------------
 # fit routine 
 # expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
-@app.post('/apply')
+@app.post('/apply', dependencies=[Depends(require_api_token)])
 async def set_apply(request : Request, authorization: str = Header(None)):
     # prepare a return object
     response = {}
@@ -342,57 +345,9 @@ async def set_apply(request : Request, authorization: str = Header(None)):
 # -------------------------------------------------------------------------------
 # compute routine (experimental)
 # expects json object { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}
-@app.post('/compute')
-async def set_compute(request : Request):
-    # prepare a return object
-    response = {}
-    response["status"] = "error"
-    response["message"] = "/compute: ERROR: "
-    #print("This is a new compute function")
-    # 1. validate input POST data
-    try:
-        dp = await request.json()
-        #print("/compute: raw data: ", str(dp))
-        app.Model["data"] = dp["data"]
-        print("/compute: raw data type: ", str(type(app.Model["data"])))
-        print("/compute: raw data size: ", len(str(app.Model["data"])))
-        app.Model["meta"] = dp["meta"]
-        print("/compute: meta info: ", str(app.Model["meta"]))
-
-    except Exception as e:
-        response["message"] += 'unable to parse json from POST data. Provide a JSON object with structure { "data" : "<string of csv serialized pandas dataframe>", "meta" : {<json dict object for parameters>}}. Ended with exception: ' + str(e)
-        print("/compute: data input error: " + str(e))
-        return response
-    
-    # 2. convert to dataframe 
-    try:
-        print("/compute: enter conversion block")
-        # TODO check with compression option and chunked mode
-        #app.Model["df"] = csv.DictReader(app.Model["data"], app.Model["meta"]["fieldnames"], dialect='unix', delimiter=',', quotechar='"')
-        
-        app.Model["df"] = app.Model["data"]
-        #print("/compute: DictReader object: " + str(type(app.Model["df"])))
-        #print("/compute: DictReader content: " + str(list(app.Model["df"])))
-
-        del(app.Model["data"])
-        # memorize model name
-        app.Model["algo_name"] = app.Model["meta"]['algo']
-        app.Model["algo"] = import_module("app.model." + app.Model["algo_name"])
-        #if "model_name" in app.Model["meta"]["options"]:
-        #    app.Model["model_name"] = app.Model["meta"]["options"]["model_name"]
-        print("/compute: model name: " + app.Model["algo_name"])
-
-    except Exception as e:
-        response["message"] += 'unable to convert raw data to DictReader object. Ended with exception: ' + str(e)
-        print("/compute: conversion error: " + str(e))
-        return response
-    
-    df_result = app.Model["algo"].compute(None, app.Model["df"], app.Model["meta"])
-    #print("Finished computation")
-    response["results"] = json.dumps(df_result)
-    
-    # end with a successful response
-    response["status"] = "success"
-    response["message"] = "/compute done successfully"
-    return response
-
+@app.post('/compute', status_code=status.HTTP_410_GONE, dependencies=[Depends(require_api_token)])
+async def set_compute():
+    return {
+        "status": "deprecated",
+        "message": "/compute has been deprecated and disabled. Use /fit and /apply instead."
+    }

@@ -29,6 +29,8 @@ else
   echo "ENABLE_HTTPS=true"
 fi
 
+MODE_DEV_PROD="${MODE_DEV_PROD:-PROD}"
+
 if [ "$MODE_DEV_PROD" = "PROD" ]; then
   if [ -n "$api_workers" ]; then
     echo "Starting in mode = PROD with $api_workers api workers"
