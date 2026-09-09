@@ -66,9 +66,9 @@ RUN if [ -s "/dltk/${REQUIREMENTS_PYTHON_SPECIFIC}" ]; then \
         --extra-index-url https://download.pytorch.org/whl/cpu \
         -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}; fi
 
-# accommodate new tool calling format to contain splunk search results
-RUN python3.11 -m pip install --upgrade "langchain-aws[anthropic]"
-RUN python3.11 -m pip install --upgrade "langchain-mcp-adapters"
+# The tool-calling dependencies are declared in specific_llm_agentic.txt and
+# are already part of the combined lock installed above. Do not upgrade them
+# independently here, as that breaks the resolved LangChain/AWS constraints.
 
 # configure spacy if it was installed (spacy is not part of the agentic stack on
 # UBI9 because of blis/thinc build issues, kept as a no-op for parity).
@@ -87,24 +87,25 @@ COPY ./bootstrap_scripts/bootstrap_fast.sh /dltk/
 COPY ./bootstrap_scripts/bootstrap_backup.sh /dltk/
 COPY app /dltk/app
 # Activate the agentic FastAPI entrypoint for this image. The default
-# /dltk/app/main.py (classic 5.2.4) does not import langgraph or
+# /dltk/app/main.py (classic 5.2.5) does not import langgraph or
 # langchain_mcp_adapters and is used by all non-agentic images. The agentic
 # variant — which imports those plus the SplunkMCP / chatbot graph layers —
 # ships as main_agentic.py and is promoted to main.py here.
 RUN mv /dltk/app/main_agentic.py /dltk/app/main.py
 COPY notebooks /dltk/notebooks
 
-# Install dos2unix, then convert windows-like line endings to linux-like
-# The bootstrap script won't run otherwise if the image was build on a windows machine
-# Finally, remove dos2unix again
-RUN yum install -y dos2unix
-RUN find /dltk/ -name 'bootstrap_*.sh' -type f -exec dos2unix {} \;
-RUN yum remove -y dos2unix && yum clean all
+# Normalize Windows line endings using UBI's existing sed binary so the
+# bootstrap scripts remain executable without adding another package layer.
+RUN find /dltk/ -name 'bootstrap_*.sh' -type f -exec sed -i 's/\r$//' {} \;
 
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages
 COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
-RUN python3.11 -m pip install /dltk/packages/dsdlsupport-1.0.0.tar.gz
+# The OpenTelemetry site hook installed above interferes with pip's temporary
+# isolated build interpreter. The image already has setuptools and wheel, so
+# build this trusted local support package in the current environment.
+RUN python3.11 -m pip install hatchling && \
+    python3.11 -m pip install --no-build-isolation /dltk/packages/dsdlsupport-1.0.0.tar.gz
 
 # Copy jupyter config
 COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py

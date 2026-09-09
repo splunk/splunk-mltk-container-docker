@@ -90,6 +90,19 @@ specific_requirements_id="${specific_requirements%.*}"
 compiled_requirements_id=compiled_${base_requirements_id}_${specific_requirements_id}_$tag
 compiled_requirements_filename=./requirements_files/$compiled_requirements_id.txt
 
+# Both agentic images target CPython 3.11 on linux/amd64 and consume the same
+# requirement inputs. Reuse the combined, resolved agentic lock for the DHI
+# variant instead of resolving the base and specific files in separate pip
+# transactions (which can retain incompatible packages from the DHI base).
+if [[ "$tag" = "agentic-ai-debian" && ! -f $compiled_requirements_filename ]]; then
+  shared_agentic_requirements_id=compiled_${base_requirements_id}_${specific_requirements_id}_agentic-ai
+  shared_agentic_requirements_filename=./requirements_files/$shared_agentic_requirements_id.txt
+  if [[ -f $shared_agentic_requirements_filename ]]; then
+    compiled_requirements_id=$shared_agentic_requirements_id
+    compiled_requirements_filename=$shared_agentic_requirements_filename
+  fi
+fi
+
 echo "Checking for compiled requirements $compiled_requirements_id"
 
 if [[ -f $compiled_requirements_filename ]]; then
@@ -114,6 +127,46 @@ else
     exit 1
 fi
 
+# Keep published repository/tag names compatible with the DSDL 5.2.4 app.
+# Some build configurations are variants in an established repository rather
+# than independent repositories. Retain the build tag locally, then add the
+# canonical publishing alias used by images.conf.
+config_stanza="$tag"
+config_image="mltk-container-$tag:$version"
+canonical_container_name="$container_name"
+canonical_version="$version"
+
+case "$tag" in
+  golden-cpu-arm)
+    canonical_container_name="${repo}mltk-container-golden-cpu"
+    canonical_version="${version}-arm64"
+    config_image="mltk-container-golden-cpu:${canonical_version}"
+    ;;
+  agentic-ai)
+    canonical_container_name="${repo}mltk-container-ubi-llm-rag"
+    canonical_version="agentic-ai-${version}"
+    config_image="mltk-container-ubi-llm-rag:${canonical_version}"
+    ;;
+  agentic-ai-debian)
+    canonical_container_name="${repo}mltk-container-ubi-llm-rag"
+    canonical_version="agentic-ai-debian-${version}"
+    config_image="mltk-container-ubi-llm-rag:${canonical_version}"
+    ;;
+  ubi-llm-rag)
+    config_stanza="llm-rag"
+    ;;
+esac
+
+canonical_ref="${canonical_container_name}:${canonical_version}"
+build_ref="${container_name}:${version}"
+if [ "$canonical_ref" != "$build_ref" ]; then
+  echo "Creating canonical repository alias: $canonical_ref"
+  if ! docker tag "$build_ref" "$canonical_ref"; then
+    echo "Failed to create canonical repository alias: $canonical_ref" >&2
+    exit 1
+  fi
+fi
+
 echo "Creating images.conf, move this file or copy-paste contents into <splunk_dir>/etc/apps/mltk-container/local/images.conf:"
 
 # ensure both options are present if the nvidia runtime is specified
@@ -121,7 +174,7 @@ if [ "$runtime" = "nvidia" ]; then
   runtime="none,nvidia"
 fi
 
-echo -e "[$tag]\ntitle = $title\nimage = mltk-container-$tag:$version\nrepo = $repo\nruntime = $runtime" > ./images_conf_files/$tag-images.txt
+echo -e "[$config_stanza]\ntitle = $title\nimage = $config_image\nrepo = $repo\nruntime = $runtime" > ./images_conf_files/$tag-images.txt
 
 # Remove output file if it already exists
 rm -f ./images_conf_files/images.conf

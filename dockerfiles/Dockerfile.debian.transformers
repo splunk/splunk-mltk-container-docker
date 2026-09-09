@@ -6,10 +6,12 @@ ARG REQUIREMENTS_PYTHON_SPECIFIC
 
 # setup environment
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
-ENV PATH /dltk/.local/bin:/dltk/.local/lib/python3.9/site-packages/:$PATH
+ENV PATH=/dltk/.local/bin:/dltk/.local/lib/python3.11/site-packages/:$PATH
 ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC 
 
 # install nodejs + other packages
+# NodeSource setup requires curl, which is absent from some slim/CUDA bases.
+RUN apt-get update && apt-get install -y curl ca-certificates
 # nodejs from source
 RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash -
 # nodejs and other from apt package repos
@@ -40,14 +42,14 @@ RUN mkdir /dltk
 
 # install base python requirements
 COPY ./requirements_files/${REQUIREMENTS_PYTHON_BASE} /dltk/${REQUIREMENTS_PYTHON_BASE}
-RUN pip3 install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_BASE}
+RUN python3 -m pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_BASE}
 
 # install specific python requirements
 COPY ./requirements_files/${REQUIREMENTS_PYTHON_SPECIFIC} /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
-RUN pip3 install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
+RUN python3 -m pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
 
 # configure spacy if it was installed
-RUN if pip3 freeze | grep -q spacy;\
+RUN if python3 -m pip freeze | grep -q spacy;\
     then echo 'Spacy is installed, downloading language file...';\
     python3 -m spacy download en_core_web_sm;\
     else echo 'Spacy is not installed'; fi
@@ -77,17 +79,14 @@ ADD basemodels/sum_jp.tar.gz /dltk/app/model/data/summarization/jp
 RUN mkdir /dltk/app/model/data/classification/en/bert_phishing
 ADD basemodels/pytorch_model.tar.gz /dltk/app/model/data/classification/en/bert_phishing
 
-# Install dos2unix, then convert windows-like line endings to linux-like
-# The bootstrap script won't run otherwise if the image was build on a windows machine
-# Finally, remove dos2unix again
-RUN apt-get update && apt-get install -y dos2unix
-RUN find /dltk/ -name 'bootstrap_*.sh' -type f -exec dos2unix {} \;
-RUN apt-get --purge remove -y dos2unix && rm -rf /var/lib/apt/lists/*
+# Normalize Windows line endings using the base image's existing sed binary,
+# avoiding an unnecessary late apt transaction and package layer.
+RUN find /dltk/ -name 'bootstrap_*.sh' -type f -exec sed -i 's/\r$//' {} \;
 
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages
 COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
-RUN pip install /dltk/packages/dsdlsupport-1.0.0.tar.gz
+RUN python3 -m pip install /dltk/packages/dsdlsupport-1.0.0.tar.gz
 
 # Copy jupyter config
 COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py

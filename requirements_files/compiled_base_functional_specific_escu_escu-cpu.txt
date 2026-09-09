@@ -4,107 +4,107 @@
 #
 #    pip-compile /temp/compiled_base_functional_specific_escu_escu-cpu.in
 #
-absl-py==2.2.2
+absl-py==2.3.1
     # via
     #   tensorboard
     #   tensorflow-cpu
-aiofiles==24.1.0
+aiofiles==25.1.0
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
+annotated-doc==0.0.5
+    # via fastapi
 annotated-types==0.7.0
     # via pydantic
-anyio==4.9.0
+anyio==4.12.1
     # via
     #   httpx
     #   jupyter-server
     #   starlette
-argon2-cffi==23.1.0
+argon2-cffi==25.1.0
     # via jupyter-server
-argon2-cffi-bindings==21.2.0
+argon2-cffi-bindings==25.1.0
     # via argon2-cffi
-arrow==1.3.0
+arrow==1.4.0
     # via isoduration
-asgiref==3.8.1
-    # via opentelemetry-instrumentation-asgi
-asttokens==3.0.0
+asttokens==3.0.2
     # via stack-data
 astunparse==1.6.3
     # via tensorflow-cpu
 async-lru==2.0.5
     # via jupyterlab
-attrs==25.3.0
+attrs==26.1.0
     # via
     #   jsonschema
     #   referencing
-babel==2.17.0
+babel==2.18.0
     # via jupyterlab-server
-beautifulsoup4==4.13.4
+beautifulsoup4==4.15.0
     # via nbconvert
 bleach[css]==6.2.0
     # via nbconvert
-cachetools==5.5.2
-    # via google-auth
-certifi==2025.4.26
+certifi==2026.7.22
     # via
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   argon2-cffi-bindings
     #   cryptography
-charset-normalizer==3.4.2
+charset-normalizer==3.5.1
     # via requests
 click==8.1.8
     # via uvicorn
 colorama==0.4.6
     # via nbdime
-comm==0.2.2
+comm==0.2.3
     # via
     #   ipykernel
     #   ipywidgets
 contourpy==1.3.0
     # via matplotlib
-cryptography==45.0.2
-    # via pyopenssl
+cryptography==50.0.0
+    # via
+    #   google-auth
+    #   pyopenssl
 cycler==0.12.1
     # via matplotlib
-debugpy==1.8.14
+debugpy==1.8.21
     # via ipykernel
-decorator==5.2.1
+decorator==5.3.1
     # via ipython
 defusedxml==0.7.1
     # via nbconvert
-deprecated==1.2.18
+deprecated==1.3.1
     # via opentelemetry-api
 deprecation==2.1.0
     # via splunk-sdk
-exceptiongroup==1.3.0
+exceptiongroup==1.3.1
     # via
     #   anyio
     #   ipython
-executing==2.2.0
+executing==2.2.1
     # via stack-data
-fastapi==0.115.12
+fastapi==0.128.8
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
-fastjsonschema==2.21.1
+fastjsonschema==2.21.2
     # via nbformat
-filelock==3.18.0
+filelock==3.19.1
     # via torch
-flatbuffers==25.2.10
+flatbuffers==25.12.19
     # via tensorflow-cpu
-fonttools==4.58.0
+fonttools==4.60.2
     # via matplotlib
 fqdn==1.5.1
     # via jsonschema
-fsspec==2025.5.0
+fsspec==2025.10.0
     # via torch
 gast==0.4.0
     # via tensorflow-cpu
 gitdb==4.0.12
     # via gitpython
-gitpython==3.1.44
+gitpython==3.1.59
     # via nbdime
-google-auth==2.40.2
+google-auth==2.50.0
     # via
     #   google-auth-oauthlib
     #   tensorboard
@@ -112,7 +112,7 @@ google-auth-oauthlib==0.4.6
     # via tensorboard
 google-pasta==0.2.0
     # via tensorflow-cpu
-grpcio==1.71.0
+grpcio==1.80.0
     # via
     #   tensorboard
     #   tensorflow-cpu
@@ -120,19 +120,19 @@ h11==0.16.0
     # via
     #   httpcore
     #   uvicorn
-h5py==3.13.0
+h5py==3.14.0
     # via tensorflow-cpu
 httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via jupyterlab
-idna==3.10
+idna==3.19
     # via
     #   anyio
     #   httpx
     #   jsonschema
     #   requests
-importlib-metadata==8.7.0
+importlib-metadata==6.0.1
     # via
     #   jupyter-client
     #   jupyter-lsp
@@ -140,15 +140,17 @@ importlib-metadata==8.7.0
     #   jupyterlab-server
     #   markdown
     #   nbconvert
+    #   opentelemetry-api
+    #   triton
 importlib-resources==6.5.2
     # via matplotlib
-ipykernel==6.29.5
+ipykernel==6.31.0
     # via jupyterlab
 ipython==8.18.1
     # via
     #   ipykernel
     #   ipywidgets
-ipywidgets==8.1.7
+ipywidgets==8.1.9
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
 isoduration==20.11.0
     # via jsonschema
@@ -162,25 +164,25 @@ jinja2==3.1.6
     #   nbconvert
     #   nbdime
     #   torch
-joblib==1.5.1
+joblib==1.5.3
     # via scikit-learn
-json5==0.12.0
+json5==0.15.0
     # via jupyterlab-server
 jsonpointer==3.0.0
     # via jsonschema
-jsonschema[format-nongpl]==4.23.0
+jsonschema[format-nongpl]==4.25.1
     # via
     #   jupyter-events
     #   jupyterlab-server
     #   nbformat
-jsonschema-specifications==2025.4.1
+jsonschema-specifications==2025.9.1
     # via jsonschema
 jupyter-client==8.6.3
     # via
     #   ipykernel
     #   jupyter-server
     #   nbclient
-jupyter-core==5.7.2
+jupyter-core==5.8.1
     # via
     #   ipykernel
     #   jupyter-client
@@ -189,32 +191,29 @@ jupyter-core==5.7.2
     #   nbclient
     #   nbconvert
     #   nbformat
-jupyter-events==0.12.0
+jupyter-events==0.12.1
     # via jupyter-server
-jupyter-lsp==2.2.5
+jupyter-lsp==2.3.1
     # via jupyterlab
-jupyter-server==2.16.0
+jupyter-server==2.18.2
     # via
     #   jupyter-lsp
-    #   jupyter-server-mathjax
     #   jupyterlab
     #   jupyterlab-git
     #   jupyterlab-server
     #   nbdime
     #   notebook-shim
-jupyter-server-mathjax==0.2.6
-    # via nbdime
-jupyter-server-terminals==0.5.3
+jupyter-server-terminals==0.5.4
     # via jupyter-server
-jupyterlab==4.4.2
+jupyterlab==4.5.10
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
-jupyterlab-git==0.51.1
+jupyterlab-git==0.52.0
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
 jupyterlab-pygments==0.3.0
     # via nbconvert
-jupyterlab-server==2.27.3
+jupyterlab-server==2.28.0
     # via jupyterlab
-jupyterlab-widgets==3.0.15
+jupyterlab-widgets==3.0.17
     # via ipywidgets
 keras==2.10.0
     # via tensorflow-cpu
@@ -222,30 +221,32 @@ keras-preprocessing==1.1.2
     # via tensorflow-cpu
 kiwisolver==1.4.7
     # via matplotlib
+lark==1.3.1
+    # via rfc3987-syntax
 libclang==18.1.1
     # via tensorflow-cpu
-markdown==3.8
+markdown==3.9
     # via tensorboard
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via
     #   jinja2
     #   nbconvert
     #   werkzeug
 matplotlib==3.9.4
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
-matplotlib-inline==0.1.7
+matplotlib-inline==0.2.2
     # via
     #   ipykernel
     #   ipython
-mistune==3.1.3
+mistune==3.3.4
     # via nbconvert
 mpmath==1.3.0
     # via sympy
 nbclient==0.10.2
     # via nbconvert
-nbconvert==7.16.6
+nbconvert==7.17.1
     # via jupyter-server
-nbdime==4.0.2
+nbdime==4.0.4
     # via jupyterlab-git
 nbformat==5.10.4
     # via
@@ -272,78 +273,63 @@ numpy==2.0.2
     #   scipy
     #   tensorboard
     #   tensorflow-cpu
-nvidia-cublas-cu12==12.6.4.1
+nvidia-cublas-cu12==12.8.4.1
     # via
     #   nvidia-cudnn-cu12
     #   nvidia-cusolver-cu12
     #   torch
-nvidia-cuda-cupti-cu12==12.6.80
+nvidia-cuda-cupti-cu12==12.8.90
     # via torch
-nvidia-cuda-nvrtc-cu12==12.6.77
+nvidia-cuda-nvrtc-cu12==12.8.93
     # via torch
-nvidia-cuda-runtime-cu12==12.6.77
+nvidia-cuda-runtime-cu12==12.8.90
     # via torch
-nvidia-cudnn-cu12==9.5.1.17
+nvidia-cudnn-cu12==9.10.2.21
     # via torch
-nvidia-cufft-cu12==11.3.0.4
+nvidia-cufft-cu12==11.3.3.83
     # via torch
-nvidia-cufile-cu12==1.11.1.6
+nvidia-cufile-cu12==1.13.1.3
     # via torch
-nvidia-curand-cu12==10.3.7.77
+nvidia-curand-cu12==10.3.9.90
     # via torch
-nvidia-cusolver-cu12==11.7.1.2
+nvidia-cusolver-cu12==11.7.3.90
     # via torch
-nvidia-cusparse-cu12==12.5.4.2
+nvidia-cusparse-cu12==12.5.8.93
     # via
     #   nvidia-cusolver-cu12
     #   torch
-nvidia-cusparselt-cu12==0.6.3
+nvidia-cusparselt-cu12==0.7.1
     # via torch
-nvidia-nccl-cu12==2.26.2
+nvidia-nccl-cu12==2.27.3
     # via torch
-nvidia-nvjitlink-cu12==12.6.85
+nvidia-nvjitlink-cu12==12.8.93
     # via
     #   nvidia-cufft-cu12
     #   nvidia-cusolver-cu12
     #   nvidia-cusparse-cu12
     #   torch
-nvidia-nvtx-cu12==12.6.77
+nvidia-nvtx-cu12==12.8.90
     # via torch
-oauthlib==3.2.2
+oauthlib==3.3.1
     # via requests-oauthlib
-opentelemetry-api==1.12.0
+opentelemetry-api==1.18.0
     # via
     #   opentelemetry-instrumentation
-    #   opentelemetry-instrumentation-asgi
-    #   opentelemetry-instrumentation-fastapi
     #   opentelemetry-sdk
     #   splunk-opentelemetry
-opentelemetry-instrumentation==0.33b0
-    # via
-    #   opentelemetry-instrumentation-asgi
-    #   opentelemetry-instrumentation-fastapi
-    #   splunk-opentelemetry
-opentelemetry-instrumentation-asgi==0.33b0
-    # via opentelemetry-instrumentation-fastapi
-opentelemetry-instrumentation-fastapi==0.33b0
-    # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
-opentelemetry-sdk==1.12.0
+opentelemetry-instrumentation==0.39b0
     # via splunk-opentelemetry
-opentelemetry-semantic-conventions==0.33b0
+opentelemetry-sdk==1.18.0
+    # via splunk-opentelemetry
+opentelemetry-semantic-conventions==0.39b0
     # via
-    #   opentelemetry-instrumentation-asgi
-    #   opentelemetry-instrumentation-fastapi
     #   opentelemetry-sdk
     #   splunk-opentelemetry
-opentelemetry-util-http==0.33b0
-    # via
-    #   opentelemetry-instrumentation-asgi
-    #   opentelemetry-instrumentation-fastapi
 opt-einsum==3.4.0
     # via tensorflow-cpu
 overrides==7.7.0
     # via jupyter-server
-packaging==25.0
+packaging==26.3
     # via
     #   deprecation
     #   ipykernel
@@ -355,58 +341,59 @@ packaging==25.0
     #   matplotlib
     #   nbconvert
     #   tensorflow-cpu
-pandas==2.2.3
+    #   wheel
+pandas==2.3.3
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
 pandocfilters==1.5.1
     # via nbconvert
-parso==0.8.4
+parso==0.8.7
     # via jedi
 pexpect==4.9.0
     # via
     #   ipython
     #   jupyterlab-git
-pillow==11.2.1
+pillow==11.3.0
     # via matplotlib
-platformdirs==4.3.8
+platformdirs==4.4.0
     # via jupyter-core
-prometheus-client==0.22.0
+prometheus-client==0.26.0
     # via jupyter-server
-prompt-toolkit==3.0.51
+prompt-toolkit==3.0.52
     # via ipython
 protobuf==3.19.6
     # via
     #   tensorboard
     #   tensorflow-cpu
-psutil==7.0.0
-    # via ipykernel
+psutil==7.2.2
+    # via
+    #   ipykernel
+    #   opentelemetry-instrumentation-system-metrics
 ptyprocess==0.7.0
     # via
     #   pexpect
     #   terminado
 pure-eval==0.2.3
     # via stack-data
-pyasn1==0.6.1
-    # via
-    #   pyasn1-modules
-    #   rsa
+pyasn1==0.6.4
+    # via pyasn1-modules
 pyasn1-modules==0.4.2
     # via google-auth
-pycparser==2.22
+pycparser==2.23
     # via cffi
-pydantic==2.11.5
+pydantic==2.13.4
     # via
     #   -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
     #   fastapi
-pydantic-core==2.33.2
+pydantic-core==2.46.4
     # via pydantic
-pygments==2.19.1
+pygments==2.21.0
     # via
     #   ipython
     #   nbconvert
     #   nbdime
-pyopenssl==25.1.0
+pyopenssl==26.4.0
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
-pyparsing==3.2.3
+pyparsing==3.3.2
     # via matplotlib
 python-dateutil==2.9.0.post0
     # via
@@ -414,13 +401,13 @@ python-dateutil==2.9.0.post0
     #   jupyter-client
     #   matplotlib
     #   pandas
-python-json-logger==3.3.0
+python-json-logger==4.0.0
     # via jupyter-events
-pytz==2025.2
+pytz==2026.3.post1
     # via pandas
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via jupyter-events
-pyzmq==26.4.0
+pyzmq==27.1.0
     # via
     #   ipykernel
     #   jupyter-client
@@ -430,7 +417,7 @@ referencing==0.36.2
     #   jsonschema
     #   jsonschema-specifications
     #   jupyter-events
-requests==2.32.3
+requests==2.32.5
     # via
     #   jupyterlab-server
     #   nbdime
@@ -446,17 +433,17 @@ rfc3986-validator==0.1.1
     # via
     #   jsonschema
     #   jupyter-events
-rpds-py==0.25.1
+rfc3987-syntax==1.1.0
+    # via jsonschema
+rpds-py==0.27.1
     # via
     #   jsonschema
     #   referencing
-rsa==4.9.1
-    # via google-auth
 scikit-learn==1.6.1
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
 scipy==1.13.1
     # via scikit-learn
-send2trash==1.8.3
+send2trash==2.1.0
     # via jupyter-server
 six==1.17.0
     # via
@@ -466,19 +453,17 @@ six==1.17.0
     #   python-dateutil
     #   rfc3339-validator
     #   tensorflow-cpu
-smmap==5.0.2
+smmap==5.0.3
     # via gitdb
-sniffio==1.3.1
-    # via anyio
-soupsieve==2.7
+soupsieve==2.8.4
     # via beautifulsoup4
-splunk-opentelemetry==1.8.0
+splunk-opentelemetry==1.11.0
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
-splunk-sdk==2.1.0
+splunk-sdk==2.1.1
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
 stack-data==0.6.3
     # via ipython
-starlette==0.46.2
+starlette==0.49.3
     # via fastapi
 sympy==1.14.0
     # via torch
@@ -504,11 +489,11 @@ threadpoolctl==3.6.0
     # via scikit-learn
 tinycss2==1.4.0
     # via bleach
-tomli==2.2.1
+tomli==2.4.1
     # via jupyterlab
-torch==2.7.0
+torch==2.8.0
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
-tornado==6.5.1
+tornado==6.5.8
     # via
     #   ipykernel
     #   jupyter-client
@@ -516,9 +501,8 @@ tornado==6.5.1
     #   jupyterlab
     #   nbdime
     #   terminado
-traitlets==5.14.3
+traitlets==5.15.1
     # via
-    #   comm
     #   ipykernel
     #   ipython
     #   ipywidgets
@@ -532,19 +516,20 @@ traitlets==5.14.3
     #   nbclient
     #   nbconvert
     #   nbformat
-triton==3.3.0
+triton==3.4.0
     # via torch
-types-python-dateutil==2.9.0.20250516
-    # via arrow
-typing-extensions==4.13.2
+typing-extensions==4.16.0
     # via
     #   anyio
-    #   asgiref
     #   async-lru
     #   beautifulsoup4
+    #   cryptography
     #   exceptiongroup
     #   fastapi
+    #   gitpython
+    #   grpcio
     #   ipython
+    #   jupyterlab
     #   mistune
     #   opentelemetry-sdk
     #   pydantic
@@ -557,17 +542,21 @@ typing-extensions==4.13.2
     #   torch
     #   typing-inspection
     #   uvicorn
-typing-inspection==0.4.1
-    # via pydantic
-tzdata==2025.2
-    # via pandas
+typing-inspection==0.4.2
+    # via
+    #   fastapi
+    #   pydantic
+tzdata==2026.3
+    # via
+    #   arrow
+    #   pandas
 uri-template==1.3.0
     # via jsonschema
-urllib3==2.4.0
+urllib3==2.6.3
     # via requests
-uvicorn==0.34.2
+uvicorn==0.39.0
     # via -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
-wcwidth==0.2.13
+wcwidth==0.8.2
     # via prompt-toolkit
 webcolors==24.11.1
     # via jsonschema
@@ -575,24 +564,24 @@ webencodings==0.5.1
     # via
     #   bleach
     #   tinycss2
-websocket-client==1.8.0
+websocket-client==1.9.0
     # via jupyter-server
-werkzeug==3.1.3
+werkzeug==3.1.8
     # via tensorboard
-wheel==0.45.1
+wheel==0.48.0
     # via
     #   astunparse
     #   tensorboard
-widgetsnbextension==4.0.14
+widgetsnbextension==4.0.16
     # via
     #   -r /temp/compiled_base_functional_specific_escu_escu-cpu.in
     #   ipywidgets
-wrapt==1.17.2
+wrapt==1.17.3
     # via
     #   deprecated
     #   opentelemetry-instrumentation
     #   tensorflow-cpu
-zipp==3.21.0
+zipp==3.23.1
     # via
     #   importlib-metadata
     #   importlib-resources

@@ -1,3 +1,8 @@
-pyspark
+# Match the Spark distribution and the compatibility-sensitive packages in
+# the all-spark-notebook base image.
+pyspark==3.5.1
+numpy==1.26.4
+ipython==8.26.0
+jupyterlab==4.2.4
 pyarrow>=14.0.1
 mlflow>=2.9.2

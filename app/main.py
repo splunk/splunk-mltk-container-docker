@@ -1,4 +1,4 @@
-# Splunk App for Data Science and Deep Learning 5.2.4
+# Splunk App for Data Science and Deep Learning 5.2.5
 # Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2026
 # -------------------------------------------------------------------------------
 
@@ -104,7 +104,7 @@ def get_root(authorization: str = Header(None)):
 def get_summary(authorization: str = Header(None)):
     return_object = {
         'app': 'Splunk App for Data Science and Deep Learning',
-        'version': '5.2.4',
+        'version': '5.2.5',
         'model': 'no model exists'
     }
     if validate_token(authorization):

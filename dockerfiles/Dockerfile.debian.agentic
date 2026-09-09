@@ -8,8 +8,15 @@ ARG REQUIREMENTS_PYTHON_SPECIFIC
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 # Keep python version in sync with the base image! agentic-ai-debian targets
 # Python 3.11 (matching dhi.io/python:3.11-debian13-sfw-ent-dev).
-ENV PATH /dltk/.local/bin:/dltk/.local/lib/python3.11/site-packages/:$PATH
+ENV PATH=/dltk/.local/bin:/dltk/.local/lib/python3.11/site-packages/:$PATH
 ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC
+
+# The DHI development base includes a broad, independently-versioned Python
+# environment. Isolate DSDL so packages left in that base cannot conflict with
+# this image's combined requirements lock.
+RUN python3 -m venv /opt/dltk-venv
+ENV VIRTUAL_ENV=/opt/dltk-venv
+ENV PATH=/opt/dltk-venv/bin:/dltk/.local/bin:/dltk/.local/lib/python3.11/site-packages/:$PATH
 
 # curl not installed in some images :(
 RUN apt-get update
@@ -20,9 +27,11 @@ RUN apt-get install curl -y
 RUN apt-get install -y libxml2-dev libxslt-dev pkg-config libopenblas-dev gfortran
 
 
-# install nodejs
-RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash -
-RUN apt-get update --fix-missing && apt-get install -y wget bzip2 git ca-certificates nodejs build-essential
+# The NodeSource Debian 13 package depends on Debian's generic `python3`
+# package, which removes the DHI image's Python 3.11 runtime and replaces it
+# with Python 3.13. JupyterLab 4 ships prebuilt assets, so Node is not needed
+# at runtime; retain the build tools without installing that conflicting package.
+RUN apt-get update --fix-missing && apt-get install -y wget bzip2 git ca-certificates build-essential
 
 # update everything
 RUN apt-get update && apt-get upgrade -y
@@ -31,24 +40,20 @@ RUN apt-get update && apt-get upgrade -y
 WORKDIR /srv
 RUN mkdir /dltk
 
-# setup python+pip
-RUN apt-get install -y python3 python3-pip
+# The DHI base already provides Python 3.11 and pip. Use `python3 -m pip` to
+# bypass its optional Socket Firewall wrapper, which requires a separate token.
 
 # install base python requirements
 COPY ./requirements_files/${REQUIREMENTS_PYTHON_BASE} /dltk/${REQUIREMENTS_PYTHON_BASE}
-RUN pip3 install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_BASE}
-
-# accommodate new tool calling format to contain splunk search results
-RUN pip3 install --upgrade "langchain-aws[anthropic]"
-RUN pip3 install --upgrade "langchain-mcp-adapters"
+RUN python3 -m pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_BASE}
 
 # install specific python requirements
-# (langchain-aws[anthropic] and langchain-mcp-adapters are declared in
-# specific_llm_agentic.txt, so no separate post-install step is needed.)
+# langchain-aws[anthropic] and langchain-mcp-adapters are already declared in
+# specific_llm_agentic.txt and therefore included in the combined lock.
 COPY ./requirements_files/${REQUIREMENTS_PYTHON_SPECIFIC} /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
-RUN pip3 install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
+RUN python3 -m pip install --no-cache-dir --upgrade -r /dltk/${REQUIREMENTS_PYTHON_SPECIFIC}
 # configure spacy if it was installed
-RUN if pip3 freeze | grep -q spacy;\
+RUN if python3 -m pip freeze | grep -q spacy;\
     then echo 'Spacy is installed, downloading language file...';\
     python3 -m spacy download en_core_web_sm;\
     else echo 'Spacy is not installed'; fi
@@ -63,7 +68,7 @@ COPY ./bootstrap_scripts/bootstrap_fast.sh /dltk/
 COPY ./bootstrap_scripts/bootstrap_backup.sh /dltk/
 COPY app /dltk/app
 # Activate the agentic FastAPI entrypoint for this image. The default
-# /dltk/app/main.py (classic 5.2.4) does not import langgraph or
+# /dltk/app/main.py (classic 5.2.5) does not import langgraph or
 # langchain_mcp_adapters and is used by all non-agentic images. The agentic
 # variant — which imports those plus the SplunkMCP / chatbot graph layers —
 # ships as main_agentic.py and is promoted to main.py here.
@@ -80,7 +85,7 @@ RUN apt-get --purge remove -y dos2unix && rm -rf /var/lib/apt/lists/*
 # Install local DSDL supporting functions
 RUN mkdir /dltk/packages
 COPY package-dsdlsupport/dist/dsdlsupport-1.0.0.tar.gz /dltk/packages/dsdlsupport-1.0.0.tar.gz
-RUN pip3 install /dltk/packages/dsdlsupport-1.0.0.tar.gz
+RUN python3 -m pip install /dltk/packages/dsdlsupport-1.0.0.tar.gz
 
 # Copy jupyter config
 COPY config/jupyter_notebook_config.py /dltk/.jupyter/jupyter_notebook_config.py

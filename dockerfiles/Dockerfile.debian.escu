@@ -8,6 +8,7 @@ ARG REQUIREMENTS_PYTHON_SPECIFIC
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /dltk/.local/bin:/dltk/.local/lib/python3.9/site-packages/:$PATH
 ENV DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC 
+RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' > /etc/apt/apt.conf.d/80-build-retries
 
 # curl not installed in some images :(
 # RUN apt-get clean && apt-get update --allow-unauthenticated
@@ -18,8 +19,9 @@ RUN apt-get install curl -y
 RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash -
 RUN apt-get update --fix-missing && apt-get install -y wget bzip2 git ca-certificates nodejs build-essential
 
-# update everything
-RUN apt-get update && apt-get upgrade -y
+# update everything; use Debian's canonical security host to avoid stale CDN package indexes
+RUN sed -i 's#http://deb.debian.org/debian-security#https://security.debian.org/debian-security#g' /etc/apt/sources.list && \
+    apt-get update && apt-get upgrade -y
 
 # configure file system
 WORKDIR /srv

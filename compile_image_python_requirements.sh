@@ -78,19 +78,32 @@ if [ "$line" != "" ]; then
     container_name=temp-requirements-compile-$tag
 
     echo "Building container to compute compiled requirements"
-    docker build --rm --platform=$build_platform -t $image_name \
+    if ! docker build --rm --platform=$build_platform -t $image_name \
         --build-arg BASE_IMAGE=$base_image \
         --build-arg TAG=$tag \
         --build-arg COMPILED_REQUIREMENTS_FILE=$compiled_requirements_id.in \
         -f ./dockerfiles/$requirements_dockerfile\
-        .
+        .; then
+      echo "Failed to build the requirements compiler image for $tag." >&2
+      exit 1
+    fi
 
     echo "Running container to copy compiled requirements"
-    docker run --platform=$build_platform --name $container_name $image_name
-    docker cp $container_name:/temp/$compiled_requirements_id.txt ./requirements_files/$compiled_requirements_id.txt
+    docker rm -f "$container_name" >/dev/null 2>&1 || true
+    # The lock is generated during the image build. Create (but do not start)
+    # a container so inherited entrypoints such as Jupyter cannot block the
+    # copy step.
+    if ! docker create --platform=$build_platform --name $container_name $image_name >/dev/null; then
+      echo "Failed to create the requirements copy container for $tag." >&2
+      docker rm -f "$container_name" >/dev/null 2>&1 || true
+      exit 1
+    fi
+    if ! docker cp "$container_name:/temp/$compiled_requirements_id.txt" "./requirements_files/$compiled_requirements_id.txt"; then
+      echo "Failed to copy the compiled requirements for $tag." >&2
+      docker rm -f "$container_name" >/dev/null 2>&1 || true
+      exit 1
+    fi
 
-    docker stop $container_name
     docker rm $container_name
     #docker image rm $image_name
 fi
-

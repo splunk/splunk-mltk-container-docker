@@ -1,6 +1,6 @@
 #!/bin/bash
 # Define the current version
-current_version="5.2.4"
+current_version="5.2.5"
 # Path to the version.md file
 version_file="version.md"
 # Path to the notebooks directory
