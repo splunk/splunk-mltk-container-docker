@@ -1,0 +1,65 @@
+# Single source of truth for the DSDL container images.
+#
+# tools/render.py turns this file into docker-bake.json (build targets and tags)
+# and images_conf_files/images.conf (the stanzas for the DSDL app). Edit this
+# file, then run `tools/render.py` (CI runs `tools/render.py --check`).
+#
+# One build target can be published under several names. The extra names keep
+# the image references and images.conf stanzas of 5.2.x working:
+# 11 images in 5.2.5 are 6 build targets from 5.3.0 on.
+
+version = "5.3.0"
+repo = "splunk/"
+python = "3.12"
+
+[targets.cpu]
+description = "Classic ML, deep learning (CPU) and NLP; includes the ESCU pretrained models"
+profile = "cpu"
+platforms = ["linux/amd64", "linux/arm64"]
+publish = [
+  { stanza = "golden-cpu", image = "mltk-container-golden-cpu", tag = "{version}", title = "Red Hat UBI Golden CPU ({version})", runtime = "none" },
+  { stanza = "golden-cpu-arm", image = "mltk-container-golden-cpu", tag = "{version}-arm64", platform = "linux/arm64", title = "Red Hat UBI Golden CPU ARM64 ({version})", runtime = "none" },
+  { stanza = "escu-cpu", image = "mltk-container-escu-cpu", tag = "{version}", title = "ESCU ({version})", runtime = "none" },
+  { stanza = "golden-cpu-transformers", image = "mltk-container-golden-cpu-transformers", tag = "{version}", title = "Transformers CPU ({version})", runtime = "none" },
+]
+
+[targets.llm]
+description = "LLM / RAG stack (llama-index, vector stores, LLM provider SDKs) on top of the CPU content"
+profile = "llm"
+platforms = ["linux/amd64", "linux/arm64"]
+publish = [
+  { stanza = "llm-rag", image = "mltk-container-ubi-llm-rag", tag = "{version}", title = "Red Hat LLM RAG CPU ({version})", runtime = "none" },
+]
+
+[targets.agentic]
+description = "The llm image serving the agentic API (app/main_agentic.py: chat, MCP, LangGraph)"
+profile = "llm"
+platforms = ["linux/amd64", "linux/arm64"]
+publish = [
+  { stanza = "agentic-ai", image = "mltk-container-ubi-llm-rag", tag = "agentic-ai-{version}", title = "Agentic AI ({version})", runtime = "none" },
+]
+
+[targets.gpu]
+description = "Deep learning and transformers on NVIDIA GPUs (CUDA 12 from wheels); also runs without a GPU"
+profile = "gpu-cu12"
+platforms = ["linux/amd64"]
+publish = [
+  { stanza = "golden-gpu", image = "mltk-container-golden-gpu", tag = "{version}", title = "Golden Image GPU ({version})", runtime = "none,nvidia" },
+  { stanza = "golden-gpu-transformers", image = "mltk-container-golden-gpu-transformers", tag = "{version}", title = "Transformers GPU ({version})", runtime = "none,nvidia" },
+]
+
+[targets.rapids]
+description = "NVIDIA RAPIDS (cuDF, cuML, cuGraph) from pip wheels"
+profile = "rapids-cu12"
+platforms = ["linux/amd64"]
+publish = [
+  { stanza = "golden-gpu-rapids", image = "mltk-container-golden-gpu-rapids", tag = "{version}", title = "Rapids 26.10 ({version})", runtime = "none,nvidia" },
+]
+
+[targets.spark]
+description = "The cpu image plus a headless Java 21 runtime and PySpark 4.2 (local mode)"
+profile = "cpu"
+platforms = ["linux/amd64", "linux/arm64"]
+publish = [
+  { stanza = "spark", image = "mltk-container-spark", tag = "{version}", title = "Spark 4.2 ({version})", runtime = "none" },
+]

@@ -1,0 +1,17 @@
+# Removed after installing java-21-openjdk-headless for the Spark image.
+# java -> nss -> crypto-policies-scripts pulls the platform python3 (3.9);
+# the image keeps exactly one interpreter. crypto-policies (the policy files)
+# stays; only its update script is dropped.
+python3
+python3-libs
+python3-pip-wheel
+python-unversioned-command
+crypto-policies-scripts
+# the setuid chain that came with the base trim may be pulled back by the JRE
+openssh
+openssh-clients
+util-linux
+util-linux-core
+pam
+pam-libs
+shadow-utils

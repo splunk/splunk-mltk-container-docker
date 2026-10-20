@@ -27,7 +27,8 @@ import torch.nn.functional as F
 from torch import optim
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from transformers import BertModel, BertTokenizer
-from transformers import AdamW, get_linear_schedule_with_warmup
+from torch.optim import AdamW
+from transformers import get_linear_schedule_with_warmup
 # tensorboard related
 from torch.utils.tensorboard import SummaryWriter
 import tensorboard

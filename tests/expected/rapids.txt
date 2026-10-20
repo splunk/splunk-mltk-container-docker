@@ -1,0 +1,24 @@
+# app/model modules that must import in the rapids image: the union of the modules
+# that imported in the 5.2.5 images it replaces (golden-gpu-rapids).
+a_threat_hunting_notebook
+agentic_workflow_execution
+barebone_template
+bert_phishing
+correlationmatrix
+dnn_lab
+fdai_zeroshot_classification
+graph_algo
+graph_algo_louvain
+grid_search_svm
+grid_search_svm_mlflow
+intent_detection_bert
+ja3_encoder
+ollama_text_processing
+pytorch_logistic_regression
+pytorch_nn
+rapids_umap
+rapids_umap_dga
+transformers_sentencebert
+transformers_zeroshot_classification
+umap
+xgboost_regressor

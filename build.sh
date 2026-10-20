@@ -1,188 +1,95 @@
-#!/bin/bash
-echo '__________________________________________________________________________________________________________________'
-echo ' ________  ________  ___       ___  ___  ________   ___  __            ________  ________  ________  ___          '
-echo '|\   ____\|\   __  \|\  \     |\  \|\  \|\   ___  \|\  \|\  \         |\   ___ \|\   ____\|\   ___ \|\  \         '
-echo '\ \  \___|\ \  \|\  \ \  \    \ \  \\\  \ \  \\ \  \ \  \/  /|_       \ \  \_|\ \ \  \___|\ \  \_|\ \ \  \        '
-echo ' \ \_____  \ \   ____\ \  \    \ \  \\\  \ \  \\ \  \ \   ___  \       \ \  \ \\ \ \_____  \ \  \ \\ \ \  \       '
-echo '  \|____|\  \ \  \___|\ \  \____\ \  \\\  \ \  \\ \  \ \  \\ \  \       \ \  \_\\ \|____|\  \ \  \_\\ \ \  \____  '
-echo '    ____\_\  \ \__\    \ \_______\ \_______\ \__\\ \__\ \__\\ \__\       \ \_______\____\_\  \ \_______\ \_______\'
-echo '   |\_________\|__|     \|_______|\|_______|\|__| \|__|\|__| \|__|        \|_______|\_________\|_______|\|_______|'
-echo '   \|_________|                                                                    \|_________|                   '
-echo '__________________________________________________________________________________________________________________'
-echo 'Splunk> DSDL Container Build Script for Custom Data-Science Runtimes'
+#!/usr/bin/env bash
+# Build Splunk DSDL container images (docker buildx bake, configured by images.toml).
+#
+# Usage:
+#   ./build.sh                                 list build targets and published names
+#   ./build.sh <name> [repo] [version]         build one target and load it locally
+#   ./build.sh all [repo] [version]            build every target
+#   ./build.sh --push <name|all> [repo] [version]
+#                                              build all platforms, push with SBOM and
+#                                              provenance, create the single-platform
+#                                              aliases (e.g. golden-cpu:<v>-arm64)
+#
+# <name> is a target (cpu, llm, agentic, gpu, rapids, spark) or a 5.2.x name such as
+# golden-cpu, golden-cpu-arm, escu-cpu, golden-gpu-transformers or ubi-llm-rag.
+# A 5.2.x name builds the platform it was published for (amd64, or arm64 for
+# golden-cpu-arm); a target name builds all of its platforms. PLATFORM=linux/arm64
+# overrides the platform of a local build.
+#
+# Every build writes images_conf_files/images.conf for the DSDL app.
+set -Eeuo pipefail
 
-if [ -z "$1" ]; then
-  echo "No build tag specified. Pick a tag:"
-  values=$(cut -d ',' -f 1 tag_mapping.csv)
-  echo $values
-  exit
-else
-  tag="$1"
-fi
+cd "$(dirname "$0")"
 
-if [ -z "$2" ]; then
-  repo="local/"
-  echo "No repo name specified. Using default repo name: ${repo}"
-else
-  repo="$2"
-fi
+push=false
+if [ "${1:-}" = "--push" ]; then push=true; shift; fi
+name="${1:-}"
+repo="${2:-splunk/}"
+version="${3:-$(sed -n 's/^version = "\(.*\)"/\1/p' images.toml)}"
 
-if [ -z "$3" ]; then
-  version="latest"
-  echo "No version specified. Using version: ${version}"
-else
-  version="$3"
-fi
-
-line=$(grep "^${tag}," tag_mapping.csv)
-
-if [ "$line" != "" ]; then
-    base_image=$(echo $line | cut -d',' -f2)
-    dockerfile=$(echo $line | cut -d',' -f3)
-    base_requirements=$(echo $line | cut -d',' -f4)
-    specific_requirements=$(echo $line | cut -d',' -f5)
-    runtime=$(echo $line | cut -d',' -f6) 
-    requirements_dockerfile=$(echo $line | cut -d',' -f7) 
-    title=$(echo $line | cut -d',' -f8) 
-
-    # Pick the build target platform.
-    # Default: linux/amd64 — every DSDL image ships to x86_64 production hosts,
-    # so we pin the platform here to guarantee reproducible builds whether the
-    # build runs on x86_64 Linux/Windows or on an Apple Silicon (arm64) dev
-    # machine. On arm64 hosts this engages qemu emulation under Docker
-    # Desktop / containerd; the trade-off is slower builds in exchange for
-    # artifacts that exactly match what runs in production.
-    # Exception: any tag ending in "-arm" (today: golden-cpu-arm) is built
-    # natively for linux/arm64 so it can be deployed on arm64 hosts.
-    case "$tag" in
-      *-arm) build_platform="linux/arm64" ;;
-      *)     build_platform="linux/amd64" ;;
-    esac
-
-    echo "Tag: $tag"
-    echo "Base Image: $base_image"
-    echo "Dockerfile: $dockerfile"
-    echo "Base Requirements File: $base_requirements"
-    echo "Specific Requirements File: $specific_requirements"
-    echo "Runtime Options: $runtime"
-    echo "Requirements Dockerfile: $requirements_dockerfile"
-    echo "Title: $title"
-    echo "Build Platform: $build_platform"
-else
-    echo "No match found for tag: $tag"
-    exit
-fi
-
-echo "Building custom module."
-./build_package.sh
-
-container_name="$repo"mltk-container-$tag
-echo "Target container name: $container_name"
-
-echo "Stopping and removing running containers with this name."
-docker stop $container_name
-docker rm $container_name
-docker rmi $container_name
-
-base_requirements_id="${base_requirements%.*}"
-specific_requirements_id="${specific_requirements%.*}"
-
-compiled_requirements_id=compiled_${base_requirements_id}_${specific_requirements_id}_$tag
-compiled_requirements_filename=./requirements_files/$compiled_requirements_id.txt
-
-# Both agentic images target CPython 3.11 on linux/amd64 and consume the same
-# requirement inputs. Reuse the combined, resolved agentic lock for the DHI
-# variant instead of resolving the base and specific files in separate pip
-# transactions (which can retain incompatible packages from the DHI base).
-if [[ "$tag" = "agentic-ai-debian" && ! -f $compiled_requirements_filename ]]; then
-  shared_agentic_requirements_id=compiled_${base_requirements_id}_${specific_requirements_id}_agentic-ai
-  shared_agentic_requirements_filename=./requirements_files/$shared_agentic_requirements_id.txt
-  if [[ -f $shared_agentic_requirements_filename ]]; then
-    compiled_requirements_id=$shared_agentic_requirements_id
-    compiled_requirements_filename=$shared_agentic_requirements_filename
+builder_image="dsdl-builder:local"
+render() {
+  if python3 -c 'import sys; sys.version_info >= (3, 11) or __import__("tomli")' 2>/dev/null; then
+    python3 tools/render.py "$@"
+  else
+    if ! docker image inspect "$builder_image" >/dev/null 2>&1; then
+      docker buildx build --load --quiet --target builder -t "$builder_image" -f docker/Dockerfile . >/dev/null
+    fi
+    docker run --rm -v "$PWD:/repo" -w /repo "$builder_image" python3.12 tools/render.py "$@"
   fi
+}
+
+if [ -z "$name" ]; then
+  echo "Build targets:"
+  render --targets | sed 's/^/  /'
+  echo "Published names (stanza -> image), see images.toml:"
+  sed -n 's/.*stanza = "\([^"]*\)", image = "\([^"]*\)", tag = "\([^"]*\)".*/  \1 -> \2:\3/p' images.toml
+  exit 0
 fi
 
-echo "Checking for compiled requirements $compiled_requirements_id"
-
-if [[ -f $compiled_requirements_filename ]]; then
-  echo "Found pre-compiled requirements: Using $compiled_requirements_id instead of $base_requirements and $specific_requirements"
-  base_requirements=$compiled_requirements_id.txt
-  specific_requirements="empty".txt
-fi
-
-docker build --rm --platform=$build_platform -t $container_name:$version\
-  --build-arg BASE_IMAGE=$base_image \
-  --build-arg TAG=$tag \
-  --build-arg REQUIREMENTS_PYTHON_BASE=$base_requirements \
-  --build-arg REQUIREMENTS_PYTHON_SPECIFIC=$specific_requirements \
-  -f ./dockerfiles/$dockerfile \
-  .
-
-# Check exit status
-if [ $? -eq 0 ]; then
-    echo "Docker build was successful."
+render --check || render
+if [ "$name" = "all" ]; then
+  targets=($(render --targets))
 else
-    echo "Docker build encountered an error."
-    exit 1
+  targets=("$(render --resolve "$name")")
 fi
 
-# Keep published repository/tag names compatible with the DSDL 5.2.4 app.
-# Some build configurations are variants in an established repository rather
-# than independent repositories. Retain the build tag locally, then add the
-# canonical publishing alias used by images.conf.
-config_stanza="$tag"
-config_image="mltk-container-$tag:$version"
-canonical_container_name="$container_name"
-canonical_version="$version"
+export REPO="$repo" VERSION="$version" VCS_REF="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+echo "Building ${targets[*]} as ${repo}*:${version} (revision ${VCS_REF})"
 
-case "$tag" in
-  golden-cpu-arm)
-    canonical_container_name="${repo}mltk-container-golden-cpu"
-    canonical_version="${version}-arm64"
-    config_image="mltk-container-golden-cpu:${canonical_version}"
-    ;;
-  agentic-ai)
-    canonical_container_name="${repo}mltk-container-ubi-llm-rag"
-    canonical_version="agentic-ai-${version}"
-    config_image="mltk-container-ubi-llm-rag:${canonical_version}"
-    ;;
-  agentic-ai-debian)
-    canonical_container_name="${repo}mltk-container-ubi-llm-rag"
-    canonical_version="agentic-ai-debian-${version}"
-    config_image="mltk-container-ubi-llm-rag:${canonical_version}"
-    ;;
-  ubi-llm-rag)
-    config_stanza="llm-rag"
-    ;;
-esac
-
-canonical_ref="${canonical_container_name}:${canonical_version}"
-build_ref="${container_name}:${version}"
-if [ "$canonical_ref" != "$build_ref" ]; then
-  echo "Creating canonical repository alias: $canonical_ref"
-  if ! docker tag "$build_ref" "$canonical_ref"; then
-    echo "Failed to create canonical repository alias: $canonical_ref" >&2
-    exit 1
-  fi
+if [ "$push" = true ]; then
+  docker buildx bake -f docker-bake.json --push \
+    --set '*.attest=type=sbom' --set '*.attest=type=provenance,mode=max' "${targets[@]}"
+  # single-platform aliases: point <image>:<tag> at one platform manifest of the index
+  render --aliases --repo "$repo" --version "$version" | while read -r target platform alias index; do
+    case " ${targets[*]} " in *" $target "*) ;; *) continue ;; esac
+    digest="$(docker buildx imagetools inspect "$index" --raw | python3 -c '
+import json, sys
+os_, arch = sys.argv[1].split("/")
+for m in json.load(sys.stdin)["manifests"]:
+    p = m.get("platform", {})
+    if p.get("os") == os_ and p.get("architecture") == arch:
+        print(m["digest"]); break' "$platform")"
+    echo "Alias $alias -> ${index%:*}@$digest ($platform)"
+    docker buildx imagetools create --prefer-index=false -t "$alias" "${index%:*}@$digest"
+  done
+else
+  for target in "${targets[@]}"; do
+    # 5.2.x names keep their published platform; target names build all platforms
+    if [ "$name" = "all" ]; then
+      platform="${PLATFORM:-$(render --platforms "$target")}"
+    else
+      platform="${PLATFORM:-$(render --platforms "$name")}"
+    fi
+    docker buildx bake -f docker-bake.json --load --set "$target.platform=$platform" "$target"
+    # local equivalents of the single-platform aliases
+    render --aliases --repo "$repo" --version "$version" | while read -r alias_target alias_platform alias index; do
+      if [ "$alias_target" = "$target" ] && [[ ",$platform," == *",$alias_platform,"* ]]; then
+        docker tag "$index" "$alias"
+      fi
+    done
+  done
 fi
 
-echo "Creating images.conf, move this file or copy-paste contents into <splunk_dir>/etc/apps/mltk-container/local/images.conf:"
-
-# ensure both options are present if the nvidia runtime is specified
-if [ "$runtime" = "nvidia" ]; then
-  runtime="none,nvidia"
-fi
-
-echo -e "[$config_stanza]\ntitle = $title\nimage = $config_image\nrepo = $repo\nruntime = $runtime" > ./images_conf_files/$tag-images.txt
-
-# Remove output file if it already exists
-rm -f ./images_conf_files/images.conf
-
-# Loop over all .txt files in the current directory
-for file in ./images_conf_files/*-images.txt; do
-  # Concatenate the file to the output file
-  cat "$file" >> ./images_conf_files/images.conf
-done
-
-exit 0
+render --images-conf --repo "$repo" --version "$version"
+echo "Copy images_conf_files/images.conf into <splunk>/etc/apps/mltk-container/local/images.conf"

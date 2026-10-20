@@ -1,0 +1,144 @@
+# Dependency profile "cpu": the default DSDL image (golden-cpu, golden-cpu-arm,
+# escu-cpu, golden-cpu-transformers) and the base of the Spark add-on image.
+#
+# Declare top-level intent only. tools/lock.sh resolves the full, hashed
+# closure into uv.lock for linux/amd64 and linux/arm64 at the same time.
+# Floors are fine; every upper cap needs a comment with the reason.
+
+[project]
+name = "dsdl-cpu"
+version = "5.3.0"
+requires-python = "==3.12.*"
+# base: needed by the DSDL API (app/main.py) in every image
+dependencies = [
+  "fastapi>=0.115",
+  "pydantic>=2.7",
+  "uvicorn>=0.30",
+  "aiofiles",
+  "pyopenssl",
+  "cryptography",
+  "matplotlib",
+  "splunk-sdk",
+  "splunk-opentelemetry>=2",
+  # pandas 3 switches on copy-on-write and the pyarrow string dtype by default, which
+  # changes results of existing user notebooks and persisted models; move in a later minor
+  "pandas>=2.3,<3",
+  "numpy",
+  # rrcf and dask-glm still import pkg_resources, which setuptools 82 removed
+  "setuptools>=78.1.1,<82",
+  # DSDL helper package from this repository (package-dsdlsupport/)
+  "dsdlsupport",
+]
+
+[dependency-groups]
+# DEV mode: JupyterLab, notebook export (post_save hook), TensorBoard and MLflow UI
+dev = [
+  "jupyterlab>=4.6",
+  "jupyter-server",
+  "ipykernel",
+  "ipywidgets",
+  "widgetsnbextension",
+  "jupyterlab-git",
+  "nbconvert",
+  "nbdime",
+  "dask-labextension",
+  "tensorboard",
+  "mlflow>=3",
+  # lets DEV users `pip install` extra packages into /srv/.dsdl/site-packages
+  "pip",
+]
+# classic data science and ML
+core = [
+  "scipy",
+  "scikit-learn",
+  "statsmodels",
+  "networkx",
+  "seaborn",
+  "plotly",
+  "datashader",
+  "dask[dataframe]",
+  "dask-ml",
+  "prophet",
+  # the PyPI "xgboost" wheel depends on nvidia-nccl-cu13; xgboost-cpu has no CUDA payload
+  "xgboost-cpu",
+  "shap",
+  "lime",
+  "umap-learn",
+  "tslearn",
+  "kmodes",
+  "imbalanced-learn",
+  "stumpy",
+  "tqdm",
+  "bocd",
+  "rrcf",
+  "pyod",
+  "suod",
+  "pomegranate",
+  "onnx",
+  "onnxscript",
+  "onnxruntime",
+  "skl2onnx",
+  "levenshtein",
+  "imagehash",
+  "boto3",
+  "pymilvus",
+  "neo4j",
+  # TF 2.21 and pymilvus ship protobuf 6 generated code; the 7.x runtime only warns today
+  # and rejects it in the next major. 6.33.5 is the first 6.x release with all known fixes.
+  "protobuf>=6.33.5,<7",
+  "grpcio",
+]
+# deep learning on CPU
+dl = [
+  "torch",
+  "torchmetrics",
+  "tensorflow>=2.21",
+  # Keras 2 loader for the ESCU DGA SavedModel and binary_nn_classifier_designer
+  "tf-keras",
+]
+# NLP: transformers, Japanese tokenizers, spaCy 3 with its English model
+nlp = [
+  "transformers>=5",
+  "sentence-transformers",
+  "sentencepiece",
+  "tokenizers",
+  "nltk",
+  "sumeval",
+  "janome",
+  "fugashi",
+  "ipadic",
+  "spacy>=3.8",
+  "spacytextblob",
+  "en-core-web-sm",
+]
+# only installed into the Spark add-on image (pyspark bundles the Spark jars)
+spark = [
+  "pyspark>=4.2,<4.3",
+]
+
+# Removed against 5.2.5 (no import in app/ or notebooks/, or broken in every image):
+# pymc3/theano-pymc, dask-xgboost (forced xgboost 0.90), spaCy 2.3.2, TF 2.8-2.10 pins,
+# tf2onnx 1.8, PyPDF2, wandb, pydgraph, torch-geometric, pygod, pytorch-tabular.
+
+[tool.uv]
+package = false
+default-groups = []
+environments = [
+  "sys_platform == 'linux' and platform_machine == 'x86_64'",
+  "sys_platform == 'linux' and platform_machine == 'aarch64'",
+]
+required-environments = [
+  "sys_platform == 'linux' and platform_machine == 'x86_64'",
+  "sys_platform == 'linux' and platform_machine == 'aarch64'",
+]
+
+# PyPI is the only default index. The PyTorch index serves torch and nothing else.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+dsdlsupport = { path = "../../package-dsdlsupport" }
+en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }

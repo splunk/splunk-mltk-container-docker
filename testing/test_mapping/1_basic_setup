@@ -1,6 +1,7 @@
-minimal-cpu
 golden-cpu
-ubi-functional-cpu
-ubi-minimal-cpu
-ubi-golden-cpu
+golden-cpu-arm
+escu-cpu
 golden-cpu-transformers
+llm-rag
+agentic-ai
+spark
