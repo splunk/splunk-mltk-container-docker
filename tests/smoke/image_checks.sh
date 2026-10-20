@@ -29,7 +29,7 @@ check "runs as uid 1001 / gid 0 by default" test "$(id -u):$(id -g)" = "1001:0"
 python3 - <<'EOF' || fail=1
 import os, struct, sys
 OPTIONAL = ("libcuda.so", "libnvidia", "libibverbs", "librdmacm", "libfabric", "libucp", "libucs", "libuct",
-            "libmpi", "libnccl-net", "libamdhip", "libhip", "librocm", "libsycl", "libze_", "libOpenCL",
+            "libmpi", "liboshmem", "libpmix", "libnccl-net", "libamdhip", "libhip", "librocm", "libsycl", "libze_", "libOpenCL",
             "libcudart.so.11", "libcudart.so.13", "libcublas.so.11", "libcublas.so.13", "libcusparse.so.13",
             "libnvJitLink.so.13", "libnvrtc.so.13", "libtbb", "libjvm", "libmlx")
 def needed(path):
