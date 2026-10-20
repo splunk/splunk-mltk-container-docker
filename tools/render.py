@@ -9,6 +9,7 @@
   tools/render.py --platforms NAME   print the platforms to build for a target (all of its
                                      platforms) or a 5.2.x stanza name (its published platform)
   tools/render.py --stanzas          print all published stanza ids
+  tools/render.py --references       print every published image reference (uses --repo/--version)
   tools/render.py --title STANZA     print the images.conf title of a stanza (uses --version)
   tools/render.py --aliases          print "<target> <platform> <alias> <source>" lines for the
                                      single-platform aliases created after a push
@@ -101,6 +102,7 @@ def main():
     parser.add_argument("--targets", action="store_true")
     parser.add_argument("--platforms")
     parser.add_argument("--stanzas", action="store_true")
+    parser.add_argument("--references", action="store_true")
     parser.add_argument("--title")
     parser.add_argument("--aliases", action="store_true")
     parser.add_argument("--repo")
@@ -113,6 +115,9 @@ def main():
 
     if args.targets:
         print("\n".join(manifest["targets"]))
+        return 0
+    if args.references:
+        print("\n".join(ref for _, _, ref in references(manifest, repo, version)))
         return 0
     if args.stanzas:
         print("\n".join(entry["stanza"] for _, entry, _ in references(manifest, repo, version)))

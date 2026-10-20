@@ -14,9 +14,5 @@ docker_compose
 soar_integration
 # Git LFS pointer stubs (the real models are not part of the build)
 basemodels
-# 5.2.x build inputs that the consolidated build does not use
-dockerfiles
-requirements_files
-bootstrap_scripts
 certificates
 package-dsdlsupport/dist

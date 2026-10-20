@@ -60,8 +60,10 @@ To build your own image, add a profile in `deps/`, a target stage at the end of 
 | --- | --- | --- |
 | `build.sh` | Build (or push) images from `images.toml` | `./build.sh golden-cpu splunk/ 5.3.0` |
 | `tools/lock.sh` | Resolve, check or upgrade the hashed Python locks | `tools/lock.sh --upgrade cpu` |
+| `tools/sync-cpu-constraints.py` | Pin the packages the gpu, rapids and llm profiles share with the cpu image to the cpu lock versions (run after changing the cpu lock) | `tools/sync-cpu-constraints.py gpu-cu12 rapids-cu12 llm` |
 | `tools/smoke-test.sh` | Headless test of a built image: security invariants, import of every `app/model` module against the 5.2.5 baseline in `tests/expected/`, PROD and DEV start, arbitrary UID with a read-only root filesystem | `tools/smoke-test.sh splunk/mltk-container-golden-cpu:5.3.0 cpu` |
 | `tools/scan.sh` | Trivy scan with a release gate (fails on end-of-life OS, fixable CRITICAL findings and secrets); reports in `scan_logs/` | `tools/scan.sh --gate splunk/mltk-container-golden-cpu:5.3.0` |
+| `tools/pull.sh` | Pull every published image reference (for example to mirror them for an air-gapped installation) | `tools/pull.sh splunk/ 5.3.0` |
 | `tools/update-digests.sh` | Re-pin the base images to their current digests | `tools/update-digests.sh` |
 | `tools/update-rootfs-allowlist.sh` | Regenerate `docker/rootfs/allow.txt` after an intended OS package change | `tools/update-rootfs-allowlist.sh` |
 | `test_container.sh` | Playwright UI tests against a live Splunk instance (`testing/`) | `./test_container.sh golden-cpu 5.3.0` |
