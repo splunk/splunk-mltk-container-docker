@@ -105,7 +105,8 @@ def timesfm_torch():
 def rapids_import():
     try:
         import cudf
-        return f"cudf {cudf.__version__} imported (GPU present)"
+        # cuDF initialises CUDA lazily: the import works without a GPU, kernels need one
+        return f"cudf {cudf.__version__} imports (CUDA is initialised on first use)"
     except Exception as error:  # noqa: BLE001 - without a GPU only a CUDA driver error is acceptable
         message = str(error).lower()
         if any(word in message for word in ("cuda", "driver", "gpu", "libcuda", "nvml")):
