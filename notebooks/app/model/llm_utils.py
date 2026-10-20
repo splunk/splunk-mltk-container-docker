@@ -3,14 +3,16 @@ from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.bedrock import Bedrock
 from llama_index.llms.bedrock_converse import BedrockConverse
-from llama_index.llms.gemini import Gemini
+# llama-index-llms-gemini (google-generativeai) is deprecated and needs protobuf<6; the
+# maintained Google GenAI integration takes the same arguments and GOOGLE_API_KEY
+from llama_index.llms.google_genai import GoogleGenAI as Gemini
 
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.embeddings.bedrock import BedrockEmbedding
-from llama_index.embeddings.gemini import GeminiEmbedding
+from llama_index.embeddings.google_genai import GoogleGenAIEmbedding as GeminiEmbedding
 
 from llama_index.vector_stores.milvus import MilvusVectorStore
 from llama_index.vector_stores.pinecone import PineconeVectorStore

@@ -60,6 +60,12 @@ start_and_probe() { # name description docker-args... -- port:scheme...
     if wait_for "$name" "${probe%%:*}" "${probe##*:}"; then echo "PASS port ${probe%%:*} answers (${probe##*:})"
     else echo "FAIL port ${probe%%:*} did not answer (${probe##*:})"; ok=0; fi
   done
+  if docker exec "$name" python -c "
+import sys
+site = next(i for i, p in enumerate(sys.path) if p.endswith('site-packages') and p.startswith('/opt/dltk/venv'))
+user = sys.path.index('/srv/.dsdl/site-packages')
+sys.exit(0 if user > site else 1)" 2>/dev/null; then echo "PASS user package dir is searched after the image site-packages"
+  else echo "FAIL user package dir missing from sys.path or ahead of the image site-packages"; ok=0; fi
   if [ "$ok" = 0 ]; then docker logs "$name" 2>&1 | tail -30; failed=1; fi
   docker rm -f "$name" >/dev/null
   docker volume rm "$name-srv" >/dev/null

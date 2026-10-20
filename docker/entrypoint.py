@@ -23,6 +23,9 @@ New in 5.3.0:
   nss_wrapper instead of editing /etc/passwd at runtime.
 * DSDL_APP_MODULE selects the FastAPI application (app.main:app by default,
   app.main_agentic:app for the agentic-ai tags).
+* The image content is read-only. In DEV mode `pip install` writes to
+  PIP_TARGET (/srv/.dsdl/site-packages, persistent); that path is searched after
+  the image's site-packages, so it cannot shadow image packages.
 """
 
 import datetime
@@ -90,6 +93,7 @@ def refresh_srv():
 def ensure_home():
     home = os.environ.setdefault("HOME", os.path.join(SRV, ".dsdl-home"))
     for path in (home,
+                 os.environ.get("PIP_TARGET", ""),
                  os.environ.get("JUPYTERLAB_SETTINGS_DIR", ""),
                  os.environ.get("JUPYTERLAB_WORKSPACES_DIR", ""),
                  os.path.join(SRV, "notebooks", "logs")):

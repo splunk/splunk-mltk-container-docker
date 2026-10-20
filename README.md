@@ -13,85 +13,72 @@ This repository contains the collection of resources, scripts, and testing frame
 ## Resources
 This repository contains the container endpoint (`./app`), jupyter notebook configuration (`./config`) and examples (`./notebooks`), build scripts and the main Dockerfiles to create the [existing pre-built container images](https://hub.docker.com/u/splunk?page=1&search=mltk-container) for TensorFlow, PyTorch, NLP libraries and many other data science libraries for CPU and GPU.
 
-### Building containers 
-You can build your own containers with the `build.sh` script.
+### Images
+From 5.3.0 all DSDL images are built from one multi-stage template (`docker/Dockerfile`) on Red Hat UBI 9 with Python 3.12. Images that only differed in their library mix were merged; the 5.2.x image names and `images.conf` stanzas keep working because the merged images are also published under the old names.
 
-The `build.sh` script is invoked with at least one and up to three arguments:
-`./build.sh <build_configuration_tag> <repo_name> <version>`
-
-`<build_configuration_tag>` is used to specify the particular set of base docker image, dockerfile, base python requirements, specific python requirements and runtime setting.
-These combinations can be found and added to in `tag_mapping.csv`.
-
-`<repo_name>` allows you to specify a repo prefix which will be needed if you intend to upload images to dockerhub.
-
-`<version>` allows you to specify a new version number for the completed image.
-
-To build the default golden cpu image locally, simply run:
-`./build.sh golden-cpu`
-
-or specify additional arguments:
-`./build.sh golden-cpu local_build/ 1.0.0`
-
-For the current v5.2.5 release, the following tags are available in `tag_mapping.csv`. You can still add custom entries for your own builds:
-
-| `build configuration tag` | Description |
-| --- | --- |
-| golden-cpu | Red Hat UBI Golden CPU (5.2.5) |
-| golden-gpu | Golden Image GPU (5.2.5) |
-| golden-cpu-transformers | Transformers CPU (5.2.5) |
-| golden-gpu-transformers | Transformers GPU (5.2.5) |
-| golden-gpu-rapids | Rapids 24.04 (5.2.5) |
-| ubi-llm-rag | Red Hat LLM RAG CPU (5.2.5) |
-| escu-cpu | ESCU (5.2.5) |
-| spark | Spark 3.5.0 (5.2.5) |
-| golden-cpu-arm | Red Hat UBI Golden CPU ARM64 (5.2.5) |
-| agentic-ai | Agentic AI (5.2.5) |
-
-When building images the build script creates an images.conf which will be placed in the `<splunk>/etc/apps/mltk-container/local` directory to make the image available for use in the DSDL app.
-
-### Build your own custom container images
-You may extend the resources available to create your own images.
-
-To do this add an entry to the `tag_mapping.csv` file which references a `base image`, `dockerfile`, `requirements files` and a `runtime` context.
-
-`tag_mapping.csv` columns:
-| Column | Description | Notes |
-| --- | --- | --- |
-| Tag | A short name given to a combination of resources that make up an image | |
-| base_image | The base image to build a DSDL container from | This may be your operating system of choice, or one that specficially supports some functionality, such as GPU libraries. This is usually gathered from a public images repository such as Dockerhub, or a private image repository. |
-| dockerfile | The dockerfile to use to build this container. | Dockerfiles must be placed in the `./dockerfiles/` directory. |
-| base_requirements / specific_requirements | These columns specify the names of requirements files to use from the `./requirements_files/` directory | For consistency  python requirements files are spit into two. For most images `base_requirements` can be set to use the `base_functional.txt` requirements file, which contains all of the basic libraries needed for DSDL to function. `specifc_requirements` may then be set to install libraries appropriate for your particualr use-case or environment. For the majority of examples in the DSDL app to function you must have the libraries listed in `specific_golden_cpu.txt` installed. Note: the build scipt will only use these files if a compiled requirements file has not been created for that image. If you make changes to an existing requirements file please ensure you delete any compiled requirements files (./requirements_files/compiled_*) before beginning a new build.
-| runtime | This may be set to only two values: `none` or `nvidia` | `nvidia` only required if you are intending to use GPU functionality |
-| requirements_dockerfile | This is only used if you are pre-compiling python requirements. Set this to a dockerfile with a minimal environment which will work with the proposed base image. Debian and Redhat variants are provided, see `./dockerfiles/Dockerfile.*.(redhat\|debian).requirements` for examples. Others may be added as needed. | |
-| stanza_name | Display title used in generated image stanza output (for example, in `images_conf_files/*-images.txt`) | `build.sh` reads this as the title for the image configuration. |
-
-Example requirements files and dockerfiles can be found in `requirements_files/` and `dockerfiles/` directories.
-
-### Supporting Scripts
-There are a number of scripts in this repo which can help in various tasks when working with DSDL containers and collections of containers. Information about these is provided in summary in this table and in more detail below.
-
-| Script Name | Description | Example | Notes |
+| Build target | Replaces (5.2.x names, still published) | Platforms | Contents |
 | --- | --- | --- | --- |
-| `build.sh` | Build a container using a configuration tag found in `tag_mapping.csv` | `./build.sh golden-cpu splunk/ 5.2.5` | |
-| `bulk_build.sh` | Build all containers in a tag list | `./bulk_build.sh tag_mapping.csv splunk/ 5.2.5` | |
-| `compile_image_python_requirements.sh` | Use a base image and simplified dockerfile to pre-compute the python dependancy versions for all libraries listed in the tag's referenced requirements files | `./compile_image_python_requirements.sh golden-cpu` | If the Dockerfile for the tag is not specified, the script looks for the tags Dockerfile plus the `.requirements` extension. If this does not exist, please create a requirements dockerfile or specifiy and appropriate requirements dockerfile. An example can be found in /dockerfiles/Dockerfile.debian.requirements |
-| `bulk_compile.sh` | Attempt to pre-compile python dependancy versions for all containers in a tag list | `./bulk_build.sh tag_mapping.csv` | Makes assumptions about dockerfile names as described above. |
-| `scan_container.sh` | Scan a built container for vulnerabilities and produce a report with Trivy | `./scan_container.sh golden-cpu splunk/ 5.2.5` | Downloads the Trivy container to run the scan. |
-| `test_container.sh` | Run a set of simulated tests using Playwright on a built container. | `./test_container.sh golden-cpu splunk/ 5.2.5` | Requires the setup of a python virtual environment that can run Playwright. Specific python versions and dependancies may be required at the system level. |
+| `cpu` | `golden-cpu`, `golden-cpu-arm` (`golden-cpu:<v>-arm64`), `escu-cpu`, `golden-cpu-transformers` | amd64, arm64 | classic ML, TensorFlow and PyTorch (CPU), transformers, spaCy 3, Japanese tokenizers, ESCU pretrained models |
+| `llm` | `ubi-llm-rag` (stanza `llm-rag`) | amd64, arm64 | the `cpu` content plus llama-index, vector stores and LLM provider SDKs |
+| `agentic` | `ubi-llm-rag:agentic-ai-<v>` (stanza `agentic-ai`) | amd64, arm64 | the `llm` image serving the agentic API (`app/main_agentic.py`) |
+| `gpu` | `golden-gpu`, `golden-gpu-transformers` | amd64 | PyTorch and TensorFlow with CUDA 12 (from wheels), transformers fine-tuning, TimesFM; also runs without a GPU |
+| `rapids` | `golden-gpu-rapids` | amd64 | NVIDIA RAPIDS (cuDF, cuML, cuGraph) from pip wheels |
+| `spark` | `spark` | amd64, arm64 | the `cpu` image plus a headless Java 21 runtime and PySpark 4.2 |
 
-### Compile requirements for an image
-In some cases, dependancy resolution can take a long time for an image with many python libraries. In this case you may find it faster to pre-compile python requirements. `compile_image_python_requirements.sh` and `bulk_compile.sh` scripts are provided for you to do this. Most pre-existing images will have compiled requirements shipped in this repo. If you need to rebuild an existing container with new libraries, please delete the associated compiled requirements file.
+`images.toml` is the single source of truth for targets, platforms, published names, stanza ids, titles and runtimes. `tools/render.py` generates `docker-bake.json` and `images_conf_files/images.conf` from it.
 
-### Configuraing DSDL with images.conf
-After running the `./build.sh` or `./bulk_build.sh` scripts, `<tag_name>.conf` files will be created in the `./images_conf_files/` directory. If deploying a single image you may move the contents of `<tag_name>.conf` into `/mltk-container/local/images.conf` in your Splunk installation, or you may copy the contents of `./images_conf_files/images.conf` into the app to configure all of the built images. 
+### How the images are hardened
+- **No build tools at runtime.** Compilers, `-devel` packages and kernel headers exist only in the `builder` stage. In 5.2.5 they caused about 75 % of all scanner findings.
+- **Minimal OS.** The runtime is an exact list of about 70 UBI RPMs installed into a `ubi-micro` root (`docker/rootfs/`): no package manager, PAM, `su`/`sudo`, ssh client, Node.js, setuid binaries or second Python. The build fails if the RPM set changes (`docker/rootfs/allow.txt`).
+- **Locked dependencies.** Every Python package comes from a hashed `uv.lock` (`deps/<profile>/`), resolved for Python 3.12 on amd64 and arm64. PyPI is the only default index; the PyTorch index serves only `torch`.
+- **No shared secrets.** No TLS private key is baked into the images (see Certificates). `/etc/passwd` is read-only; arbitrary UIDs (OpenShift) are supported through nss_wrapper.
+- **Pinned bases.** Base images are pinned by digest (`tools/update-digests.sh`); rebuild monthly so OS and Python fixes reach the images.
 
-Note: for an image to be deployed it must be made available to the docker or k8s instance by publishing to a public repository (default is dockerhub) or by adding the images to an appropriate private repository.
+### Building containers
+Requirements: Docker with buildx (Docker Desktop or Docker Engine 25+). Building the amd64 images on an arm64 machine works through emulation, but is slow.
+
+```
+./build.sh                               # list targets and published names
+./build.sh golden-cpu                    # 5.2.x name: builds the cpu target for linux/amd64
+./build.sh golden-cpu-arm                # builds the cpu target for linux/arm64
+./build.sh cpu local_build/ 1.0.0        # a target name builds all of its platforms
+./build.sh all splunk/ 5.3.0             # every target
+./build.sh --push all splunk/ 5.3.0      # push with SBOM and provenance attestations
+```
+
+Every build writes `images_conf_files/images.conf`; copy it to `<splunk>/etc/apps/mltk-container/local/images.conf` to make the images available in the DSDL app.
+
+### Changing the Python libraries of an image
+1. Edit the profile in `deps/<profile>/pyproject.toml` (`cpu`, `llm`, `gpu-cu12` or `rapids-cu12`). Declare top-level intent only; add an upper version cap only with a comment explaining why.
+2. Run `tools/lock.sh <profile>` to resolve the hashed lock (`tools/lock.sh --upgrade <profile>` moves everything to the newest allowed versions, `tools/lock.sh --check` verifies that all locks are current).
+3. Rebuild, then run the smoke test and the scan (below).
+
+To build your own image, add a profile in `deps/`, a target stage at the end of `docker/Dockerfile` and a `[targets.<name>]` entry in `images.toml`, then run `tools/render.py`.
+
+### Supporting scripts
+| Script | Description | Example |
+| --- | --- | --- |
+| `build.sh` | Build (or push) images from `images.toml` | `./build.sh golden-cpu splunk/ 5.3.0` |
+| `tools/lock.sh` | Resolve, check or upgrade the hashed Python locks | `tools/lock.sh --upgrade cpu` |
+| `tools/smoke-test.sh` | Headless test of a built image: security invariants, import of every `app/model` module against the 5.2.5 baseline in `tests/expected/`, PROD and DEV start, arbitrary UID with a read-only root filesystem | `tools/smoke-test.sh splunk/mltk-container-golden-cpu:5.3.0 cpu` |
+| `tools/scan.sh` | Trivy scan with a release gate (fails on end-of-life OS, fixable CRITICAL findings and secrets); reports in `scan_logs/` | `tools/scan.sh --gate splunk/mltk-container-golden-cpu:5.3.0` |
+| `tools/update-digests.sh` | Re-pin the base images to their current digests | `tools/update-digests.sh` |
+| `tools/update-rootfs-allowlist.sh` | Regenerate `docker/rootfs/allow.txt` after an intended OS package change | `tools/update-rootfs-allowlist.sh` |
+| `test_container.sh` | Playwright UI tests against a live Splunk instance (`testing/`) | `./test_container.sh golden-cpu 5.3.0` |
 
 ### Certificates
-For development purposes the container images create self-signed certificates for HTTPS. You can replace the `dltk.key` and `dltk.pem` filed by editing the Dockerfile to build a container with your own certificates. This is one possibility to use your own certificates. There are also other options to configure your container environment with your own certificates.
+The API (port 5000) and JupyterLab (port 8888) use HTTPS unless `ENABLE_HTTPS=false`. At start the container uses, in this order:
+1. the certificate and key given by `API_SSL_CERT` and `API_SSL_KEY` (for example mounted from a secret),
+2. `/dltk/.jupyter/dltk.pem` and `/dltk/.jupyter/dltk.key` if a derived image provides them,
+3. a self-signed pair generated for this installation into `/srv/.dsdl/tls` (valid for one year, renewed automatically before it expires).
+
+Images up to 5.2.5 contained a private key generated at build time, shared by everybody who pulled the same image. If you rely on those images, provide your own certificate.
+
+### Installing extra Python packages in DEV mode
+The image content is read-only. In DEV mode `pip install <package>` installs into `/srv/.dsdl/site-packages` on the persistent volume. That directory is searched after the image's own packages, so it can add packages but not replace the image's versions. For permanent changes, edit the profile and rebuild.
 
 ### Run and test your container locally
-You can run your container locally, e.g. with `docker run -it --rm --name mltk-container-golden-cpu -p 5000:5000 -p 8888:8888 -p 6006:6006 -v mltk-container-data:/srv splunk/mltk-container-golden-cpu:5.2.5`
+You can run your container locally, e.g. with `docker run -it --rm --name mltk-container-golden-cpu -p 5000:5000 -p 8888:8888 -p 6006:6006 -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD=<password> -v mltk-container-data:/srv splunk/mltk-container-golden-cpu:5.3.0`
 
 ## Further documentation and usage
 Please find further information and documentation on splunkbase: [Download and install the Splunk App for Data Science and Deep Learning](https://splunkbase.splunk.com/app/4607/) and refer to the [official documentation pages](https://docs.splunk.com/Documentation/DSDL) on how to install and use the app.

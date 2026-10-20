@@ -10,6 +10,7 @@
 #   * contains a secret or private key.
 # HIGH findings with a fix are reported for the monthly rebuild/lock refresh.
 #
+# Secret findings in known sample data are allowed in tools/trivy-secret.yaml.
 # TRIVY_IMAGE overrides the scanner image (pin it by digest in CI).
 set -Eeuo pipefail
 
@@ -24,7 +25,9 @@ failed=0
 for image in "$@"; do
   report="scan_logs/$(echo "$image" | tr '/:' '__')_$(date +%Y%m%d%H%M%S).json"
   docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v dsdl-trivy-cache:/root/.cache/ \
-    "$trivy_image" image --quiet --format json --scanners vuln,secret --timeout 45m "$image" > "$report"
+    -v "$PWD/tools/trivy-secret.yaml:/trivy-secret.yaml:ro" \
+    "$trivy_image" image --quiet --format json --scanners vuln,secret --secret-config /trivy-secret.yaml \
+    --timeout 45m "$image" > "$report"
   if ! python3 - "$report" "$image" "$gate" <<'EOF'
 import collections, json, sys
 report, image, gate = sys.argv[1], sys.argv[2], sys.argv[3] == "true"

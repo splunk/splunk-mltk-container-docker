@@ -57,6 +57,7 @@ RUN bash /policy/build-rootfs.sh jre
 # Python environments from hashed locks (uv verifies every artefact hash)
 # ---------------------------------------------------------------------------
 FROM builder AS venv-base
+COPY docker/finalize-venv.sh /usr/local/bin/finalize-venv
 COPY package-dsdlsupport/ /src/package-dsdlsupport/
 COPY vendor/ /src/vendor/
 
@@ -66,9 +67,7 @@ COPY deps/cpu/ /src/deps/cpu/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-${TARGETARCH} \
     cd /src/deps/cpu && uv sync --frozen --no-install-project --no-editable \
         --group dev --group core --group dl --group nlp \
- && rm -f /opt/dltk/venv/.lock \
- # tornado's test suite ships a private test key that secret scanners flag
- && rm -rf /opt/dltk/venv/lib/python3.12/site-packages/tornado/test
+ && finalize-venv
 
 # files that the "spark" group adds on top of the cpu venv
 FROM venv-cpu AS venv-spark-delta
@@ -85,21 +84,21 @@ ARG TARGETARCH
 COPY deps/llm/ /src/deps/llm/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-${TARGETARCH} \
     cd /src/deps/llm && uv sync --frozen --no-install-project --no-editable --all-groups \
- && rm -f /opt/dltk/venv/.lock && rm -rf /opt/dltk/venv/lib/python3.12/site-packages/tornado/test
+ && finalize-venv
 
 FROM venv-base AS venv-gpu
 ARG TARGETARCH
 COPY deps/gpu-cu12/ /src/deps/gpu-cu12/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-${TARGETARCH} \
     cd /src/deps/gpu-cu12 && uv sync --frozen --no-install-project --no-editable --all-groups \
- && rm -f /opt/dltk/venv/.lock && rm -rf /opt/dltk/venv/lib/python3.12/site-packages/tornado/test
+ && finalize-venv
 
 FROM venv-base AS venv-rapids
 ARG TARGETARCH
 COPY deps/rapids-cu12/ /src/deps/rapids-cu12/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-${TARGETARCH} \
     cd /src/deps/rapids-cu12 && uv sync --frozen --no-install-project --no-editable --all-groups \
- && rm -f /opt/dltk/venv/.lock && rm -rf /opt/dltk/venv/lib/python3.12/site-packages/tornado/test
+ && finalize-venv
 
 # ---------------------------------------------------------------------------
 # payload: identical in every image (one shared layer)
@@ -150,6 +149,8 @@ ENV PATH=/opt/dltk/venv/bin:/usr/bin:/bin \
     JUPYTERLAB_SETTINGS_DIR=/srv/.dsdl-home/.jupyter/lab/user-settings \
     JUPYTERLAB_WORKSPACES_DIR=/srv/.dsdl-home/.jupyter/lab/workspaces \
     MPLCONFIGDIR=/tmp/matplotlib \
+    PIP_TARGET=/srv/.dsdl/site-packages \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PYTHONDONTWRITEBYTECODE=1
 LABEL org.opencontainers.image.source="https://github.com/splunk/splunk-mltk-container-docker" \
       org.opencontainers.image.vendor="Splunk" \

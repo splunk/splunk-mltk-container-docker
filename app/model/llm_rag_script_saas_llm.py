@@ -25,7 +25,9 @@ from llama_index.llms.ollama import Ollama
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.bedrock import Bedrock
-from llama_index.llms.gemini import Gemini
+# llama-index-llms-gemini (google-generativeai) is deprecated and needs protobuf<6; the
+# maintained Google GenAI integration takes the same arguments and GOOGLE_API_KEY
+from llama_index.llms.google_genai import GoogleGenAI as Gemini
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import textwrap
 from llama_index.core.llms import ChatMessage, MessageRole

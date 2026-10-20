@@ -120,3 +120,5 @@ certificates/*.pem
 # generated volumes folders
 beta_content/passive_deployment_prototypes/prototype_ollama_example/compose_files/volumes/*
 docker_compose/volumes/*
+# Trivy reports written by tools/scan.sh
+scan_logs/*.json

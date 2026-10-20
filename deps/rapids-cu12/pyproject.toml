@@ -1,0 +1,504 @@
+# Dependency profile "rapids-cu12": the "gpu-rapids" image (replaces golden-gpu-rapids).
+# RAPIDS 26.10 CUDA 12 pip wheels from pypi.org + torch cu126, linux/x86_64 only.
+#
+# Declare top-level intent only. tools/lock.sh resolves the full, hashed
+# closure into uv.lock for linux/amd64.
+# Floors are fine; every upper cap needs a comment with the reason.
+# base, dev and core are kept identical to deps/cpu/pyproject.toml (plus the
+# jupyterlab-nvdashboard DEV extension), and every package shared with the cpu image is
+# pinned to its deps/cpu/uv.lock version through constraint-dependencies
+# (see tools/sync-cpu-constraints.py), except where RAPIDS 26.10 forbids it.
+#
+# Differences to deps/cpu by design:
+# - no TensorFlow / tf-keras: RAPIDS documents its pip wheels as incompatible with the
+#   TensorFlow pip packages, so the dl group is torch only;
+# - pandas 3.0 instead of pandas<3 (see below), which also moves numpy/numba/dask;
+# - every CUDA user-space library is a CUDA 12 pip wheel (nvidia-*-cu12, cuda-toolkit 12.x);
+#   nothing from CUDA 13 may enter this lock.
+
+[project]
+name = "dsdl-rapids-cu12"
+version = "5.3.0"
+requires-python = "==3.12.*"
+# base: needed by the DSDL API (app/main.py) in every image
+dependencies = [
+  "fastapi>=0.115",
+  "pydantic>=2.7",
+  "uvicorn>=0.30",
+  "aiofiles",
+  "pyopenssl",
+  "cryptography",
+  "matplotlib",
+  "splunk-sdk",
+  "splunk-opentelemetry>=2",
+  # Accepted deviation from deps/cpu (pandas<3): cudf-cu12 26.10 pins pandas>=3.0,<3.1.
+  # pandas 3 turns on copy-on-write and the str dtype, so the classic modules shipped in
+  # this image need the pandas-3 functional suite (analysis G15) before release.
+  "pandas>=3.0,<3.1",
+  "numpy",
+  # rrcf and dask-glm still import pkg_resources, which setuptools 82 removed
+  "setuptools>=78.1.1,<82",
+  # DSDL helper package from this repository (package-dsdlsupport/)
+  "dsdlsupport",
+]
+
+[dependency-groups]
+# DEV mode: JupyterLab, notebook export (post_save hook), TensorBoard and MLflow UI
+dev = [
+  "jupyterlab>=4.6",
+  "jupyter-server",
+  "ipykernel",
+  "ipywidgets",
+  "widgetsnbextension",
+  "jupyterlab-git",
+  "nbconvert",
+  "nbdime",
+  "dask-labextension",
+  "tensorboard",
+  "mlflow>=3",
+  # lets DEV users `pip install` extra packages into /srv/.dsdl/site-packages
+  "pip",
+  # GPU utilisation dashboards in JupyterLab (shipped by golden-gpu-rapids)
+  "jupyterlab-nvdashboard",
+]
+# classic data science and ML (same list as deps/cpu)
+core = [
+  "scipy",
+  "scikit-learn",
+  "statsmodels",
+  "networkx",
+  "seaborn",
+  "plotly",
+  "datashader",
+  "dask[dataframe]",
+  "dask-ml",
+  "prophet",
+  # the PyPI "xgboost" wheel depends on nvidia-nccl-cu13; xgboost-cpu has no CUDA payload
+  "xgboost-cpu",
+  "shap",
+  "lime",
+  "umap-learn",
+  "tslearn",
+  "kmodes",
+  "imbalanced-learn",
+  "stumpy",
+  "tqdm",
+  "bocd",
+  "rrcf",
+  "pyod",
+  "suod",
+  "pomegranate",
+  "onnx",
+  "onnxscript",
+  "onnxruntime",
+  "skl2onnx",
+  "levenshtein",
+  "imagehash",
+  "boto3",
+  "pymilvus",
+  "neo4j",
+  # pymilvus ships protobuf 6 generated code; the 7.x runtime only warns today and
+  # rejects it in the next major. 6.33.5 is the first 6.x release with all known fixes.
+  "protobuf>=6.33.5,<7",
+  "grpcio",
+]
+# deep learning: torch only (no TensorFlow, see header)
+dl = [
+  # 2.14 is the last torch release with CUDA 12 wheels; 2.15+ is CUDA 13 only
+  "torch==2.14.*",
+]
+# NLP: transformers only. Keeps the 5 transformers modules that import in golden-gpu-rapids
+# 5.2.5 (bert_phishing, intent_detection_bert, transformers_*, fdai_zeroshot_classification)
+nlp = [
+  "transformers>=5",
+]
+# RAPIDS 26.10 on CUDA 12 from pypi.org, plus graphistry
+rapids = [
+  "cudf-cu12>=26.10",
+  "cuml-cu12>=26.10",
+  "cugraph-cu12>=26.10",
+  # core package only: graphistry[all] pulled torch 1.13, dgl, pyppeteer, gremlinpython (D16)
+  "graphistry",
+  # NVRTC (cuDF JIT, Numba-CUDA UDFs) must come from pip, the rootfs has no CUDA toolkit.
+  # ==12.*: CUDA 12 user space only (never mix cu12 and cu13). torch 2.14.1+cu126 pins
+  # cuda-toolkit 12.6.3; RAPIDS adds nvidia-nvjitlink-cu12>=12.9 (CUDA 12 minor-version
+  # compatible, so one driver >= R535 covers both)
+  "cuda-toolkit[nvrtc]==12.*",
+]
+
+# Removed against 5.2.5 golden-gpu-rapids: the conda RAPIDS 24.04 base (cuspatial, cuproj,
+# cucim, cuxfilter, custreamz, cudf-kafka, dask-sql, geo stack), graphistry[all] (torch 1.13,
+# torchdata, dgl, nvidia-*-cu11, pyppeteer, gremlinpython, neotime, google-cloud-spanner),
+# and the RAPIDS 24.04 ABI pins (numpy 1.26, pandas 2.2.1, pyarrow 14, protobuf 4, urllib3 1.26).
+
+[tool.uv]
+package = false
+default-groups = []
+# Same versions as the cpu image for every shared package (one CVE answer per package
+# across images, identical behaviour of user notebooks and persisted models), except the
+# few that RAPIDS 26.10 forbids; those are listed with their reason inside the block.
+constraint-dependencies = [
+  # RAPIDS caps numba<0.65 and numba 0.64 caps numpy<2.5. numba 0.63.0b1 declares no numpy
+  # cap, so without this floor uv falls back to that beta to keep numpy 2.5 (fails at import).
+  "numba>=0.64",
+  # >>> cpu-lock constraints (generated by tools/sync-cpu-constraints.py, do not edit)
+  "absl-py==2.5.1",
+  "aiofiles==25.1.0",
+  "aiohappyeyeballs==2.7.1",
+  "aiohttp==3.14.5",
+  "aiosignal==1.4.0",
+  "alembic==1.20.0",
+  "annotated-doc==0.0.5",
+  "annotated-types==0.8.0",
+  "anyio==4.15.1",
+  "apricot-select==0.6.1",
+  "argon2-cffi==25.1.0",
+  "argon2-cffi-bindings==26.1.0",
+  "arrow==1.4.0",
+  "asttokens==3.0.2",
+  "astunparse==1.6.3",
+  "async-lru==2.4.0",
+  "attrs==26.1.0",
+  "babel==2.18.0",
+  "beautifulsoup4==4.15.0",
+  "bleach==6.4.0",
+  "blinker==1.9.0",
+  "blis==1.3.3",
+  "bocd==0.1.2",
+  # bokeh==3.10.1 not pinned: rapids-dask-dependency 26.10 requires bokeh<3.10
+  "boto3==1.43.115",
+  "botocore==1.43.115",
+  "cachetools==7.2.4",
+  "catalogue==2.0.10",
+  "certifi==2026.10.19",
+  "cffi==2.1.1",
+  "charset-normalizer==3.5.2",
+  "click==8.5.0",
+  "cloudpathlib==0.26.0",
+  "cloudpickle==3.1.2",
+  "cmdstanpy==1.3.0",
+  "colorama==0.4.6",
+  "colorcet==3.2.1",
+  "combo==0.1.3",
+  "comm==0.2.3",
+  "confection==1.3.3",
+  "contourpy==1.4.0",
+  "cryptography==50.0.2",
+  "cycler==0.12.1",
+  "cymem==2.0.13",
+  # dask==2026.8.0 not pinned: rapids-dask-dependency 26.10 pins dask==2026.7.1
+  "dask-glm==0.4.0",
+  "dask-labextension==7.0.0",
+  "dask-ml==2025.1.0",
+  "databricks-sdk==0.154.0",
+  "datashader==0.19.1",
+  "debugpy==1.8.22",
+  "defusedxml==0.7.1",
+  "deprecation==2.1.0",
+  # distributed==2026.8.0 not pinned: rapids-dask-dependency 26.10 pins distributed==2026.7.1
+  "docker==7.2.0",
+  "executing==2.3.0",
+  "fastapi==0.152.0",
+  "fastjsonschema==2.22.2",
+  "filelock==4.2.4",
+  "flask==3.1.3",
+  "flask-cors==6.0.5",
+  "flatbuffers==25.12.19",
+  "fonttools==4.67.0",
+  "formulaic==1.2.2",
+  "fqdn==1.6.0",
+  "frozenlist==1.8.0",
+  "fsspec==2026.9.0",
+  "fugashi==1.5.2",
+  "gast==0.7.0",
+  "gitdb==4.0.12",
+  "gitpython==3.2.1",
+  "google-auth==2.62.0",
+  "google-pasta==0.2.0",
+  "googleapis-common-protos==1.75.5",
+  "graphene==3.4.3",
+  "graphql-core==3.2.13",
+  "graphql-relay==3.2.0",
+  "grpcio==1.84.0",
+  "gunicorn==26.2.0",
+  "h11==0.16.0",
+  "h5py==3.14.0",
+  "hf-xet==1.7.0",
+  "holidays==0.107",
+  "httpcore==1.0.9",
+  "httpx==0.28.1",
+  "huey==3.4.0",
+  "huggingface-hub==1.33.0",
+  "idna==3.20",
+  "imagehash==4.3.2",
+  "imageio==2.38.1",
+  "imbalanced-learn==0.14.2",
+  "importlib-metadata==9.0.1",
+  "interface-meta==2.0.1",
+  "ipadic==1.0.0",
+  "ipykernel==7.4.0",
+  "ipython==9.17.1",
+  "ipython-pygments-lexers==1.1.1",
+  "ipywidgets==8.1.9",
+  "isoduration==20.11.0",
+  "itsdangerous==2.2.0",
+  "janome==0.5.0",
+  "jedi==0.20.1",
+  "jinja2==3.1.6",
+  "jmespath==1.1.0",
+  "joblib==1.6.0",
+  "json5==0.17.3",
+  "jsonpointer==3.4",
+  "jsonschema==4.26.0",
+  "jsonschema-specifications==2025.9.1",
+  "jupyter-builder==1.2.3",
+  "jupyter-client==8.10.0",
+  "jupyter-core==5.9.1",
+  "jupyter-events==0.12.1",
+  "jupyter-lsp==2.3.1",
+  "jupyter-server==2.21.1",
+  "jupyter-server-proxy==4.6.0",
+  "jupyter-server-terminals==0.5.4",
+  "jupyterlab==4.6.4",
+  "jupyterlab-git==0.55.0",
+  "jupyterlab-git-core==0.55.0",
+  "jupyterlab-pygments==0.3.0",
+  "jupyterlab-server==2.28.1",
+  "jupyterlab-widgets==3.0.17",
+  "keras==3.15.1",
+  "kiwisolver==1.5.1",
+  "kmodes==0.12.2",
+  "lark==1.3.1",
+  "lazy-loader==0.6",
+  "levenshtein==0.27.5",
+  "libclang==18.1.1",
+  "lightning-utilities==0.15.3",
+  "lime==0.2.0.1",
+  # llvmlite==0.50.0 not pinned: numba 0.64 requires llvmlite<0.47
+  "locket==1.0.0",
+  "lxml==6.1.3",
+  "mako==1.4.3",
+  "markdown==3.11.2",
+  "markdown-it-py==4.2.0",
+  "markupsafe==3.0.4",
+  "matplotlib==3.11.2",
+  "matplotlib-inline==0.2.2",
+  "mdurl==0.1.2",
+  "mistune==3.4.0",
+  "ml-dtypes==0.6.0",
+  "mlflow==3.17.1",
+  "mlflow-skinny==3.17.1",
+  "mlflow-tracing==3.17.1",
+  "mpmath==1.3.0",
+  "msgpack==1.2.3",
+  "multidict==7.1.0",
+  "multipledispatch==1.0.0",
+  "murmurhash==1.0.15",
+  "namex==0.1.0",
+  "narwhals==2.27.1",
+  "nbclient==0.11.0",
+  "nbconvert==7.17.2",
+  "nbdime==4.0.4",
+  "nbformat==5.11.1",
+  "neo4j==6.4.1",
+  "nest-asyncio2==1.7.4",
+  "networkx==3.7",
+  "nltk==3.10.3",
+  "nose==1.3.7",
+  "notebook-shim==0.2.4",
+  # numba==0.68.0 not pinned: cudf/cuml/cugraph-cu12 26.10 require numba<0.65
+  # numpy==2.5.4 not pinned: numba 0.64 requires numpy<2.5
+  "onnx==1.23.2",
+  "onnx-ir==1.0.0",
+  "onnxruntime==1.31.0",
+  "onnxscript==0.7.2",
+  "opentelemetry-api==1.45.1",
+  "opentelemetry-configuration==0.66b1",
+  "opentelemetry-exporter-http-transport==0.66b1",
+  "opentelemetry-exporter-otlp-common==0.66b1",
+  "opentelemetry-exporter-otlp-proto-common==1.45.1",
+  "opentelemetry-exporter-otlp-proto-grpc==1.45.1",
+  "opentelemetry-exporter-otlp-proto-http==1.45.1",
+  "opentelemetry-instrumentation==0.66b1",
+  "opentelemetry-instrumentation-logging==0.66b1",
+  "opentelemetry-instrumentation-system-metrics==0.66b1",
+  "opentelemetry-opamp-client==0.4b0",
+  "opentelemetry-propagator-b3==1.45.1",
+  "opentelemetry-proto==1.45.1",
+  "opentelemetry-sdk==1.45.1",
+  "opentelemetry-semantic-conventions==0.66b1",
+  "opt-einsum==3.4.0",
+  "optree==0.20.0",
+  "orjson==3.13.0",
+  "packaging==26.3",
+  # pandas==2.3.3 not pinned: cudf-cu12 26.10 requires pandas>=3.0,<3.1 (cpu stays on pandas<3)
+  "pandocfilters==1.5.1",
+  "param==2.4.2",
+  "parso==0.8.7",
+  "partd==1.4.2",
+  "patsy==1.0.3",
+  "pexpect==4.9.0",
+  "pillow==13.0.0",
+  "pip==26.2.1",
+  "plac==1.4.7",
+  "platformdirs==4.13.5",
+  "plotly==7.1.0",
+  "pomegranate==1.1.2",
+  "portalocker==4.4.1",
+  "preshed==3.0.13",
+  "prettytable==3.18.0",
+  "prometheus-client==0.26.0",
+  "prompt-toolkit==3.0.53",
+  "propcache==0.5.4",
+  "prophet==1.5.0",
+  "protobuf==6.33.6",
+  "psutil==7.2.2",
+  "ptyprocess==0.7.0",
+  "pure-eval==0.2.4",
+  "pyarrow==25.0.1",
+  "pyasn1==0.6.4",
+  "pyasn1-modules==0.4.2",
+  "pycparser==3.11",
+  "pyct==0.6.0",
+  "pydantic==2.14.1",
+  "pydantic-core==2.50.1",
+  "pygments==2.21.0",
+  "pymilvus==3.0.2",
+  "pynndescent==0.6.0",
+  "pyod==3.6.7",
+  "pyopenssl==26.4.0",
+  "pyparsing==3.3.3",
+  "python-dateutil==2.9.0.post0",
+  "python-dotenv==1.2.4",
+  "python-json-logger==4.2.0",
+  "pytz==2026.5",
+  "pywavelets==1.10.0",
+  "pyyaml==6.0.3",
+  "pyzmq==27.2.0",
+  "rapidfuzz==3.14.6",
+  "referencing==0.37.0",
+  "regex==2026.9.29",
+  "requests==2.34.2",
+  "rfc3339-validator==0.1.4",
+  "rfc3986-validator==0.1.1",
+  "rfc3987-syntax==1.1.0",
+  "rich==15.0.0",
+  "rpds-py==2026.9.1",
+  "rrcf==0.4.4",
+  "s3transfer==0.19.3",
+  "sacrebleu==2.6.0",
+  "safetensors==0.8.0",
+  "scikit-image==0.26.0",
+  "scikit-learn==1.9.1",
+  "scipy==1.18.1",
+  "seaborn==0.13.2",
+  "send2trash==2.1.0",
+  "sentence-transformers==6.1.0",
+  "sentencepiece==0.2.2",
+  "setuptools==81.0.0",
+  "shap==0.54.1",
+  "shellingham==1.5.4",
+  "simpervisor==1.0.0",
+  "six==1.17.0",
+  "skl2onnx==1.20.0",
+  "sklearn-compat==0.1.6",
+  "skops==0.16.0",
+  "slicer==0.0.8",
+  "smart-open==8.0.4",
+  "smmap==5.0.3",
+  "sortedcontainers==2.4.0",
+  "soupsieve==3.0.3",
+  "spacy==3.8.16",
+  "spacy-legacy==3.0.12",
+  "spacy-loggers==1.0.5",
+  "spacytextblob==5.1.0",
+  "sparse==0.19.2",
+  "splunk-opentelemetry==2.13.2",
+  "splunk-sdk==2.1.1",
+  "sqlalchemy==2.1.5",
+  "sqlparse==0.6.0",
+  "srsly==2.5.4",
+  "stack-data==0.6.3",
+  "stanio==0.5.1",
+  "starlette==1.9.0",
+  "statsmodels==0.15.0",
+  "stumpy==1.14.1",
+  "sumeval==0.2.2",
+  "suod==0.1.4",
+  "sympy==1.14.0",
+  "tabulate==0.10.0",
+  "tblib==3.2.2",
+  "tensorboard==2.21.0",
+  "tensorboard-data-server==0.7.2",
+  "tensorflow==2.21.0",
+  "termcolor==3.3.0",
+  "terminado==0.18.1",
+  "textblob==0.20.1",
+  "tf-keras==2.21.0",
+  "thinc==8.3.13",
+  "threadpoolctl==3.7.0",
+  "tifffile==2026.10.15",
+  "tinycss2==1.5.1",
+  "tokenizers==0.23.3",
+  "toolz==1.2.0",
+  "torch==2.14.1",
+  "torchmetrics==1.9.0",
+  "tornado==6.5.10",
+  "tqdm==4.70.1",
+  "traitlets==5.16.1",
+  "transformers==5.20.2",
+  "tslearn==0.9.0",
+  "typer==0.27.3",
+  "typing-extensions==4.16.0",
+  "typing-inspection==0.4.4",
+  "tzdata==2026.5",
+  "umap-learn==0.5.12",
+  "uri-template==1.3.0",
+  "urllib3==2.8.0",
+  "uuid-utils==0.18.0",
+  "uvicorn==0.54.0",
+  "wasabi==1.1.3",
+  "wcwidth==0.9.2",
+  "weasel==1.0.0",
+  "webcolors==25.10.0",
+  "webencodings==0.6.1",
+  "websocket-client==1.9.2",
+  "werkzeug==3.1.9",
+  "wheel==0.48.0",
+  "widgetsnbextension==4.0.16",
+  "wrapt==2.5.1",
+  "xarray==2026.9.0",
+  "xgboost-cpu==3.4.1",
+  "xyzservices==2026.9.1",
+  "yarl==1.25.1",
+  "zict==3.0.0",
+  "zipp==4.1.1",
+  # <<< cpu-lock constraints
+]
+environments = [
+  "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+required-environments = [
+  "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+
+# PyPI is the only default index. The PyTorch index serves torch and nothing else.
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu126" }
+dsdlsupport = { path = "../../package-dsdlsupport" }
+
+# Shared packages that must NOT follow the deps/cpu/uv.lock version, with the reason
+# (read by tools/sync-cpu-constraints.py).
+[tool.dsdl.cpu-constraints.exclude]
+pandas = "cudf-cu12 26.10 requires pandas>=3.0,<3.1 (cpu stays on pandas<3)"
+numba = "cudf/cuml/cugraph-cu12 26.10 require numba<0.65"
+llvmlite = "numba 0.64 requires llvmlite<0.47"
+numpy = "numba 0.64 requires numpy<2.5"
+dask = "rapids-dask-dependency 26.10 pins dask==2026.7.1"
+distributed = "rapids-dask-dependency 26.10 pins distributed==2026.7.1"
+bokeh = "rapids-dask-dependency 26.10 requires bokeh<3.10"
