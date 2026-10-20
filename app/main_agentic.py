@@ -374,14 +374,21 @@ app.favicon_path = '/srv/app/static/favicon.ico'
 app.data_path = '/srv/app/data/'
 app.graphics_path = '/srv/app/graphics/'
 
-@app.on_event("startup")
 def setup_tracing():
+    # Splunk Observability (olly_enabled=true or 1). splunk-opentelemetry 2.x replaced
+    # splunk_otel.tracing.start_tracing with init_splunk_otel, and the FastAPI middleware
+    # must be added before the application starts, so this runs at import time.
     if 'olly_enabled' in os.environ:
         if 'true' in os.environ['olly_enabled'] or os.environ['olly_enabled'] == "1":
-            from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-            from splunk_otel.tracing import start_tracing
-            start_tracing()
-            FastAPIInstrumentor.instrument_app(app)
+            try:
+                from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+                from splunk_otel import init_splunk_otel
+                init_splunk_otel()
+                FastAPIInstrumentor.instrument_app(app)
+            except Exception as e:
+                print(f"Splunk Observability tracing could not be enabled: {e}")
+
+setup_tracing()
 
 # -------------------------------------------------------------------------------
 # STATIC mounts

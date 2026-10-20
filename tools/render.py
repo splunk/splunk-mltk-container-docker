@@ -3,7 +3,8 @@
 
   tools/render.py                    write docker-bake.json
   tools/render.py --check            fail if docker-bake.json is out of date
-  tools/render.py --images-conf      write images_conf_files/images.conf (uses --repo/--version)
+  tools/render.py --images-conf      write images_conf_files/images.conf (uses --repo/--version);
+                                     --only T,S limits it to the given targets and stanzas
   tools/render.py --resolve NAME     print the build target for a target or legacy stanza name
   tools/render.py --targets          print all build target names
   tools/render.py --platforms NAME   print the platforms to build for a target (all of its
@@ -11,6 +12,8 @@
   tools/render.py --stanzas          print all published stanza ids
   tools/render.py --references       print every published image reference (uses --repo/--version)
   tools/render.py --title STANZA     print the images.conf title of a stanza (uses --version)
+  tools/render.py --alias-ref NAME   print the reference of a single-platform 5.2.x name
+                                     (e.g. golden-cpu-arm), nothing for other names
   tools/render.py --aliases          print "<target> <platform> <alias> <source>" lines for the
                                      single-platform aliases created after a push
 
@@ -56,7 +59,7 @@ def bake(manifest):
             "target": name,
             "platforms": target["platforms"],
             "args": {
-                "PYTHON_VERSION": "${PYTHON_VERSION}",
+                "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
                 "DSDL_VERSION": "${VERSION}",
                 "VCS_REF": "${VCS_REF}",
             },
@@ -72,7 +75,7 @@ def bake(manifest):
         "variable": {
             "REPO": {"default": manifest["repo"]},
             "VERSION": {"default": manifest["version"]},
-            "PYTHON_VERSION": {"default": manifest["python"]},
+            "DSDL_PYTHON_VERSION": {"default": manifest["python"]},
             "VCS_REF": {"default": "unknown"},
         },
         "group": {"default": {"targets": list(manifest["targets"])}},
@@ -80,9 +83,11 @@ def bake(manifest):
     }
 
 
-def images_conf(manifest, repo, version):
+def images_conf(manifest, repo, version, only=None):
     lines = []
-    for _, entry, _ in references(manifest, repo, version):
+    for target, entry, _ in references(manifest, repo, version):
+        if only and target not in only and entry["stanza"] not in only:
+            continue
         lines += [
             f"[{entry['stanza']}]",
             f"title = {entry['title'].format(version=version)}",
@@ -102,6 +107,8 @@ def main():
     parser.add_argument("--targets", action="store_true")
     parser.add_argument("--platforms")
     parser.add_argument("--stanzas", action="store_true")
+    parser.add_argument("--alias-ref")
+    parser.add_argument("--only", help="comma-separated targets and/or stanzas for --images-conf")
     parser.add_argument("--references", action="store_true")
     parser.add_argument("--title")
     parser.add_argument("--aliases", action="store_true")
@@ -118,6 +125,11 @@ def main():
         return 0
     if args.references:
         print("\n".join(ref for _, _, ref in references(manifest, repo, version)))
+        return 0
+    if args.alias_ref:
+        for _, entry, ref in references(manifest, repo, version):
+            if args.alias_ref == entry["stanza"] and "platform" in entry:
+                print(ref)
         return 0
     if args.stanzas:
         print("\n".join(entry["stanza"] for _, entry, _ in references(manifest, repo, version)))
@@ -156,7 +168,8 @@ def main():
         return 0
     if args.images_conf:
         IMAGES_CONF.parent.mkdir(exist_ok=True)
-        IMAGES_CONF.write_text(images_conf(manifest, repo, version))
+        only = {item for item in (args.only or "").split(",") if item}
+        IMAGES_CONF.write_text(images_conf(manifest, repo, version, only))
         print(f"wrote {IMAGES_CONF.relative_to(ROOT)}")
         return 0
 

@@ -3,6 +3,8 @@
 Splunk App for Data Science and Deep Learning (DSDL) 5.2.5 formerly known as Deep Learning Toolkit for Splunk (DLTK) versions 2.3.0 - 3.9.0 and (DSDL) 5.0.0 - 5.2.5 published on [splunkbase](https://splunkbase.splunk.com/app/4607/).
 There is also a prior DLTK version 4.x which was open sourced on [GitHub](https://github.com/splunk/deep-learning-toolkit) but is not actively maintained. Please make use of the latest version 5.2.5
 
+This branch builds the consolidated **5.3.0** container images (see [Images](#images), [Upgrading from 5.2.x](#upgrading-from-52x) and the build report in [BUILD.md](BUILD.md)).
+
 Copyright (C) 2005-2026 Splunk Inc. All rights reserved.  
 Author: [Philipp Drieger]()
 Contributors: [Josh Cowling](), [Huaibo Zhao](), [Tatsu Murata]() 
@@ -21,32 +23,37 @@ From 5.3.0 all DSDL images are built from one multi-stage template (`docker/Dock
 | `cpu` | `golden-cpu`, `golden-cpu-arm` (`golden-cpu:<v>-arm64`), `escu-cpu`, `golden-cpu-transformers` | amd64, arm64 | classic ML, TensorFlow and PyTorch (CPU), transformers, spaCy 3, Japanese tokenizers, ESCU pretrained models |
 | `llm` | `ubi-llm-rag` (stanza `llm-rag`) | amd64, arm64 | the `cpu` content plus llama-index, vector stores and LLM provider SDKs |
 | `agentic` | `ubi-llm-rag:agentic-ai-<v>` (stanza `agentic-ai`) | amd64, arm64 | the `llm` image serving the agentic API (`app/main_agentic.py`) |
-| `gpu` | `golden-gpu`, `golden-gpu-transformers` | amd64 | PyTorch and TensorFlow with CUDA 12 (from wheels), transformers fine-tuning, TimesFM; also runs without a GPU |
-| `rapids` | `golden-gpu-rapids` | amd64 | NVIDIA RAPIDS (cuDF, cuML, cuGraph) from pip wheels |
+| `gpu` | `golden-gpu`, `golden-gpu-transformers` | amd64 | PyTorch 2.14 (CUDA 12.6) and TensorFlow 2.21 (CUDA 12) from wheels, peft/bitsandbytes/accelerate, TimesFM; also runs without a GPU |
+| `rapids` | `golden-gpu-rapids` | amd64 | NVIDIA RAPIDS 26.10 (cuDF, cuML, cuGraph) from pip wheels, with pandas 3.0 (a RAPIDS requirement) |
 | `spark` | `spark` | amd64, arm64 | the `cpu` image plus a headless Java 21 runtime and PySpark 4.2 |
+
+**GPU support.** The `gpu` and `rapids` images use the CUDA 12 user space from the NVIDIA wheels; no CUDA is installed in the OS layer. They need an NVIDIA driver R535 or newer (`NVIDIA_REQUIRE_CUDA=cuda>=12.2`). PyTorch kernels cover GPU architectures sm_50 to sm_90 (Maxwell to Hopper). **Blackwell GPUs (sm_100, sm_120) are not supported** by these builds: PyTorch publishes Blackwell kernels for CUDA 12.8+ and 13 only, and torch 2.14 has no CUDA 12.8 build. 5.2.5 `golden-gpu-transformers` (torch cu128) did support Blackwell. A CUDA 13 GPU image (driver R580+) is the planned answer.
+
+**Transformer base models.** The bert/T5 base models that the DSDL text classification and summarization assistants and `bert_phishing` load (`app/model/data/classification/...`, `app/model/data/summarization/...`) are not shipped: in 5.2.x they were Git LFS pointer files and never real models either. Place the models on the `/srv` volume under `/srv/app/model/data/`; the container start keeps them. `testing/test_2_transformers.py` needs them.
 
 `images.toml` is the single source of truth for targets, platforms, published names, stanza ids, titles and runtimes. `tools/render.py` generates `docker-bake.json` and `images_conf_files/images.conf` from it.
 
 ### How the images are hardened
 - **No build tools at runtime.** Compilers, `-devel` packages and kernel headers exist only in the `builder` stage. In 5.2.5 they caused about 75 % of all scanner findings.
-- **Minimal OS.** The runtime is an exact list of about 70 UBI RPMs installed into a `ubi-micro` root (`docker/rootfs/`): no package manager, PAM, `su`/`sudo`, ssh client, Node.js, setuid binaries or second Python. The build fails if the RPM set changes (`docker/rootfs/allow.txt`).
-- **Locked dependencies.** Every Python package comes from a hashed `uv.lock` (`deps/<profile>/`), resolved for Python 3.12 on amd64 and arm64. PyPI is the only default index; the PyTorch index serves only `torch`.
+- **Minimal OS.** The runtime is an exact list of about 70 UBI RPMs installed into a `ubi-micro` root (`docker/rootfs/`): no package manager, PAM, `su`/`sudo`, ssh client, Node.js, setuid binaries or second Python. The build fails if the RPM set changes (`docker/rootfs/allow.txt`, and `allow-jre.txt` for the Java runtime of the Spark image) or if an installed RPM is missing files.
+- **Locked dependencies.** Every Python package is pinned in a `uv.lock` (`deps/<profile>/`), resolved for Python 3.12; the build fails if a lock is out of date. Every downloaded wheel and sdist is checked against its sha256 in the lock. The two local packages (`package-dsdlsupport`, `vendor/timesfm`) and pure-Python sdists are built from source with version-pinned build backends. PyPI is the only default index; the PyTorch index serves only `torch` and `torchvision`.
 - **No shared secrets.** No TLS private key is baked into the images (see Certificates). `/etc/passwd` is read-only; arbitrary UIDs (OpenShift) are supported through nss_wrapper.
 - **Pinned bases.** Base images are pinned by digest (`tools/update-digests.sh`); rebuild monthly so OS and Python fixes reach the images.
 
 ### Building containers
-Requirements: Docker with buildx (Docker Desktop or Docker Engine 25+). Building the amd64 images on an arm64 machine works through emulation, but is slow.
+Requirements: Docker with buildx (Docker Desktop, or Docker Engine 25+ with the buildx plugin). A local build loads one platform into Docker: a 5.2.x name builds the platform it was published for, a target name the host's platform if the target supports it. `PLATFORM=linux/amd64` (or `linux/arm64`) selects another platform; building a foreign platform needs QEMU (`docker run --privileged --rm tonistiigi/binfmt --install all`) and is slow. `PLATFORM=all` and `--push` build every declared platform and need the containerd image store (Docker Desktop: Settings > General) or a `docker-container` buildx builder (`docker buildx create --use`).
 
 ```
 ./build.sh                               # list targets and published names
 ./build.sh golden-cpu                    # 5.2.x name: builds the cpu target for linux/amd64
-./build.sh golden-cpu-arm                # builds the cpu target for linux/arm64
-./build.sh cpu local_build/ 1.0.0        # a target name builds all of its platforms
+./build.sh golden-cpu-arm                # cpu target for linux/arm64, tagged golden-cpu:<v>-arm64
+./build.sh cpu local_build/ 1.0.0        # a target name: the host's platform
+PLATFORM=all ./build.sh cpu              # all platforms of the target
 ./build.sh all splunk/ 5.3.0             # every target
 ./build.sh --push all splunk/ 5.3.0      # push with SBOM and provenance attestations
 ```
 
-Every build writes `images_conf_files/images.conf`; copy it to `<splunk>/etc/apps/mltk-container/local/images.conf` to make the images available in the DSDL app.
+Every build writes `images_conf_files/images.conf` with the stanzas of the images it built; copy them to `<splunk>/etc/apps/mltk-container/local/images.conf` to make the images available in the DSDL app.
 
 ### Changing the Python libraries of an image
 1. Edit the profile in `deps/<profile>/pyproject.toml` (`cpu`, `llm`, `gpu-cu12` or `rapids-cu12`). Declare top-level intent only; add an upper version cap only with a comment explaining why.
@@ -69,15 +76,30 @@ To build your own image, add a profile in `deps/`, a target stage at the end of 
 | `test_container.sh` | Playwright UI tests against a live Splunk instance (`testing/`) | `./test_container.sh golden-cpu 5.3.0` |
 
 ### Certificates
-The API (port 5000) and JupyterLab (port 8888) use HTTPS unless `ENABLE_HTTPS=false`. At start the container uses, in this order:
+The API (port 5000) and JupyterLab (port 8888) use HTTPS unless `ENABLE_HTTPS=false`. At every start the container uses, in this order:
 1. the certificate and key given by `API_SSL_CERT` and `API_SSL_KEY` (for example mounted from a secret),
 2. `/dltk/.jupyter/dltk.pem` and `/dltk/.jupyter/dltk.key` if a derived image provides them,
-3. a self-signed pair generated for this installation into `/srv/.dsdl/tls` (valid for one year, renewed automatically before it expires).
+3. a self-signed pair generated for this installation into `/srv/.dsdl/tls` (valid for one year; regenerated at container start when it expires within 30 days or does not match its key, so a container that runs for a year needs a restart).
+
+If `API_SSL_CERT`/`API_SSL_KEY` are set but the files do not exist, the container logs a warning and continues with option 2 or 3.
 
 Images up to 5.2.5 contained a private key generated at build time, shared by everybody who pulled the same image. If you rely on those images, provide your own certificate.
 
 ### Installing extra Python packages in DEV mode
-The image content is read-only. In DEV mode `pip install <package>` installs into `/srv/.dsdl/site-packages` on the persistent volume. That directory is searched after the image's own packages, so it can add packages but not replace the image's versions. For permanent changes, edit the profile and rebuild.
+The image content is read-only. In a running container `pip install <package>` (in a notebook or a Jupyter terminal) installs into `/srv/.dsdl/site-packages` on the persistent volume, and its command line tools land in `/srv/.dsdl/site-packages/bin`, which is on `PATH`. That directory is searched after the image's own packages, so it can add packages but not replace the image's versions. pip installs the package's dependencies into that directory too, even when the image already has them; use `pip install --no-deps <package>` when the image provides the dependencies. Only pure-Python packages and wheels can be installed: the images have no compiler.
+
+For permanent changes, edit the profile and rebuild, or derive an image: `FROM splunk/mltk-container-golden-cpu:5.3.0`, `USER root`, `RUN pip install <package>` (installs into the image's environment), `USER 1001`.
+
+### Upgrading from 5.2.x
+The 5.2.x image names and `images.conf` stanzas keep working, but the contents changed:
+
+- **Platform:** all images run Red Hat UBI 9 with Python 3.12 (5.2.5 used Python 3.8 to 3.11 on UBI 9, Debian 11/13 and Ubuntu 20.04/22.04). There is no conda, no R, no Node.js, no compiler, no `curl`/`wget`/`openssl` command line tools, and no ssh client (`git` works over HTTPS only). The runtime user is 1001 with group 0 in every image, including RAPIDS (5.2.5: `rapids:conda`). `HOME` is `/srv/.dsdl-home` on the persistent volume.
+- **Major library versions:** TensorFlow 2.21 with Keras 3 (Keras 2 models load through `tf_keras`), PyTorch 2.14, transformers 5, scikit-learn 1.9, numpy 2.5, pandas 2.3 (the 5.2.5 `spark` and `agentic-ai` images had pandas 3.0; `rapids` now has pandas 3.0), spaCy 3.8 with `en_core_web_sm`, xgboost 3.4, LangChain 1.x / LangGraph 1.2 / MCP 1.30 in the llm images (llama-index stays on 0.12), Spark 4.2 with Java 21. **Models persisted with 5.2.x (pickles, Keras 2 files) may need re-saving or retraining.**
+- **Removed libraries** (not imported by the shipped models and notebooks, or broken in every 5.2.5 image): pymc3/theano-pymc, dask-xgboost (it forced xgboost 0.90), spaCy 2 and spacytextblob 0.1, tf2onnx, PyPDF2 (use pypdf), wandb, pydgraph, torch-geometric, pygod, pytorch-tabular, and in the llm images the deprecated LlamaIndex integrations (llama-index meta package, `llms-gemini`/`embeddings-gemini`/google-generativeai (replaced by Google GenAI), Vertex, Databricks, vLLM, instructor embeddings, the agent/program/question-gen OpenAI packages, arxiv, the Neo4j graph/vector stores, `llms-huggingface`, `llms-openai-like`, `llms-deepseek`). Each profile in `deps/` documents the reason.
+- **Spark:** local mode only. The Hive metastore and `enableHiveSupport()`, the embedded Derby database, the Thrift JDBC server, Spark Connect, the Scala/R shells (`spark-shell`, `sparkR`, `spark-sql`, `beeline`) and the R kernel of the 5.2.5 jupyter base image are not included (`docker/spark-jars-trim.txt`). Bundled netty, Jackson and lz4-java jars are replaced by patched releases (`docker/spark-jar-overrides.txt`).
+- **GPU:** CUDA 12.6 from wheels; no Blackwell support (see [Images](#images)).
+- **Certificates:** no private key is built into the images any more; see [Certificates](#certificates).
+- **Accepted residual findings:** pip vendors older urllib3, msgpack and setuptools copies (4 HIGH findings in every image until pip updates them); nltk 3.10 has a HIGH finding without a fix; the llm images keep llama-index-core 0.12 (a HIGH fixed only in 0.13, which needs a code port). See [BUILD.md](BUILD.md) for the per-image results.
 
 ### Run and test your container locally
 You can run your container locally, e.g. with `docker run -it --rm --name mltk-container-golden-cpu -p 5000:5000 -p 8888:8888 -p 6006:6006 -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD=<password> -v mltk-container-data:/srv splunk/mltk-container-golden-cpu:5.3.0`

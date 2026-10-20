@@ -4,8 +4,9 @@ python@PY@
 # C++ runtime and OpenMP for numpy/scipy/torch/sklearn wheels (they vendor the rest)
 libstdc++
 libgomp
-# start-up script, Jupyter terminals and user notebooks expect find
+# start-up script, Jupyter terminals and user notebooks expect find; kubectl/oc cp need tar
 findutils
+tar
 # jupyterlab-git and GitPython in DEV mode (git over HTTPS; see trim.txt for ssh)
 git-core
 # git-remote-https needs libcurl; the minimal build avoids openldap, libssh, cyrus-sasl and libevent

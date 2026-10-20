@@ -17,6 +17,10 @@ cd "$(dirname "$0")/.."
 image="${1:?image reference}"
 target="${2:?target name (cpu, llm, agentic, gpu, rapids, spark)}"
 quick="${3:-}"
+if [ ! -f "tests/expected/$target.txt" ]; then
+  echo "unknown target '$target' (cpu, llm, agentic, gpu, rapids, spark)" >&2
+  exit 2
+fi
 platform="$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$image")"
 run=(docker run --rm -i --platform "$platform" --network none)
 failed=0

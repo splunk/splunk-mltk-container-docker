@@ -26,3 +26,15 @@ netty-transport-classes-kqueue-*.jar
 netty-transport-native-epoll-*-linux-riscv64.jar
 netty-tcnative-boringssl-static-*-osx-*.jar
 netty-tcnative-boringssl-static-*-windows-*.jar
+# Launchers (bin/<glob>: removed from pyspark/bin and the venv bin/): the Hive CLI and JDBC
+# client, the Scala and R shells, Spark Connect tools, examples, and Windows .cmd files.
+# pyspark, spark-submit and spark-class stay.
+bin/beeline*
+bin/spark-sql*
+bin/spark-shell*
+bin/sparkR*
+bin/spark-connect-shell
+bin/spark-pipelines
+bin/run-example*
+bin/docker-image-tool.sh
+bin/*.cmd

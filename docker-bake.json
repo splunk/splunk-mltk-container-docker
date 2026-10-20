@@ -6,7 +6,7 @@
     "VERSION": {
       "default": "5.3.0"
     },
-    "PYTHON_VERSION": {
+    "DSDL_PYTHON_VERSION": {
       "default": "3.12"
     },
     "VCS_REF": {
@@ -35,7 +35,7 @@
         "linux/arm64"
       ],
       "args": {
-        "PYTHON_VERSION": "${PYTHON_VERSION}",
+        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
         "DSDL_VERSION": "${VERSION}",
         "VCS_REF": "${VCS_REF}"
       },
@@ -57,7 +57,7 @@
         "linux/arm64"
       ],
       "args": {
-        "PYTHON_VERSION": "${PYTHON_VERSION}",
+        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
         "DSDL_VERSION": "${VERSION}",
         "VCS_REF": "${VCS_REF}"
       },
@@ -77,7 +77,7 @@
         "linux/arm64"
       ],
       "args": {
-        "PYTHON_VERSION": "${PYTHON_VERSION}",
+        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
         "DSDL_VERSION": "${VERSION}",
         "VCS_REF": "${VCS_REF}"
       },
@@ -96,7 +96,7 @@
         "linux/amd64"
       ],
       "args": {
-        "PYTHON_VERSION": "${PYTHON_VERSION}",
+        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
         "DSDL_VERSION": "${VERSION}",
         "VCS_REF": "${VCS_REF}"
       },
@@ -116,7 +116,7 @@
         "linux/amd64"
       ],
       "args": {
-        "PYTHON_VERSION": "${PYTHON_VERSION}",
+        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
         "DSDL_VERSION": "${VERSION}",
         "VCS_REF": "${VCS_REF}"
       },
@@ -136,7 +136,7 @@
         "linux/arm64"
       ],
       "args": {
-        "PYTHON_VERSION": "${PYTHON_VERSION}",
+        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
         "DSDL_VERSION": "${VERSION}",
         "VCS_REF": "${VCS_REF}"
       },

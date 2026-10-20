@@ -13,10 +13,25 @@ root=/rootfs
 
 lines() { sed -e "s/@PY@/${PY:-}/g" -e 's/#.*//' -e '/^[[:space:]]*$/d' "$1"; }
 
-dnf_install() {
+dnf_root() {
   dnf -y --installroot="$root" --releasever=9 \
-    --setopt=reposdir=/etc/yum.repos.d --setopt=install_weak_deps=False --setopt=tsflags=nodocs \
-    install "$@"
+    --setopt=reposdir=/etc/yum.repos.d --setopt=install_weak_deps=False --setopt=tsflags=nodocs "$@"
+}
+dnf_install() { dnf_root install "$@"; }
+
+# Every file an installed RPM declares must exist (documentation and licenses excepted):
+# catches packages that ubi-micro registers but ships stripped.
+payload_check() {
+  local missing
+  # rpm -V exits non-zero whenever it reports anything; only "missing" lines matter here
+  # (/var/cache and /var/log are emptied on purpose by finish())
+  missing="$({ rpm --root="$root" -Va --nodeps --nodigest --nosignature --noscripts 2>/dev/null || true; } \
+    | awk '$1 == "missing" && $2 != "d" && $2 != "l" && $NF !~ /^\/var\/(cache|log)\// {print $NF}')"
+  if [ -n "$missing" ]; then
+    echo "Installed RPMs are missing files:" >&2
+    echo "$missing" | head -20 >&2
+    exit 1
+  fi
 }
 
 # Remove packages with --nodeps; each entry in a trim list documents why it is safe.
@@ -40,6 +55,11 @@ finish() {
 case "${1:-}" in
   base)
     PY="${2:?python version}"
+    # ubi-micro registers tzdata in its RPM database but ships it without /usr/share/zoneinfo;
+    # drop the stub so packages.txt installs the full time zone database
+    rpm --root="$root" -e --nodeps --noscripts tzdata
+    # the RPMs ubi-micro pre-installs (glibc, bash, ...) get the current repository fixes too
+    dnf_root upgrade
     dnf_install $(lines "$policy/packages.txt")
     trim "$policy/trim.txt"
     # one static account; arbitrary UIDs get an entry through nss_wrapper at start
@@ -51,6 +71,7 @@ case "${1:-}" in
       cp /usr/share/buildinfo/content-sets.json "$root/$dir/content-sets.json"
     done
     finish
+    payload_check
     rpm --root="$root" -qa --qf '%{NAME}\n' | LC_ALL=C sort > /rootfs-packages.txt
     if [ "${ROOTFS_ALLOWLIST_CHECK:-1}" = "1" ] && ! diff -u "$policy/allow.txt" /rootfs-packages.txt; then
       echo "The runtime RPM set differs from docker/rootfs/allow.txt. Review the diff above;" >&2
@@ -65,7 +86,14 @@ case "${1:-}" in
     dnf_install java-21-openjdk-headless
     trim "$policy/trim-jre.txt"
     finish
+    payload_check
     rpm --root="$root" -qa --qf '%{NAME}\n' | LC_ALL=C sort > /tmp/.jre-after
+    LC_ALL=C comm -13 /tmp/.jre-before /tmp/.jre-after > /rootfs-jre-packages.txt
+    if [ "${ROOTFS_ALLOWLIST_CHECK:-1}" = "1" ] && ! diff -u "$policy/allow-jre.txt" /rootfs-jre-packages.txt; then
+      echo "The JRE RPM set differs from docker/rootfs/allow-jre.txt. Review the diff above;" >&2
+      echo "if it is intended, update allow-jre.txt (tools/update-rootfs-allowlist.sh)." >&2
+      exit 1
+    fi
     # The delta = files of the newly installed RPMs (they keep their packaged mtimes) plus
     # everything the scriptlets wrote (alternatives links, ldconfig cache, rpm database).
     {

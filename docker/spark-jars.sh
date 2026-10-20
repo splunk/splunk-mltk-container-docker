@@ -3,12 +3,16 @@
 #   spark-jars-trim.txt       components DSDL's local-mode Spark never loads
 #   spark-jar-overrides.txt   hash-pinned patch releases of bundled libraries
 set -Eeuo pipefail
-jars="$(echo /opt/dltk/venv/lib/python3.*/site-packages/pyspark/jars)"
+venv=/opt/dltk/venv
+jars="$(echo "$venv"/lib/python3.*/site-packages/pyspark/jars)"
 policy="${1:-/src/spark}"
 cd "$jars"
 
 sed -e 's/#.*//' -e '/^[[:space:]]*$/d' "$policy/spark-jars-trim.txt" | while read -r glob; do
-  rm -rf $glob
+  case "$glob" in
+    bin/*) rm -f ../$glob "$venv"/$glob ;;   # launcher: pyspark/bin and the venv bin/
+    *) rm -rf $glob ;;
+  esac
 done
 
 sed -e 's/#.*//' -e '/^[[:space:]]*$/d' "$policy/spark-jar-overrides.txt" | while read -r glob path sha256; do

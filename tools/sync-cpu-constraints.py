@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Pin the packages a profile shares with the cpu image to the deps/cpu/uv.lock versions.
 
-Usage: tools/sync-cpu-constraints.py <profile>...    (gpu-cu12, rapids-cu12, llm)
+Usage: tools/sync-cpu-constraints.py [--check] <profile>...    (gpu-cu12, rapids-cu12, llm)
+
+--check only reports (exit 1) when a profile's generated block is out of date.
 
 Rewrites the generated block of [tool.uv] constraint-dependencies in
 deps/<profile>/pyproject.toml with "name==version" for every registry package the
@@ -57,7 +59,7 @@ def cpu_closure():
             if "registry" in packages[name].get("source", {})}
 
 
-def sync(profile, pins):
+def sync(profile, pins, check=False):
     pyproject = ROOT / "deps" / profile / "pyproject.toml"
     text = pyproject.read_text()
     exclude = tomllib.loads(text).get("tool", {}).get("dsdl", {}).get("cpu-constraints", {}).get("exclude", {})
@@ -71,18 +73,27 @@ def sync(profile, pins):
     pattern = re.compile(re.escape(BEGIN) + ".*?" + re.escape(END), re.S)
     if not pattern.search(text):
         sys.exit(f"{pyproject}: generated constraint block markers not found")
-    pyproject.write_text(pattern.sub(lambda _: "".join(lines), text, count=1))
+    rendered = pattern.sub(lambda _: "".join(lines), text, count=1)
+    if check:
+        if rendered != text:
+            print(f"{profile}: cpu-lock constraints are out of date; run tools/lock.sh", file=sys.stderr)
+            return False
+        return True
+    pyproject.write_text(rendered)
     excluded = len(exclude.keys() & pins.keys())
     print(f"{profile}: {len(pins) - excluded} pins, {excluded} excluded")
+    return True
 
 
 def main():
-    profiles = sys.argv[1:]
+    args = sys.argv[1:]
+    check = "--check" in args
+    profiles = [a for a in args if a != "--check"]
     if not profiles or profiles[0] in ("-h", "--help"):
         sys.exit(__doc__)
     pins = cpu_closure()
-    for profile in profiles:
-        sync(profile, pins)
+    results = [sync(profile, pins, check) for profile in profiles]
+    sys.exit(0 if all(results) else 1)
 
 
 if __name__ == "__main__":

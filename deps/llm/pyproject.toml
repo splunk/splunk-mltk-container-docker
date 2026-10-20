@@ -30,7 +30,7 @@ dependencies = [
   # changes results of existing user notebooks and persisted models; move in a later minor
   "pandas>=2.3,<3",
   "numpy",
-  # rrcf and dask-glm still import pkg_resources, which setuptools 82 removed
+  # rrcf (app/model/random_cut_forest.py) imports pkg_resources, which setuptools 82 removed
   "setuptools>=78.1.1,<82",
   # DSDL helper package from this repository (package-dsdlsupport/)
   "dsdlsupport",
@@ -227,9 +227,9 @@ llm = [
 # - llama-index (meta package; pins llms-openai<0.8), llama-index-multi-modal-llms-openai,
 #   -agent-openai, -program-openai, -question-gen-openai: frozen legacy packages
 # - llama-index-llms-gemini, -embeddings-gemini, google-generativeai: final SDK needs protobuf<6,
-#   disjoint with TF 2.21 and splunk-opentelemetry 2.x. app/model/llm_utils.py:6,13 and
-#   llm_rag_script_saas_llm.py:28 must move to llama_index.llms.google_genai.GoogleGenAI /
-#   llama_index.embeddings.google_genai.GoogleGenAIEmbedding (until then those imports fail)
+#   disjoint with TF 2.21 and splunk-opentelemetry 2.x. app/model/llm_utils.py and
+#   llm_rag_script_saas_llm.py import the Gemini names from llama_index.llms.google_genai /
+#   llama_index.embeddings.google_genai instead (same arguments, GOOGLE_API_KEY).
 # - llama-index-llms-vertex, -embeddings-vertex, -vector-stores-vertexaivectorsearch and
 #   google-cloud-aiplatform: need aiplatform<2, no import (google-genai covers Vertex)
 # - llama-index-vector-stores-databricks, databricks-vectorsearch: protobuf<5/<6, no import
@@ -246,6 +246,10 @@ llm = [
 
 [tool.uv]
 package = false
+# Build backends of the packages built from source (local packages, pure-Python sdists):
+# pinned so a build cannot pick up a new backend release silently. uv.lock hashes the
+# sdists themselves; these backends are fetched from PyPI by version.
+build-constraint-dependencies = ["setuptools==81.0.0", "wheel==0.48.0", "hatchling==1.32.4", "uv-build==0.13.4"]
 default-groups = []
 environments = [
   "sys_platform == 'linux' and platform_machine == 'x86_64'",
@@ -290,6 +294,7 @@ constraint-dependencies = [
   "argon2-cffi==25.1.0",
   "argon2-cffi-bindings==26.1.0",
   "arrow==1.4.0",
+  "asgiref==3.12.1",
   "asttokens==3.0.2",
   "astunparse==1.6.3",
   "async-lru==2.4.0",
@@ -455,6 +460,8 @@ constraint-dependencies = [
   "opentelemetry-exporter-otlp-proto-grpc==1.45.1",
   "opentelemetry-exporter-otlp-proto-http==1.45.1",
   "opentelemetry-instrumentation==0.66b1",
+  "opentelemetry-instrumentation-asgi==0.66b1",
+  "opentelemetry-instrumentation-fastapi==0.66b1",
   "opentelemetry-instrumentation-logging==0.66b1",
   "opentelemetry-instrumentation-system-metrics==0.66b1",
   "opentelemetry-opamp-client==0.4b0",
@@ -462,6 +469,7 @@ constraint-dependencies = [
   "opentelemetry-proto==1.45.1",
   "opentelemetry-sdk==1.45.1",
   "opentelemetry-semantic-conventions==0.66b1",
+  "opentelemetry-util-http==0.66b1",
   "opt-einsum==3.4.0",
   "optree==0.20.0",
   "orjson==3.13.0",

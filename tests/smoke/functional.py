@@ -58,10 +58,23 @@ def escu_torch_models():
     return f"{len(names)} models, flat and per-model layout"
 
 
-def escu_dga_savedmodel():
-    import tf_keras
-    model = tf_keras.models.load_model("/dltk/app/model/data/pretrained_dga_model_dsdl")
-    return f"{type(model).__name__}"
+def escu_dga_notebook():
+    # run the exported cells of the shipped ESCU notebook (what DSDL executes): imports,
+    # init() and apply() on two domains
+    import json
+    import pandas as pd
+    import shutil
+    shutil.copytree("/dltk/app", "/srv/app", dirs_exist_ok=True)
+    notebook = json.load(open("/dltk/notebooks/pretrained_dga_model_dsdl.ipynb"))
+    namespace = {}
+    for cell in notebook["cells"]:
+        if cell.get("metadata", {}).get("name") in ("mltkc_import", "mltkc_init", "mltkc_apply"):
+            exec(compile("".join(cell["source"]), "pretrained_dga_model_dsdl", "exec"), namespace)
+    df = pd.DataFrame({"domain": ["google.com", "xjwqkzmvplrtaqhb.com"]})
+    model = namespace["init"](df, {})
+    result = namespace["apply"](model, df, {})
+    assert list(result.columns) == ["pred_dga", "pred_dga_proba"] and len(result) == 2
+    return f"pred_dga {result['pred_dga'].tolist()}"
 
 
 def spacy_model():
@@ -92,8 +105,11 @@ def gpu_build():
     import torch
     assert torch.version.cuda and torch.version.cuda.startswith("12."), torch.version.cuda
     assert tf.test.is_built_with_cuda()
-    return f"torch cuda {torch.version.cuda}, tf cuda {tf.sysconfig.get_build_info().get('cuda_version')}, " \
-           f"gpu visible: {torch.cuda.is_available()}"
+    archs = torch._C._cuda_getArchFlags().split()
+    # cu126 covers Maxwell to Hopper (sm_50-sm_90); Blackwell (sm_100/sm_120) needs a CUDA 13 build
+    assert "sm_80" in archs and "sm_90" in archs, archs
+    return f"torch cuda {torch.version.cuda} ({' '.join(archs)}), " \
+           f"tf cuda {tf.sysconfig.get_build_info().get('cuda_version')}, gpu visible: {torch.cuda.is_available()}"
 
 
 def timesfm_torch():
@@ -122,13 +138,16 @@ def agentic_app():
 
 
 CHECKS = {
-    "cpu": [torch_compute, tensorflow_compute, sklearn_fit, escu_torch_models, escu_dga_savedmodel, spacy_model],
+    "cpu": [torch_compute, tensorflow_compute, sklearn_fit, escu_torch_models, escu_dga_notebook, spacy_model],
     "spark": [sklearn_fit, spark_local_job],
     "llm": [torch_compute, tensorflow_compute, sklearn_fit, agentic_app],
     "agentic": [agentic_app],
     "gpu": [torch_compute, tensorflow_compute, gpu_build, timesfm_torch, spacy_model],
     "rapids": [torch_compute, sklearn_fit, rapids_import],
 }
+if target not in CHECKS:
+    print(f"unknown target {target} (known: {', '.join(CHECKS)})")
+    sys.exit(2)
 if target in ("llm", "agentic"):
     import shutil
     shutil.copytree("/dltk/app", "/srv/app", dirs_exist_ok=True)

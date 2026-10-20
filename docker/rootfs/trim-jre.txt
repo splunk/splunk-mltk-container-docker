@@ -15,3 +15,22 @@ util-linux-core
 pam
 pam-libs
 shadow-utils
+python3-setuptools-wheel
+# printing (cups-libs -> avahi -> dbus -> systemd-libs; gnutls -> nettle/libidn2/libunistring;
+# libevent) and sound (alsa-lib): the AWT/Java Sound paths that load them are never used by
+# headless local-mode Spark, and the chain brings back systemd-libs that trim.txt removes
+cups-libs
+avahi-libs
+dbus-libs
+systemd-libs
+gnutls
+nettle
+libidn2
+libunistring
+libevent
+alsa-lib
+# only used by the JDK package scriptlets at install/upgrade time
+copy-jdk-configs
+lua
+lua-libs
+lua-posix

@@ -1,0 +1,10 @@
+java-21-openjdk-headless
+javapackages-filesystem
+lksctp-tools
+nspr
+nss
+nss-softokn
+nss-softokn-freebl
+nss-sysinit
+nss-util
+tzdata-java

@@ -51,10 +51,13 @@ RUN ROOTFS_ALLOWLIST_CHECK=${ROOTFS_ALLOWLIST_CHECK} bash /policy/build-rootfs.s
 
 # JRE for the Spark add-on, recorded as a file delta on top of the runtime rootfs
 FROM rootfs AS rootfs-jre
-RUN bash /policy/build-rootfs.sh jre
+ARG ROOTFS_ALLOWLIST_CHECK=1
+RUN ROOTFS_ALLOWLIST_CHECK=${ROOTFS_ALLOWLIST_CHECK} bash /policy/build-rootfs.sh jre
 
 # ---------------------------------------------------------------------------
-# Python environments from hashed locks (uv verifies every artefact hash)
+# Python environments from the uv locks: every package downloaded from an index or URL
+# is verified against the sha256 in uv.lock. The local packages (dsdlsupport,
+# vendor/timesfm) and pure-Python sdists are built from source in this stage.
 # ---------------------------------------------------------------------------
 FROM builder AS venv-base
 COPY docker/finalize-venv.sh /usr/local/bin/finalize-venv
@@ -65,7 +68,7 @@ FROM venv-base AS venv-cpu
 ARG TARGETARCH
 COPY deps/cpu/ /src/deps/cpu/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-${TARGETARCH} \
-    cd /src/deps/cpu && uv sync --frozen --no-install-project --no-editable \
+    cd /src/deps/cpu && uv sync --locked --no-install-project --no-editable \
         --group dev --group core --group dl --group nlp \
  && finalize-venv
 
@@ -75,9 +78,10 @@ ARG TARGETARCH
 COPY docker/spark-jars.sh docker/spark-jars-trim.txt docker/spark-jar-overrides.txt /src/spark/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-${TARGETARCH} \
     touch /tmp/.spark-marker && sleep 1 \
- && cd /src/deps/cpu && uv sync --frozen --no-install-project --no-editable \
+ && cd /src/deps/cpu && uv sync --locked --no-install-project --no-editable \
         --group dev --group core --group dl --group nlp --group spark \
  && bash /src/spark/spark-jars.sh /src/spark \
+ && finalize-venv \
  && mkdir /delta \
  && (cd / && find opt/dltk/venv -newer /tmp/.spark-marker \( -type f -o -type l \) -print0 | tar --null -T - -cf - | tar -xf - -C /delta)
 
@@ -85,21 +89,21 @@ FROM venv-base AS venv-llm
 ARG TARGETARCH
 COPY deps/llm/ /src/deps/llm/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-${TARGETARCH} \
-    cd /src/deps/llm && uv sync --frozen --no-install-project --no-editable --all-groups \
+    cd /src/deps/llm && uv sync --locked --no-install-project --no-editable --all-groups \
  && finalize-venv
 
 FROM venv-base AS venv-gpu
 ARG TARGETARCH
 COPY deps/gpu-cu12/ /src/deps/gpu-cu12/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-${TARGETARCH} \
-    cd /src/deps/gpu-cu12 && uv sync --frozen --no-install-project --no-editable --all-groups \
+    cd /src/deps/gpu-cu12 && uv sync --locked --no-install-project --no-editable --all-groups \
  && finalize-venv
 
 FROM venv-base AS venv-rapids
 ARG TARGETARCH
 COPY deps/rapids-cu12/ /src/deps/rapids-cu12/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-${TARGETARCH} \
-    cd /src/deps/rapids-cu12 && uv sync --frozen --no-install-project --no-editable --all-groups \
+    cd /src/deps/rapids-cu12 && uv sync --locked --no-install-project --no-editable --all-groups \
  && finalize-venv
 
 # ---------------------------------------------------------------------------
@@ -151,7 +155,6 @@ ENV PATH=/opt/dltk/venv/bin:/usr/bin:/bin \
     JUPYTERLAB_SETTINGS_DIR=/srv/.dsdl-home/.jupyter/lab/user-settings \
     JUPYTERLAB_WORKSPACES_DIR=/srv/.dsdl-home/.jupyter/lab/workspaces \
     MPLCONFIGDIR=/tmp/matplotlib \
-    PIP_TARGET=/srv/.dsdl/site-packages \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PYTHONDONTWRITEBYTECODE=1
 LABEL org.opencontainers.image.source="https://github.com/splunk/splunk-mltk-container-docker" \

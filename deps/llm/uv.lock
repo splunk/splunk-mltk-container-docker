@@ -29,6 +29,7 @@ constraints = [
     { name = "argon2-cffi", specifier = "==25.1.0" },
     { name = "argon2-cffi-bindings", specifier = "==26.1.0" },
     { name = "arrow", specifier = "==1.4.0" },
+    { name = "asgiref", specifier = "==3.12.1" },
     { name = "asttokens", specifier = "==3.0.2" },
     { name = "astunparse", specifier = "==1.6.3" },
     { name = "async-lru", specifier = "==2.4.0" },
@@ -191,6 +192,8 @@ constraints = [
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = "==1.45.1" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = "==1.45.1" },
     { name = "opentelemetry-instrumentation", specifier = "==0.66b1" },
+    { name = "opentelemetry-instrumentation-asgi", specifier = "==0.66b1" },
+    { name = "opentelemetry-instrumentation-fastapi", specifier = "==0.66b1" },
     { name = "opentelemetry-instrumentation-logging", specifier = "==0.66b1" },
     { name = "opentelemetry-instrumentation-system-metrics", specifier = "==0.66b1" },
     { name = "opentelemetry-opamp-client", specifier = "==0.4b0" },
@@ -198,6 +201,7 @@ constraints = [
     { name = "opentelemetry-proto", specifier = "==1.45.1" },
     { name = "opentelemetry-sdk", specifier = "==1.45.1" },
     { name = "opentelemetry-semantic-conventions", specifier = "==0.66b1" },
+    { name = "opentelemetry-util-http", specifier = "==0.66b1" },
     { name = "opt-einsum", specifier = "==3.4.0" },
     { name = "optree", specifier = "==0.20.0" },
     { name = "orjson", specifier = "==3.13.0" },
@@ -349,6 +353,12 @@ overrides = [
     { name = "openai", specifier = ">=2.45,<3" },
     { name = "pandas", specifier = ">=2.3,<3" },
     { name = "pypdf", specifier = ">=6" },
+]
+build-constraints = [
+    { name = "hatchling", specifier = "==1.32.4" },
+    { name = "setuptools", specifier = "==81.0.0" },
+    { name = "uv-build", specifier = "==0.13.4" },
+    { name = "wheel", specifier = "==0.48.0" },
 ]
 
 [[package]]

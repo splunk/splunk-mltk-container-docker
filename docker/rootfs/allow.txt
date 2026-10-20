@@ -65,6 +65,7 @@ redhat-release
 sed
 setup
 sqlite-libs
+tar
 tzdata
 xz-libs
 zlib

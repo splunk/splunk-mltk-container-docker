@@ -31,12 +31,15 @@ dependencies = [
   "matplotlib",
   "splunk-sdk",
   "splunk-opentelemetry>=2",
+  # FastAPI tracing of the DSDL API when olly_enabled is set (app/main.py setup_tracing)
+  "opentelemetry-instrumentation-fastapi",
   # Accepted deviation from deps/cpu (pandas<3): cudf-cu12 26.10 pins pandas>=3.0,<3.1.
-  # pandas 3 turns on copy-on-write and the str dtype, so the classic modules shipped in
-  # this image need the pandas-3 functional suite (analysis G15) before release.
+  # pandas 3 turns on copy-on-write and the str dtype. The classic modules of this image
+  # import under pandas 3 (tests/expected/rapids.txt); their fit/apply results under
+  # pandas 3 are not covered by an automated test yet.
   "pandas>=3.0,<3.1",
   "numpy",
-  # rrcf and dask-glm still import pkg_resources, which setuptools 82 removed
+  # rrcf (app/model/random_cut_forest.py) imports pkg_resources, which setuptools 82 removed
   "setuptools>=78.1.1,<82",
   # DSDL helper package from this repository (package-dsdlsupport/)
   "dsdlsupport",
@@ -133,6 +136,10 @@ rapids = [
 
 [tool.uv]
 package = false
+# Build backends of the packages built from source (local packages, pure-Python sdists):
+# pinned so a build cannot pick up a new backend release silently. uv.lock hashes the
+# sdists themselves; these backends are fetched from PyPI by version.
+build-constraint-dependencies = ["setuptools==81.0.0", "wheel==0.48.0", "hatchling==1.32.4", "uv-build==0.13.4"]
 default-groups = []
 # Same versions as the cpu image for every shared package (one CVE answer per package
 # across images, identical behaviour of user notebooks and persisted models), except the
@@ -155,6 +162,7 @@ constraint-dependencies = [
   "argon2-cffi==25.1.0",
   "argon2-cffi-bindings==26.1.0",
   "arrow==1.4.0",
+  "asgiref==3.12.1",
   "asttokens==3.0.2",
   "astunparse==1.6.3",
   "async-lru==2.4.0",
@@ -320,6 +328,8 @@ constraint-dependencies = [
   "opentelemetry-exporter-otlp-proto-grpc==1.45.1",
   "opentelemetry-exporter-otlp-proto-http==1.45.1",
   "opentelemetry-instrumentation==0.66b1",
+  "opentelemetry-instrumentation-asgi==0.66b1",
+  "opentelemetry-instrumentation-fastapi==0.66b1",
   "opentelemetry-instrumentation-logging==0.66b1",
   "opentelemetry-instrumentation-system-metrics==0.66b1",
   "opentelemetry-opamp-client==0.4b0",
@@ -327,6 +337,7 @@ constraint-dependencies = [
   "opentelemetry-proto==1.45.1",
   "opentelemetry-sdk==1.45.1",
   "opentelemetry-semantic-conventions==0.66b1",
+  "opentelemetry-util-http==0.66b1",
   "opt-einsum==3.4.0",
   "optree==0.20.0",
   "orjson==3.13.0",

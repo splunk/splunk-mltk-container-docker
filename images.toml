@@ -2,7 +2,7 @@
 #
 # tools/render.py turns this file into docker-bake.json (build targets and tags)
 # and images_conf_files/images.conf (the stanzas for the DSDL app). Edit this
-# file, then run `tools/render.py` (CI runs `tools/render.py --check`).
+# file, then run `tools/render.py` (build.sh checks that docker-bake.json is current).
 #
 # One build target can be published under several names. The extra names keep
 # the image references and images.conf stanzas of 5.2.x working:
