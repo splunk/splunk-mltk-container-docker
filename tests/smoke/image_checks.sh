@@ -24,6 +24,9 @@ check "no private key in the image" none_found grep -rlI --include='*.key' --inc
   --include='*.der' -e 'BEGIN [A-Z ]*PRIVATE KEY' /dltk /opt /etc /srv /usr/share
 check "image content is read-only for the runtime user" bash -c '! touch /opt/dltk/venv/.w 2>/dev/null && ! touch /dltk/app/.w 2>/dev/null'
 check "runs as uid 1001 / gid 0 by default" test "$(id -u):$(id -g)" = "1001:0"
+check "time zone database present" test -f /usr/share/zoneinfo/America/New_York
+check "no world-writable files outside /tmp" none_found find / -xdev ! -type l -perm -o+w ! -path '/tmp*' ! -path '/var/tmp*' ! -path '/proc/*' ! -path '/dev/*'
+check "tar available (kubectl cp)" command -v tar
 
 # every ELF dependency of the venv and the OS must resolve inside the image
 python3 - <<'EOF' || fail=1
