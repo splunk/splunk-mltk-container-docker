@@ -19,8 +19,9 @@ New in 5.3.0:
   API_SSL_CERT / API_SSL_KEY, else from /dltk/.jupyter/dltk.{pem,key} if a
   derived image provides them, else a per-installation self-signed pair is
   generated into /srv/.dsdl/tls and renewed before it expires.
-* /etc/passwd is read-only. Arbitrary UIDs (OpenShift) get a passwd entry via
-  nss_wrapper instead of editing /etc/passwd at runtime.
+* /etc/passwd is read-only. Arbitrary UIDs (OpenShift) get a passwd entry, and a
+  container hostname missing from /etc/hosts gets the loopback address, via
+  nss_wrapper instead of editing /etc at runtime.
 * DSDL_APP_MODULE selects the FastAPI application (app.main:app by default,
   app.main_agentic:app for the agentic-ai tags).
 * The image content is read-only. Processes started here `pip install` into
@@ -35,6 +36,7 @@ import pwd
 import re
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -133,29 +135,53 @@ def ensure_home():
                 log(f"warning: could not create {path}: {error}")
 
 
-def ensure_user(env):
-    """Give arbitrary UIDs a passwd entry without a writable /etc/passwd."""
+def hostname_resolves():
+    try:
+        socket.getaddrinfo(socket.gethostname(), None)
+        return True
+    except OSError:
+        return False
+
+
+def ensure_identity(env):
+    """Give arbitrary UIDs a passwd entry, and the container hostname an address, without
+    writing to /etc (read-only). Both go through nss_wrapper for the child processes.
+
+    The hostname matters for Spark (InetAddress.getLocalHost) and other libraries; Docker
+    and Kubernetes normally list it in /etc/hosts, but not with every network mode."""
     uid, gid = os.getuid(), os.getgid()
     try:
         pwd.getpwuid(uid)
-        return
+        need_passwd = False
     except KeyError:
-        pass
+        need_passwd = True
+    need_hosts = not hostname_resolves()
+    if not (need_passwd or need_hosts):
+        return
     if not os.path.exists(NSS_WRAPPER_LIB):
-        log(f"UID {uid} has no passwd entry and nss_wrapper is missing; continuing without one.")
+        log("warning: nss_wrapper is missing; cannot register the UID or the hostname.")
         return
     nss_dir = os.path.join("/tmp", "dsdl-nss")
     os.makedirs(nss_dir, exist_ok=True)
-    passwd_file = os.path.join(nss_dir, "passwd")
-    group_file = os.path.join(nss_dir, "group")
-    with open("/etc/passwd", encoding="utf-8") as src, open(passwd_file, "w", encoding="utf-8") as dst:
-        dst.write(src.read())
-        dst.write(f"dltk:x:{uid}:{gid}:dltk user:{env['HOME']}:/bin/bash\n")
-    shutil.copyfile("/etc/group", group_file)
+    if need_passwd:
+        passwd_file = os.path.join(nss_dir, "passwd")
+        group_file = os.path.join(nss_dir, "group")
+        with open("/etc/passwd", encoding="utf-8") as src, open(passwd_file, "w", encoding="utf-8") as dst:
+            dst.write(src.read())
+            dst.write(f"dltk:x:{uid}:{gid}:dltk user:{env['HOME']}:/bin/bash\n")
+        shutil.copyfile("/etc/group", group_file)
+        env["NSS_WRAPPER_PASSWD"] = passwd_file
+        env["NSS_WRAPPER_GROUP"] = group_file
+        log(f"Registered UID {uid} through nss_wrapper.")
+    if need_hosts:
+        hostname = socket.gethostname()
+        hosts_file = os.path.join(nss_dir, "hosts")
+        with open("/etc/hosts", encoding="utf-8") as src, open(hosts_file, "w", encoding="utf-8") as dst:
+            dst.write(src.read())
+            dst.write(f"\n127.0.0.1 {hostname}\n::1 {hostname}\n")
+        env["NSS_WRAPPER_HOSTS"] = hosts_file
+        log(f"Mapped hostname {hostname} to the loopback address through nss_wrapper.")
     env["LD_PRELOAD"] = (NSS_WRAPPER_LIB + " " + env.get("LD_PRELOAD", "")).strip()
-    env["NSS_WRAPPER_PASSWD"] = passwd_file
-    env["NSS_WRAPPER_GROUP"] = group_file
-    log(f"Registered UID {uid} through nss_wrapper.")
 
 
 def certificate_valid(cert_path):
@@ -294,7 +320,7 @@ def main():
     env["HOME"] = os.environ["HOME"]
     backup_notebooks(image_version)
     refresh_srv()
-    ensure_user(env)
+    ensure_identity(env)
     tls = resolve_tls(env)
 
     # like 5.2.x `${MODE_DEV_PROD:-PROD}`: unset or empty means PROD

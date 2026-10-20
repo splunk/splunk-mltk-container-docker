@@ -28,11 +28,13 @@ check "time zone database present" test -f /usr/share/zoneinfo/America/New_York
 check "no world-writable files outside /tmp" none_found find / -xdev ! -type l -perm -o+w ! -path '/tmp*' ! -path '/var/tmp*' ! -path '/proc/*' ! -path '/dev/*'
 check "tar available (kubectl cp)" command -v tar
 
-# every ELF dependency of the venv and the OS must resolve inside the image
+# every ELF dependency of the venv and the OS must resolve inside the image. OPTIONAL: libraries
+# that are injected at run time (libcuda), multi-node fabrics, alternative accelerator backends,
+# CuPy's optional cuTENSOR, and ALSA for Java Sound (libjsound; removed with the JRE trim)
 python3 - <<'EOF' || fail=1
 import os, struct, sys
 OPTIONAL = ("libcuda.so", "libnvidia", "libibverbs", "librdmacm", "libfabric", "libucp", "libucs", "libuct",
-            "libmpi", "liboshmem", "libpmix", "libcutensor", "libnccl-net", "libamdhip", "libhip", "librocm", "libsycl", "libze_", "libOpenCL",
+            "libmpi", "liboshmem", "libpmix", "libcutensor", "libasound", "libnccl-net", "libamdhip", "libhip", "librocm", "libsycl", "libze_", "libOpenCL",
             "libcudart.so.11", "libcudart.so.13", "libcublas.so.11", "libcublas.so.13", "libcusparse.so.13",
             "libnvJitLink.so.13", "libnvrtc.so.13", "libtbb", "libjvm", "libmlx")
 def needed(path):

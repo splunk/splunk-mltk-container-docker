@@ -84,7 +84,16 @@ def spacy_model():
 
 
 def spark_local_job():
-    # the APIs the DSDL Spark modules use: SQL, ml.fpm (FPGrowth), mllib (ALS)
+    # the APIs the DSDL Spark modules use: SQL, ml.fpm (FPGrowth), mllib (ALS). This runs with
+    # --network none, where the hostname is not in /etc/hosts: apply the entrypoint's own
+    # nss_wrapper fallback, as a container start would.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("dsdl_entrypoint", "/dltk/entrypoint.py")
+    entrypoint = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(entrypoint)
+    env = dict(os.environ, HOME="/tmp")
+    entrypoint.ensure_identity(env)
+    os.environ.update(env)
     from pyspark.ml.fpm import FPGrowth
     from pyspark.mllib.recommendation import ALS, Rating
     from pyspark.sql import SparkSession
