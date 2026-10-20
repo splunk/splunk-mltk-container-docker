@@ -1,199 +1,129 @@
-# Image Build Report
+# Image Build Report (5.3.0, branch `v5.3.0-dev`)
 
 ## Result
 
-All 11 images declared in `tag_mapping.csv` were built locally from the current
-working tree with repository prefix `splunk/` and version `5.2.5`. The normal
-build was attempted first for each mapping. Where a build or runtime smoke test
-exposed a dependency problem, the requirements were compiled, the underlying
-issue was corrected, and the image was rebuilt.
+The 11 images of 5.2.5 are built from **one multi-stage Dockerfile** (`docker/Dockerfile`) as
+**6 build targets**. All 10 published 5.2.5 image references and `images.conf` stanzas are kept:
+images that only differed in their library mix were merged and are published under every old
+name. The internal `agentic-ai-debian` test image is retired.
 
-The working tree already contained uncommitted changes when this work began.
-Those changes were retained and were part of the build context.
+| | 5.2.5 (10 published references) | 5.3.0 (same 10 references) | Change |
+|---|---:|---:|---:|
+| Trivy findings | 32,357 | 1,914 | −94.1 % |
+| CRITICAL | 157 | 0 | −100 % |
+| HIGH + CRITICAL | 3,383 | 132 | −96.1 % |
+| Distinct images and size | 10 images, 38.3 GB | 6 images (cpu amd64 + arm64, llm, gpu, rapids, spark), 19.2 GB | −50 % |
+| Operating systems | 6 (UBI 9, Debian 11 and 13, DHI Debian 13, Ubuntu 20.04 and 22.04) | 1 (UBI 9.8) | |
+| Python versions | 4 (3.8, 3.9, 3.10, 3.11) | 1 (3.12) | |
 
-## Final image inventory
+The 5.2.5 numbers understate that baseline: Trivy reports no OS findings at all for the two
+Ubuntu 20.04 images (end of life), so `golden-gpu` and `golden-gpu-transformers` show only
+their Python findings there.
 
-The IDs below come from `docker image inspect` after the final rebuilds.
+## Images
 
-| Mapping | Platform | Local image ID | Size |
-|---|---|---|---:|
-| `golden-cpu` | `linux/amd64` | `sha256:f8442f1c228f3610bc571d669b1acf0f8beaac5ccaf433397168287980508062` | 2.16 GB |
-| `golden-gpu` | `linux/amd64` | `sha256:4b13f6b2e7b564876f2c976e1d5296cd489c473b4f552fc7c99f9747183d78e2` | 6.55 GB |
-| `golden-cpu-transformers` | `linux/amd64` | `sha256:6027a2bc3e62c68c3d6993f1d4a1746ce5453700623c01864505b86925152e2d` | 1.85 GB |
-| `golden-gpu-transformers` | `linux/amd64` | `sha256:4f8b88cd7853907a63437ee710547b5c8d86cd10fe71cd2c0fdab431e805d01d` | 8.00 GB |
-| `golden-gpu-rapids` | `linux/amd64` | `sha256:1464533cd1dc7499f1fa9480957b25bd5c6b500ab94ff3207b5824e373b3c11c` | 7.22 GB |
-| `ubi-llm-rag` | `linux/amd64` | `sha256:2e4e186a5cd0c02b5471ebbc4c3195fa26e609c5e8a72d9dae9acde1046b54d9` | 1.57 GB |
-| `escu-cpu` | `linux/amd64` | `sha256:8ae3b128961a7b59b286b9a1572650a6e879a671d659a941f14a71b3256fbd43` | 4.77 GB |
-| `spark` | `linux/amd64` | `sha256:60ee9c1e0d9be8c6bf76b92205adb028109a84f541b29f054236458bb71222d3` | 3.11 GB |
-| `golden-cpu-arm` | `linux/arm64` | `sha256:975c2b11ab2a47f8ea2bf1c2afc5a17a514ca68eaa080749b556c260bcabf19d` | 1.11 GB |
-| `agentic-ai` | `linux/amd64` | `sha256:1ea1881cf56b24a894caaa1e3ea0391e895ccaa912047999cefbeee93e746dc7` | 1.91 GB |
-| `agentic-ai-debian` | `linux/amd64` | `sha256:a476f8caec63e34204f38537c469ec6d1e0aa6c630355ebcd989103240be50b9` | 1.80 GB |
+Built locally for linux/amd64 (and linux/arm64 for `cpu`) from this branch, smoke-tested with
+`tools/smoke-test.sh` and scanned with Trivy 0.64.1 (`tools/scan.sh --gate`, vulnerability DB of
+2026-10-20). Sizes from `docker image inspect` (same method as the 5.2.5 report).
 
-Every image is tagged `splunk/mltk-container-<mapping>:5.2.5`.
+| Target | Published as (5.2.x names) | Size | Modules importing (5.2.5 union) | Findings | CRIT | HIGH |
+|---|---|---:|---:|---:|---:|---:|
+| `cpu` amd64 | `golden-cpu`, `escu-cpu`, `golden-cpu-transformers` | 1.70 GB | 47 (40) | 184 | 0 | 11 |
+| `cpu` arm64 | `golden-cpu:<v>-arm64` | 1.35 GB | 47 (40) | 180 | 0 | 11 |
+| `llm` | `ubi-llm-rag` (stanza `llm-rag`) | 1.77 GB | 61 (46) | 185 | 0 | 12 |
+| `agentic` | `ubi-llm-rag:agentic-ai-<v>` | 1.77 GB | 61 (46) | 185 | 0 | 12 |
+| `gpu` | `golden-gpu`, `golden-gpu-transformers` | 5.23 GB | 51 (48) | 184 | 0 | 11 |
+| `rapids` | `golden-gpu-rapids` | 7.03 GB | 36 (22) | 191 | 0 | 10 |
+| `spark` | `spark` | 2.12 GB | 51 (44) | 253 | 0 | 32 |
 
-### Repository compatibility aliases
+"Modules importing" counts the `app/model` modules that import in the image; the number in
+brackets is the union of the modules that imported in the 5.2.5 images the target replaces
+(`tests/expected/<target>.txt`). No module regressed in any image.
 
-The initial build names follow the internal `tag_mapping.csv` identifiers. A
-comparison with the DSDL 5.2.4 app configuration showed that three variants are
-published as tags in established repositories rather than as separate Docker
-repositories. The following additional local tags were created for 5.2.5:
+### Per published reference
 
-| Build tag | Canonical 5.2.5 repository tag |
-|---|---|
-| `splunk/mltk-container-golden-cpu-arm:5.2.5` | `splunk/mltk-container-golden-cpu:5.2.5-arm64` |
-| `splunk/mltk-container-agentic-ai:5.2.5` | `splunk/mltk-container-ubi-llm-rag:agentic-ai-5.2.5` |
-| `splunk/mltk-container-agentic-ai-debian:5.2.5` | `splunk/mltk-container-ubi-llm-rag:agentic-ai-debian-5.2.5` |
+| Reference | 5.2.5 base | 5.2.5 findings / H+C | 5.3.0 findings / H+C |
+|---|---|---:|---:|
+| `golden-cpu:<v>` | UBI 9 | 881 / 127 | 184 / 11 |
+| `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | 180 / 11 |
+| `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | 184 / 11 |
+| `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | 184 / 11 |
+| `ubi-llm-rag:<v>` | UBI 9 | 1,105 / 224 | 185 / 12 |
+| `ubi-llm-rag:agentic-ai-<v>` | UBI 9 | 7,079 / 253 | 185 / 12 |
+| `golden-gpu:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 357 / 152 | 184 / 11 |
+| `golden-gpu-transformers:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 289 / 138 | 184 / 11 |
+| `golden-gpu-rapids:<v>` | Ubuntu 22.04 + conda | 4,664 / 508 | 191 / 10 |
+| `spark:<v>` | Ubuntu 22.04 + conda | 5,841 / 694 | 253 / 32 |
 
-The first two follow the exact 5.2.4 repository conventions. The Debian
-agentic image is new in 5.2.5 and follows the existing agentic variant naming
-scheme inside `mltk-container-ubi-llm-rag`. The original build tags were kept as
-aliases. The `[ubi-llm-rag]` configuration stanza was also restored to the
-existing public stanza identifier `[llm-rag]`. `build.sh` now applies these
-canonical aliases and configuration names automatically on future rebuilds.
+## Where the reduction comes from
 
-`push_5.2.5_images.sh` publishes the ten release images under these canonical
-names. It intentionally excludes the `agentic-ai-debian` test image, verifies
-that every publishable tag exists locally before the first push, and supports a
-non-mutating `--dry-run` check.
+1. **No build tools in runtime images.** Compilers, `-devel` packages and kernel headers stay in
+   the builder stage. In 5.2.5 they were about 75 % of all findings (kernel headers alone 67.6 %).
+2. **A minimal operating system.** The runtime is an exact list of 71 UBI 9 RPMs in a ubi-micro
+   root (`docker/rootfs/allow.txt`), without package manager, PAM, su/sudo, ssh, Node.js, setuid
+   files or a second Python. The Spark image adds 10 RPMs for Java 21 (`allow-jre.txt`).
+3. **One Python and fresh, locked libraries.** Python 3.12 everywhere, four `uv.lock` profiles with
+   hashes (`deps/`), shared packages at the same versions; legacy pins removed (pymc3, TF 2.8 to
+   2.10, spaCy 2, xgboost 0.90, ...).
+4. **Spark:** no jupyter/conda base, unused Spark components removed, bundled netty, Jackson and
+   lz4-java replaced by hash-pinned patch releases.
+5. **GPU:** CUDA from the NVIDIA wheels only (5.2.5 shipped a second, unused CUDA in the OS layer).
 
-## Build history and corrections
+## Residual HIGH findings
 
-### Base and build infrastructure
+- **OS packages without a released fix** (Red Hat status "affected"): expat (2), libuuid (2) and
+  python3.12 (2) in every image. They are picked up by the monthly
+  rebuild (`tools/update-digests.sh`) once Red Hat ships fixes.
+- **pip's vendored copies** of urllib3 (2), msgpack and setuptools: 4 HIGH in every image, fixed
+  when pip ships a release with newer vendored libraries.
+- **nltk 3.10.3:** one HIGH without a fix (cpu, llm, gpu, spark).
+- **llama-index-core 0.12:** one HIGH in the llm images, fixed only in 0.13, which needs a port of
+  the LLM/RAG modules (they use APIs removed in 0.13).
+- **Spark:** jars that Hadoop and Parquet shade into their own artefacts (hadoop-client-runtime,
+  parquet-jackson); fixed only by Spark/Hadoop releases.
 
-- The requirements compiler now fails immediately when its Docker build,
-  container creation, or lockfile copy fails, and it removes its tag-specific
-  temporary container on failure.
-- Compiled locks are generated during the compiler-image build. The helper now
-  uses `docker create` followed by `docker cp`, so a base image's inherited
-  entrypoint cannot start Jupyter and block lockfile retrieval. This was exposed
-  by the Spark compiler image.
-- Debian requirements compilation is noninteractive (`Etc/UTC`) and configures
-  bounded apt retries and network timeouts. Pip compilation and the general
-  Debian image install also use bounded retries without bypassing package hashes.
-- Temporary `dos2unix` install/remove transactions were replaced with `sed`
-  line-ending normalization in the affected Transformer, RAPIDS, Spark, and
-  Red Hat agentic Dockerfiles. This removed fragile late package-manager work.
-- Docker's internal storage filled while building the large CUDA images. Only
-  unused BuildKit cache and task-created temporary compiler images were removed;
-  requested images and Docker volumes were retained. The cumulative unused
-  build cache reclaimed during this run was 135.524 GB.
+No image has a CRITICAL finding, a secret, or a finding on an end-of-life OS.
 
-### `golden-cpu` and `golden-cpu-arm`
+## Verification
 
-- Both normal builds succeeded. The x86 image was built for `linux/amd64`; the
-  ARM mapping produced a native `linux/arm64` image.
+For every image (`tools/smoke-test.sh`):
+- security invariants: no setuid/setgid files, compilers, headers, package manager, Node.js, ssh,
+  su/sudo, curl/wget/openssl/perl; one Python; read-only `/etc/passwd` and image content; no
+  private key; no world-writable files; time zone database present; every ELF dependency resolves;
+- every `app/model` module imported; none of the 5.2.5 modules regressed;
+- functional checks: torch and TensorFlow compute; the ESCU pretrained models (the 3 torch models
+  and the DGA notebook end to end, which failed in every 5.2.5 image); spaCy 3 with its model;
+  a Spark SQL/FPGrowth/ALS job; the CUDA 12.6 build of the GPU stack (GPU architectures sm_50 to
+  sm_90); cuDF import; the agentic application;
+- PROD start (HTTPS API on 5000) as the default user and as an arbitrary UID with a read-only
+  root filesystem; DEV start with JupyterLab (8888), MLflow UI (6000) and TensorBoard (6006).
 
-### `golden-gpu`
+The branch was also reviewed in five areas (Dockerfile/rootfs, entrypoint vs. the 5.2.x bootstrap
+contract, build tooling, dependency profiles, documentation/compatibility) with an adversarial
+verifier per area; the confirmed findings are fixed in commit 8984d9a and later.
 
-- The first normal build rejected the downloaded
-  `nvidia-cublas-cu12==12.1.3.1` artifact because its SHA-256 did not match the
-  compiled lock. A later compiler download encountered another corrupt artifact.
-- The compiler was made resilient to transient apt/PyPI failures while retaining
-  integrity checks. The GPU lock was recompiled and the second image build
-  succeeded.
+## Not verified here
 
-### CPU and GPU Transformer images
+- **No NVIDIA GPU** on the build host: the GPU and RAPIDS images were import- and CPU-tested only.
+  Driver matrix (R535+), TensorFlow and PyTorch sharing CUDA in one process, and RAPIDS kernels
+  need a GPU run before release. Blackwell GPUs are not supported by the CUDA 12.6 build.
+- **arm64** was built and tested for `cpu` only; the `llm`, `agentic` and `spark` locks resolve for
+  arm64 and the llm lock was install- and import-tested on arm64 during locking.
+- **Playwright UI tests** (`testing/`, against a Splunk instance) and calls to real LLM providers
+  were not run. Images were not pushed or signed.
+- **Known application issues** unchanged by this branch: `ServiceContext` (llama-index 0.12) fails
+  at fit time in `RAG_Encoding`, `RAG_Inferencing` and `llm_rag_script_saas_llm`;
+  `timesfm_multi_resolution` imports a missing name; the agentic routes `/chatbox`, `/logReview`
+  and `/mcp/status` have no token check.
 
-- The CPU Transformer's first normal build failed while compiling the legacy
-  `numexpr==2.7.3` sdist against current build tooling. The source requirement
-  was updated to `numexpr==2.8.4`, which has a compatible wheel, and the image
-  succeeded on its second build.
-- The GPU Transformer image builds CPython 3.11.12. Its old compiler path did
-  not reliably resolve for that interpreter, so the requirements compiler now
-  uses `python:3.11-slim` and pip is consistently invoked through
-  `python3 -m pip`. The missing `curl` prerequisite and late `dos2unix` apt
-  transaction were also corrected before the final successful build.
+## Reproduce
 
-### `escu-cpu`
+```
+./build.sh golden-cpu local/ 5.3.0                  # one target, one platform
+tools/smoke-test.sh local/mltk-container-golden-cpu:5.3.0 cpu
+tools/scan.sh --gate local/mltk-container-golden-cpu:5.3.0
+tools/lock.sh --check                               # locks and cpu-constraint blocks are current
+```
 
-- The first three attempts failed because the configured Debian Bullseye
-  security route returned 404 for the indexed `e2fsprogs` package. The security
-  source was changed to `https://security.debian.org/debian-security`, with
-  bounded apt retries/timeouts, and attempt four succeeded.
-
-### Agentic images
-
-- On the Red Hat image, OpenTelemetry's site hook interfered with the isolated
-  build interpreter used for the repository-local `dsdlsupport` package. The
-  declared Hatchling backend is now installed explicitly and isolation is
-  bypassed only for that trusted local package.
-- Independent post-lock upgrades of `langchain-aws` and
-  `langchain-mcp-adapters` broke the resolved LangChain constraints. Those
-  upgrades were removed because both packages are already part of the compiled
-  agentic lock. The Red Hat image succeeded on its fourth complete build.
-- On the Debian image, installing NodeSource's Debian 13 package replaced the
-  DHI Python 3.11 runtime with Debian Python 3.13. Node is not required for the
-  prebuilt JupyterLab 4 runtime assets, so it was removed from this image's
-  build dependencies.
-- The DHI image's optional `pip3` Socket Firewall wrapper required an external
-  token. Module-form pip calls bypass that optional wrapper, and a clean
-  `/opt/dltk-venv` prevents unrelated packages in the broad DHI development
-  environment from contaminating the resolved lock. The Debian image reuses
-  the combined CPython 3.11 agentic lock and succeeded on its third build.
-
-### `golden-gpu-rapids`
-
-- The first image built, but importing cuDF exposed a binary ABI failure caused
-  by NumPy 2.0.2 combined with pandas 1.5.3. The RAPIDS 24.04 base's compatible
-  core versions were made explicit: NumPy 1.26.4, pandas 2.2.1, PyArrow 14.0.2,
-  protobuf 4.25.3, urllib3 1.26.18, and pynvml 11.4.1.
-- Requirements were recompiled and the corrected image passed imports for cuDF,
-  cuML, and cuGraph. Its `pip check` result was compared with the untouched
-  RAPIDS base. The final image has the same base metadata warnings for CUDA
-  helper distributions, plus an xgboost platform warning caused by running the
-  amd64 image through QEMU on an ARM host; no new dependency-version conflict
-  was introduced by the rebuilt lock.
-
-### `spark`
-
-- The first image installed PySpark 4.2.0 over a Spark 3.5.1 JVM distribution.
-  A real local `SparkSession` then failed with `JavaPackage` not callable.
-- Pinning `pyspark==3.5.1` aligned Python and JVM Spark, and a second image ran a
-  local job. Dependency checking then exposed upgrades incompatible with the
-  upstream notebook environment: NumPy 2.4.6 versus Numba 0.60, IPython 9.17.1
-  versus ipympl 0.9.4, and JupyterLab 4.6.3 versus Notebook 7.2.1.
-- The untouched base versions (NumPy 1.26.4, IPython 8.26.0, and JupyterLab
-  4.2.4) were pinned alongside PySpark 3.5.1. After recompilation, the third
-  image passed a real local Spark job and returned to the base image's sole
-  `certipy` platform warning.
-- The generated display title was corrected from Spark 3.5.0 to Spark 3.5.1 to
-  match the base tag and verified runtime.
-
-## Runtime verification
-
-- All 11 requested tags were inspected successfully. Ten report
-  `linux/amd64`; `golden-cpu-arm` reports `linux/arm64`.
-- `agentic-ai`: Python 3.11.13; `langchain-core` 0.3.86; standard-library
-  `json`/`traceback` and `dsdlsupport` imports passed; `pip check` reported no
-  broken requirements.
-- `agentic-ai-debian`: Python 3.11.16; `langchain-core` 0.3.86; the same imports
-  passed; `pip check` reported no broken requirements.
-- `golden-gpu-transformers`: Python 3.11.12, Torch 2.9.0+cu128, TensorFlow
-  2.20.0, and Transformers 4.57.6 imported; `dsdlsupport` imported and
-  `pip check` reported no broken requirements.
-- `golden-gpu-rapids`: Python 3.9.19, NumPy 1.26.4, pandas 2.2.1, PyArrow
-  14.0.2, cuDF 24.04.01, cuML 24.04.00, cuGraph 24.04.00, and `dsdlsupport`
-  imported successfully.
-- `spark`: a local Spark 3.5.1 session started, `spark.range(3).count()` returned
-  `3`, and `dsdlsupport` imported. `pip check` reports only
-  `certipy 0.1.3 is not supported on this platform`, matching the untouched
-  upstream base image.
-- The build host is an ARM-based macOS machine and has no NVIDIA runtime.
-  CUDA images were therefore built for amd64 under emulation and import-tested,
-  but actual GPU kernel execution could not be validated on this host. The
-  expected no-driver `libcuda.so.1` warning occurred during RAPIDS imports.
-- Initial GPU Transformer smoke attempts also encountered exhausted Docker
-  internal temporary storage while Matplotlib initialized. After the safe cache
-  cleanup, the same test passed with a bounded tmpfs; this was a host storage
-  condition rather than an image dependency failure.
-
-## Configuration and repository checks
-
-- `images_conf_files/images.conf` contains 11 stanzas, one for every mapping,
-  and all generated image references and display versions use `5.2.5`.
-- `build.sh` and `compile_image_python_requirements.sh` pass `bash -n`.
-- `git diff --check` passes.
-- BuildKit still emits two non-fatal lint warnings for several existing
-  Dockerfiles: `InvalidDefaultArgInFrom` for an unset default `BASE_IMAGE`, and
-  `LegacyKeyValueFormat` for older `ENV key value` syntax. These do not prevent
-  any requested image from building.
+Build the images one at a time: a GPU or RAPIDS build needs about 30 to 40 GB of Docker disk,
+including the build cache (`docker builder prune` frees it afterwards).
