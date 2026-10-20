@@ -72,10 +72,12 @@ RUN --mount=type=cache,target=/root/.cache/uv,id=uv-${TARGETARCH} \
 # files that the "spark" group adds on top of the cpu venv
 FROM venv-cpu AS venv-spark-delta
 ARG TARGETARCH
+COPY docker/spark-jars.sh docker/spark-jars-trim.txt docker/spark-jar-overrides.txt /src/spark/
 RUN --mount=type=cache,target=/root/.cache/uv,id=uv-${TARGETARCH} \
     touch /tmp/.spark-marker && sleep 1 \
  && cd /src/deps/cpu && uv sync --frozen --no-install-project --no-editable \
         --group dev --group core --group dl --group nlp --group spark \
+ && bash /src/spark/spark-jars.sh /src/spark \
  && mkdir /delta \
  && (cd / && find opt/dltk/venv -newer /tmp/.spark-marker \( -type f -o -type l \) -print0 | tar --null -T - -cf - | tar -xf - -C /delta)
 

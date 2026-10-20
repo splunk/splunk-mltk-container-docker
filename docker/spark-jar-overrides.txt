@@ -1,0 +1,34 @@
+# Jars of the pyspark distribution replaced by patch releases in the Spark image.
+# Spark 4.2.0 bundles netty 4.2.13, Jackson 2.21.2 and lz4-java 1.11.0, which have
+# known vulnerabilities fixed in the same release lines. Patch releases within these
+# lines are binary compatible; tests/smoke/functional.py runs Spark SQL, ml and mllib
+# against the result. Re-check (and usually empty) this list on every Spark release.
+# (jackson-module-scala has no .sha256 on Maven Central: its sha256 was computed after
+# verifying the published .sha1.)
+#
+# <jar glob replaced>  <path on https://repo1.maven.org/maven2>  <sha256>
+netty-all-[0-9]*.jar io/netty/netty-all/4.2.19.Final/netty-all-4.2.19.Final.jar 4409956545582c735c42ba7cb4a0619a5db4f041d96fad99e31ad13671134fcd
+netty-buffer-[0-9]*.jar io/netty/netty-buffer/4.2.19.Final/netty-buffer-4.2.19.Final.jar 863f09b46cfe7d83872c9499086b9681cd9878c30a319d9f1f3a681bbfb0b12f
+netty-codec-[0-9]*.jar io/netty/netty-codec/4.2.19.Final/netty-codec-4.2.19.Final.jar 9da978357522895ed6141e14c81f776173206f6cdd72e92b637c60e6e624735b
+netty-codec-base-[0-9]*.jar io/netty/netty-codec-base/4.2.19.Final/netty-codec-base-4.2.19.Final.jar 5702c8097cc81e939dd12e5b39ac2e81f83737c320f6f4d88553577842f9ceb6
+netty-codec-compression-[0-9]*.jar io/netty/netty-codec-compression/4.2.19.Final/netty-codec-compression-4.2.19.Final.jar 8935c51c7217780ae56d178c938b50ea5729b1e088cf3c2568674e331665554c
+netty-codec-dns-[0-9]*.jar io/netty/netty-codec-dns/4.2.19.Final/netty-codec-dns-4.2.19.Final.jar d8177c55f0864807f6ab02d0af7c72a6b88dd6bfd1a39f3a17e5954e0942fcad
+netty-codec-http-[0-9]*.jar io/netty/netty-codec-http/4.2.19.Final/netty-codec-http-4.2.19.Final.jar 7c28809a4f527746fbce2369f5ac5d5fcef45cfe9da21aa3dd9d3f6bdf00cbe0
+netty-codec-http2-[0-9]*.jar io/netty/netty-codec-http2/4.2.19.Final/netty-codec-http2-4.2.19.Final.jar f45756b12a75b907e98cd0158dc947308ca463cd3d27b9035d11a025a4fdbc4d
+netty-codec-socks-[0-9]*.jar io/netty/netty-codec-socks/4.2.19.Final/netty-codec-socks-4.2.19.Final.jar b837044e8edbd977bafe4e643c13958a45cf0caefd1338b7e6660e716a769624
+netty-common-[0-9]*.jar io/netty/netty-common/4.2.19.Final/netty-common-4.2.19.Final.jar 22fa74761f6e35c8c88972f35cf65664566b922dd73d3424528e97c34278fa79
+netty-handler-[0-9]*.jar io/netty/netty-handler/4.2.19.Final/netty-handler-4.2.19.Final.jar 8b469cf23ddf21ba84291f4dff470d2277a28deac95e7084b0ff2ce853e58276
+netty-handler-proxy-[0-9]*.jar io/netty/netty-handler-proxy/4.2.19.Final/netty-handler-proxy-4.2.19.Final.jar 6a46fb5716c8b2a227e3d5e4533ab67abaccc6cb3a4f431ff0ed0859ae8a6993
+netty-resolver-[0-9]*.jar io/netty/netty-resolver/4.2.19.Final/netty-resolver-4.2.19.Final.jar 3ded47536faeb3c4c544a84871d82f461511589afb2a892a180ca425f281363e
+netty-resolver-dns-[0-9]*.jar io/netty/netty-resolver-dns/4.2.19.Final/netty-resolver-dns-4.2.19.Final.jar 417aaf5cf25cd07865ea91d2e08916b6974995c54aa83730264fc0e06dd4ea90
+netty-transport-[0-9]*.jar io/netty/netty-transport/4.2.19.Final/netty-transport-4.2.19.Final.jar d82d4e200456b8c5d8a1647a3724603f80616e5b35b9ada6e7a20d048f175075
+netty-transport-classes-epoll-[0-9]*.jar io/netty/netty-transport-classes-epoll/4.2.19.Final/netty-transport-classes-epoll-4.2.19.Final.jar 4d96ba8dd98ace998f6ae7bfe53ae9e581bd92ad2f7ebe5bd994d1a24306db7e
+netty-transport-native-unix-common-[0-9]*.jar io/netty/netty-transport-native-unix-common/4.2.19.Final/netty-transport-native-unix-common-4.2.19.Final.jar 341e91b8e69e6b7d92c353c845ffd91f34e921b7186254c176a64c7089b3e721
+netty-transport-native-epoll-[0-9]*-linux-x86_64.jar io/netty/netty-transport-native-epoll/4.2.19.Final/netty-transport-native-epoll-4.2.19.Final-linux-x86_64.jar 3dd01532f34540676c9e0153f96a44c78a73f2b0118ef46cb14247e512dde76b
+netty-transport-native-epoll-[0-9]*-linux-aarch_64.jar io/netty/netty-transport-native-epoll/4.2.19.Final/netty-transport-native-epoll-4.2.19.Final-linux-aarch_64.jar e3e69412243f28942dac2d1772e5be72302cc0123fd58a31f357e1eef9d2bfa5
+jackson-core-[0-9]*.jar com/fasterxml/jackson/core/jackson-core/2.21.8/jackson-core-2.21.8.jar 604ef7765013daf5cde192e40bc4c8412c4ca93f4aaf7bf8e9a62fad1e1026bb
+jackson-databind-[0-9]*.jar com/fasterxml/jackson/core/jackson-databind/2.21.8/jackson-databind-2.21.8.jar ad77f2285717e2f34c319d988b7c85783a47d0b33f33a501d1fcbf196e61bbaa
+lz4-java-[0-9]*.jar at/yawk/lz4/lz4-java/1.11.4/lz4-java-1.11.4.jar 58c8e0b813960d2a248e050c353baea73139b48a2ffc55382d42c69707e17325
+jackson-dataformat-yaml-[0-9]*.jar com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.21.8/jackson-dataformat-yaml-2.21.8.jar b924025c47ea13da43ff2860b19ce5c18ecd14b8ec5cb7d03fc315f699935abe
+jackson-datatype-jsr310-[0-9]*.jar com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.21.8/jackson-datatype-jsr310-2.21.8.jar 63a0854504aa90ed8f34f891aaa5259f9bd622bac115323559a38abdc1e81632
+jackson-module-scala_2.13-[0-9]*.jar com/fasterxml/jackson/module/jackson-module-scala_2.13/2.21.8/jackson-module-scala_2.13-2.21.8.jar b697f5a396088c569d3eb7f5ea4ee1d7968ab8e13d46d348df94daf9a8ca66b1

@@ -59,14 +59,24 @@ case "${1:-}" in
     fi
     ;;
   jre)
+    rpm --root="$root" -qa --qf '%{NAME}\n' | LC_ALL=C sort > /tmp/.jre-before
     touch /tmp/.jre-marker
     sleep 1
     dnf_install java-21-openjdk-headless
     trim "$policy/trim-jre.txt"
     finish
+    rpm --root="$root" -qa --qf '%{NAME}\n' | LC_ALL=C sort > /tmp/.jre-after
+    # The delta = files of the newly installed RPMs (they keep their packaged mtimes) plus
+    # everything the scriptlets wrote (alternatives links, ldconfig cache, rpm database).
+    {
+      LC_ALL=C comm -13 /tmp/.jre-before /tmp/.jre-after | xargs rpm --root="$root" -ql | grep '^/'
+      (cd "$root" && find . -xdev -newer /tmp/.jre-marker \( -type f -o -type l \) | sed 's#^\.##')
+    } | LC_ALL=C sort -u | while read -r path; do
+      if [ -e "$root$path" ] || [ -L "$root$path" ]; then printf '.%s\0' "$path"; fi
+    done > /tmp/.jre-files
     mkdir -p /delta
-    (cd "$root" && find . -xdev -newer /tmp/.jre-marker \( -type f -o -type l \) -print0 \
-      | tar --null -T - -cf - | tar -xf - -C /delta)
+    (cd "$root" && tar --null --no-recursion -T /tmp/.jre-files -cf - | tar -xf - -C /delta)
+    echo "JRE delta: $(tr -cd '\0' < /tmp/.jre-files | wc -c) paths, $(du -sh /delta | cut -f1)"
     ;;
   *)
     sed -n '2,8p' "$0" >&2

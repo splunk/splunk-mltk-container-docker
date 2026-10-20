@@ -1,0 +1,28 @@
+# Jars removed from the pyspark distribution in the Spark image (globs, relative to pyspark/jars).
+# DSDL runs Spark in local mode with the in-memory catalog (app/model/spark_*.py use
+# pyspark.sql, pyspark.ml and pyspark.mllib only). These components are never loaded
+# there, but they carry most of the scanner findings of the Spark jars.
+# Hive support (enableHiveSupport), the embedded Derby metastore and the Thrift JDBC server
+hive-*.jar
+spark-hive_*.jar
+spark-hive-thriftserver_*.jar
+derby*.jar
+datanucleus-*.jar
+javax.jdo-*.jar
+jdo-api-*.jar
+libfb303-*.jar
+libthrift-*.jar
+antlr-runtime-3.*.jar
+super-csv-*.jar
+transaction-api-*.jar
+# Spark Connect server and its JVM REPL client (DSDL uses classic local mode)
+spark-connect_*.jar
+connect-repl
+# Scala REPL (spark-shell); pyspark does not use it
+jline-*.jar
+# native transports for other operating systems / CPU architectures
+netty-transport-native-kqueue-*.jar
+netty-transport-classes-kqueue-*.jar
+netty-transport-native-epoll-*-linux-riscv64.jar
+netty-tcnative-boringssl-static-*-osx-*.jar
+netty-tcnative-boringssl-static-*-windows-*.jar

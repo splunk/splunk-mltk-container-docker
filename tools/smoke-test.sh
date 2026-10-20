@@ -7,7 +7,9 @@
 #   2. every app/model module imports; nothing in tests/expected/<target>.txt regresses
 #   3. PROD start: HTTPS API on 5000 answers, as the default user and as an arbitrary
 #      UID with a read-only root filesystem (OpenShift style)
-#   4. DEV start: JupyterLab (8888), MLflow UI (6000) and TensorBoard (6006) answer
+#   4. functional checks per target (tests/smoke/functional.py): compute with torch/TF,
+#      ESCU models load, local Spark job, CUDA build of the GPU stack, ...
+#   5. DEV start: JupyterLab (8888), MLflow UI (6000) and TensorBoard (6006) answer
 # --quick runs only 1 and 3.
 set -Eeuo pipefail
 
@@ -27,6 +29,11 @@ if [ "$quick" != "--quick" ]; then
   step "import matrix (expected: tests/expected/$target.txt)"
   "${run[@]}" -e EXPECTED="$(cat "tests/expected/$target.txt")" --entrypoint /opt/dltk/venv/bin/python \
     "$image" - < tests/smoke/import_models.py || failed=1
+fi
+
+if [ "$quick" != "--quick" ]; then
+  step "functional checks ($target)"
+  "${run[@]}" --entrypoint /opt/dltk/venv/bin/python "$image" - "$target" < tests/smoke/functional.py || failed=1
 fi
 
 wait_for() { # container port scheme
