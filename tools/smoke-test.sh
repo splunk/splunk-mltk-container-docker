@@ -9,8 +9,10 @@
 #      UID with a read-only root filesystem (OpenShift style)
 #   4. functional checks per target (tests/smoke/functional.py): compute with torch/TF,
 #      ESCU models load, local Spark job, CUDA build of the GPU stack, ...
-#   5. DEV start: JupyterLab (8888), MLflow UI (6000) and TensorBoard (6006) answer, and a
+#   5. DEV start: JupyterLab (8888), MLflow UI (6000) and TensorBoard (6006) answer, a
 #      notebook kernel started through JupyterLab runs a cell (tests/smoke/jupyter_kernel.py)
+#      and the MLflow API serves its store; on a fresh volume and on a volume as 5.2.x left
+#      it (MLflow file store in /srv/mlruns, ~/.ipython from earlier kernels)
 # --quick runs only 1 and 3.
 set -Eeuo pipefail
 
@@ -66,6 +68,11 @@ start_and_probe() { # name description docker-args... -- port:scheme...
   step "$description"
   docker rm -f "$name" >/dev/null 2>&1 || true
   docker volume rm "$name-srv" >/dev/null 2>&1 || true
+  if [ -n "${SEED:-}" ]; then # prepare the volume as an earlier release left it
+    docker run --rm --platform "$platform" --network none -v "$name-srv:/srv" \
+      --entrypoint /opt/dltk/venv/bin/python "$image" -c "$SEED" >/dev/null 2>&1 \
+      || { echo "FAIL preparing the volume of $name"; failed=1; }
+  fi
   docker run -d --platform "$platform" --name "$name" -v "$name-srv:/srv" "${args[@]}" "$image" >/dev/null
   local ok=1 probe
   for probe in "${probes[@]}"; do
@@ -78,9 +85,17 @@ site = next(i for i, p in enumerate(sys.path) if p.endswith('site-packages') and
 user = sys.path.index('/srv/.dsdl/site-packages')
 sys.exit(0 if user > site else 1)" 2>/dev/null; then echo "PASS user package dir is searched after the image site-packages"
   else echo "FAIL user package dir missing from sys.path or ahead of the image site-packages"; ok=0; fi
-  if [ "$name" = dsdl-smoke-dev ]; then
+  if [ -n "${KERNEL_CHECK:-}" ]; then
     docker exec -i -e SMOKE_JUPYTER_PASSWORD="$jupyter_password" "$name" /opt/dltk/venv/bin/python - \
       < tests/smoke/jupyter_kernel.py || ok=0
+  fi
+  if [ -n "${MLFLOW_EXPERIMENT:-}" ]; then
+    if docker exec "$name" python -c "
+import json, urllib.request
+url = 'http://127.0.0.1:6000/api/2.0/mlflow/experiments/get-by-name?experiment_name=$MLFLOW_EXPERIMENT'
+print(json.load(urllib.request.urlopen(url, timeout=30))['experiment']['name'])" >/dev/null 2>&1
+    then echo "PASS MLflow serves experiment '$MLFLOW_EXPERIMENT'"
+    else echo "FAIL MLflow does not serve experiment '$MLFLOW_EXPERIMENT'"; ok=0; fi
   fi
   if [ "$ok" = 0 ]; then docker logs "$name" 2>&1 | tail -30; failed=1; fi
   docker rm -f "$name" >/dev/null
@@ -94,8 +109,25 @@ jupyter_hash="$("${run[@]}" --entrypoint /opt/dltk/venv/bin/python "$image" \
 start_and_probe dsdl-smoke-prod "PROD start (default user)" -e api_token=smoke-token -- 5000:https
 start_and_probe dsdl-smoke-uid "PROD start (arbitrary UID, read-only root filesystem)" \
   --user 1000660000:0 --read-only --tmpfs /tmp -e api_token=smoke-token -- 5000:https
+# a volume as 5.2.x left it: experiments in the MLflow file store /srv/mlruns, and ~/.ipython
+# from earlier kernels (jupyter_core then tries its one-time config migration)
+legacy_volume='
+import os
+os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
+import mlflow
+mlflow.set_tracking_uri("file:///srv/mlruns")
+mlflow.set_experiment("dsdl-smoke-legacy")
+with mlflow.start_run():
+    mlflow.log_metric("m", 1.0)
+os.makedirs("/srv/.dsdl-home/.ipython/profile_default", exist_ok=True)
+'
 if [ "$quick" != "--quick" ]; then
-  start_and_probe dsdl-smoke-dev "DEV start (JupyterLab, MLflow UI, TensorBoard)" \
+  KERNEL_CHECK=1 MLFLOW_EXPERIMENT=Default start_and_probe dsdl-smoke-dev \
+    "DEV start (JupyterLab, MLflow UI, TensorBoard)" \
+    -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD="$jupyter_hash" -e api_token=smoke-token \
+    -- 5000:https 8888:https 6000:http 6006:http
+  SEED="$legacy_volume" KERNEL_CHECK=1 MLFLOW_EXPERIMENT=dsdl-smoke-legacy start_and_probe dsdl-smoke-dev-legacy \
+    "DEV start on a 5.2.x volume (MLflow file store, existing ~/.ipython)" \
     -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD="$jupyter_hash" -e api_token=smoke-token \
     -- 5000:https 8888:https 6000:http 6006:http
 fi

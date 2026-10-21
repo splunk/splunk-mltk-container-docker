@@ -125,6 +125,10 @@ RUN find /dltk \( -name .DS_Store -o -name __pycache__ \) -prune -exec rm -rf {}
  # model files must be real artefacts, never Git LFS pointer stubs
  && if grep -rlI --include='*' '^version https://git-lfs.github.com/spec/v1' /dltk/app/model/data; then \
         echo "Git LFS pointer file found in model data" >&2; exit 1; fi \
+ # jupyter_core migrates IPython 3 config once ~/.ipython exists (any volume a kernel ran
+ # on) and writes this marker into the read-only config dir; JupyterLab then dies with
+ # PermissionError. With the marker present it skips the migration.
+ && echo "not migrated: DSDL images ship their own Jupyter config" > /dltk/.jupyter/migrated \
  && sed -i 's/\r$//' /dltk/bootstrap_fast.sh /dltk/entrypoint.py \
  && chmod 0755 /dltk/bootstrap_fast.sh \
  && ln -s bootstrap_fast.sh /dltk/bootstrap_transformers.sh \

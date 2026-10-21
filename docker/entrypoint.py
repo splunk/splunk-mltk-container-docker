@@ -28,6 +28,9 @@ New in 5.3.0:
   /srv/.dsdl/site-packages (persistent, PIP_TARGET); that path is searched after
   the image's site-packages, so it cannot shadow image packages.
 * This script stays PID 1 in both modes: it forwards signals and reaps orphans.
+* The MLflow UI gets an explicit store: /srv/mlflow.db (SQLite), or the 5.2.x
+  file store /srv/mlruns when a volume has one and no mlflow.db yet (MLflow 3
+  refuses an implicit file store).
 """
 
 import datetime
@@ -268,15 +271,28 @@ def resolve_tls(env):
     return cert, key
 
 
-def uvicorn_command(env, tls, dev_mode):
+def uvicorn_command(env, tls):
+    # 5.2.x passed --reload-dir app in DEV mode without --reload, which never reloaded and only
+    # made uvicorn warn; the API reloads a model module itself on /fit
     workers = env.get("api_workers") or "1"
     command = ["uvicorn", env.get("DSDL_APP_MODULE", "app.main:app"),
                "--host", "0.0.0.0", "--port", "5000", "--workers", workers]
-    if dev_mode:
-        command += ["--reload-dir", "app"]
     if tls:
         command += ["--ssl-certfile", tls[0], "--ssl-keyfile", tls[1]]
     return command
+
+
+def mlflow_command():
+    """MLflow UI on 6000 with an explicit backend store. Without one, MLflow 3 picks up the
+    ./mlruns of a 5.2.x volume and refuses to start (file store in maintenance mode)."""
+    command = ["mlflow", "ui", "-p", "6000", "-h", "0.0.0.0"]
+    legacy = os.path.join(SRV, "mlruns")
+    database = os.path.join(SRV, "mlflow.db")
+    if os.path.isdir(legacy) and not os.path.exists(database):
+        log("MLflow UI: keeping the 5.2.x file store /srv/mlruns; migrate it with "
+            "`mlflow migrate-filestore` (MLflow 3 no longer develops the file store).")
+        return ["env", "MLFLOW_ALLOW_FILE_STORE=true"] + command + ["--backend-store-uri", "file://" + legacy]
+    return command + ["--backend-store-uri", "sqlite:///" + database]
 
 
 def supervise(commands, env):
@@ -334,14 +350,14 @@ def main():
     workers = env.get("api_workers") or "1"
     log(f"Starting DSDL {image_version} in mode = {'DEV' if dev_mode else 'PROD'} with {workers} api workers")
 
-    api = uvicorn_command(env, tls, dev_mode)
+    api = uvicorn_command(env, tls)
     if not dev_mode:
         sys.exit(supervise([api], env))
 
     services = [
         ["jupyter", "lab", "--no-browser", "--ip=0.0.0.0", "--port=8888"],
         ["tensorboard", "--bind_all", "--logdir", os.path.join(SRV, "notebooks", "logs")],
-        ["mlflow", "ui", "-p", "6000", "-h", "0.0.0.0"],
+        mlflow_command(),
     ]
     sys.exit(supervise(services + [api], env))
 
