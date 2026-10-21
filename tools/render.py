@@ -65,7 +65,7 @@ def bake(manifest):
             },
             "labels": {"org.opencontainers.image.description": target["description"]},
             # multi-platform names only; single-platform aliases (e.g. -arm64) are
-            # created from the pushed index by tools/release.sh
+            # created from the pushed index by build.sh --push
             "tags": sorted({
                 "${REPO}" + entry["image"] + ":" + entry["tag"].replace("{version}", "${VERSION}")
                 for entry in target["publish"] if "platform" not in entry

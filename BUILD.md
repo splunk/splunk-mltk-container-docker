@@ -1,4 +1,4 @@
-# Image Build Report (5.3.0, branch `v5.3.0-dev`)
+# Image Build Report (branch `v5.2.5-dev`, images built as 5.3.0)
 
 ## Result
 
