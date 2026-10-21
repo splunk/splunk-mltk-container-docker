@@ -113,6 +113,9 @@ Alternatives checked:
   has no CUDA 13 GPU wheels (2.21, and 2.22rc0 neither); it also needs driver R580+ and Turing or
   newer. This is the planned next GPU line.
 
+Decision (2026-10-21): keep torch 2.13.0+cu129, which gives Blackwell support and the exact RAPIDS
+CUDA version, and drop Maxwell, Pascal and Volta, which the CUDA 13 line drops as well.
+
 Found and fixed while verifying:
 - `import triton` after `import tensorflow` crashes the process (segfault with triton 3.7.1 and
   3.8.0, so the earlier build had it too). bitsandbytes and `torch.compile` import triton, so a
