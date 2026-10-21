@@ -9,7 +9,8 @@
 #      UID with a read-only root filesystem (OpenShift style)
 #   4. functional checks per target (tests/smoke/functional.py): compute with torch/TF,
 #      ESCU models load, local Spark job, CUDA build of the GPU stack, ...
-#   5. DEV start: JupyterLab (8888), MLflow UI (6000) and TensorBoard (6006) answer
+#   5. DEV start: JupyterLab (8888), MLflow UI (6000) and TensorBoard (6006) answer, and a
+#      notebook kernel started through JupyterLab runs a cell (tests/smoke/jupyter_kernel.py)
 # --quick runs only 1 and 3.
 set -Eeuo pipefail
 
@@ -77,17 +78,25 @@ site = next(i for i, p in enumerate(sys.path) if p.endswith('site-packages') and
 user = sys.path.index('/srv/.dsdl/site-packages')
 sys.exit(0 if user > site else 1)" 2>/dev/null; then echo "PASS user package dir is searched after the image site-packages"
   else echo "FAIL user package dir missing from sys.path or ahead of the image site-packages"; ok=0; fi
+  if [ "$name" = dsdl-smoke-dev ]; then
+    docker exec -i -e SMOKE_JUPYTER_PASSWORD="$jupyter_password" "$name" /opt/dltk/venv/bin/python - \
+      < tests/smoke/jupyter_kernel.py || ok=0
+  fi
   if [ "$ok" = 0 ]; then docker logs "$name" 2>&1 | tail -30; failed=1; fi
   docker rm -f "$name" >/dev/null
   docker volume rm "$name-srv" >/dev/null
 }
 
+# DSDL passes JUPYTER_PASSWD as a password hash (sha512:salt:digest); users log in with the plain password
+jupyter_password=smoke-test-password
+jupyter_hash="$("${run[@]}" --entrypoint /opt/dltk/venv/bin/python "$image" \
+  -c "from jupyter_server.auth.security import passwd; print(passwd('$jupyter_password', 'sha512'))")"
 start_and_probe dsdl-smoke-prod "PROD start (default user)" -e api_token=smoke-token -- 5000:https
 start_and_probe dsdl-smoke-uid "PROD start (arbitrary UID, read-only root filesystem)" \
   --user 1000660000:0 --read-only --tmpfs /tmp -e api_token=smoke-token -- 5000:https
 if [ "$quick" != "--quick" ]; then
   start_and_probe dsdl-smoke-dev "DEV start (JupyterLab, MLflow UI, TensorBoard)" \
-    -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD=smoke-test-password -e api_token=smoke-token \
+    -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD="$jupyter_hash" -e api_token=smoke-token \
     -- 5000:https 8888:https 6000:http 6006:http
 fi
 

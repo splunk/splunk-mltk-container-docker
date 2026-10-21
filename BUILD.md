@@ -133,7 +133,9 @@ Found and fixed while verifying:
   python3.12 (2) in every image. They are picked up by the monthly
   rebuild (`tools/update-digests.sh`) once Red Hat ships fixes.
 - **pip's vendored copies** of urllib3 (2), msgpack and setuptools: 4 HIGH in every image, fixed
-  when pip ships a release with newer vendored libraries.
+  when pip ships a release with newer vendored libraries. A CRITICAL published on 2026-10-20 in
+  pip 26.2.1's vendored certifi (GHSA-6q48-6c7w-9gw2, compromised emSign intermediate CAs) is fixed
+  by pip 26.2.2, which the locks now pin; images built before that need a rebuild.
 - **nltk 3.10.3:** one HIGH without a fix (cpu, llm, gpu, spark).
 - **llama-index-core 0.12:** one HIGH in the llm images, fixed only in 0.13, which needs a port of
   the LLM/RAG modules (they use APIs removed in 0.13).
@@ -156,7 +158,11 @@ For every image (`tools/smoke-test.sh`):
   TensorFlow followed by bitsandbytes/triton in one process, the bitsandbytes library it loads, a
   random-weight TimesFM checkpoint load and forecast; cuDF import; the agentic application;
 - PROD start (HTTPS API on 5000) as the default user and as an arbitrary UID with a read-only
-  root filesystem; DEV start with JupyterLab (8888), MLflow UI (6000) and TensorBoard (6006).
+  root filesystem; DEV start with JupyterLab (8888), MLflow UI (6000) and TensorBoard (6006), and a
+  notebook kernel started through JupyterLab (login, websocket) running a cell.
+- Jupyter kernels of amd64 images hang under Rosetta (Docker Desktop on Apple silicon): Rosetta
+  deadlocks in its own lock inside the kernel (also with the 5.2.x images). On Apple silicon use the
+  arm64 images; the smoke test reports the kernel check as SKIP there.
 
 The branch was also reviewed in five areas (Dockerfile/rootfs, entrypoint vs. the 5.2.x bootstrap
 contract, build tooling, dependency profiles, documentation/compatibility) with an adversarial
@@ -169,8 +175,9 @@ verifier per area; the confirmed findings are fixed in commit 8984d9a and later.
   on Blackwell), TensorFlow on Hopper with R535 (PTX JIT of its compute_90 code), `torch.compile`
   on Blackwell, TensorFlow and PyTorch sharing a GPU in one process, the bitsandbytes cuda128
   library on CUDA 12.9, and RAPIDS kernels.
-- **arm64** was built and tested for `cpu` only; the `llm`, `agentic` and `spark` locks resolve for
-  arm64 and the llm lock was install- and import-tested on arm64 during locking.
+- **arm64** was built and smoke-tested for `cpu`, and on 2026-10-21 for `llm` and `agentic` (all checks
+  passed, including the JupyterLab kernel; Trivy then flagged the pip certifi CRITICAL above). The
+  `spark` lock resolves for arm64, but no arm64 `spark` image was built.
 - **Playwright UI tests** (`testing/`, against a Splunk instance) and calls to real LLM providers
   were not run. Images were not pushed or signed.
 - **Known application issues** unchanged by this branch: `ServiceContext` (llama-index 0.12) fails

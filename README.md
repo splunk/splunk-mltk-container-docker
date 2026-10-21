@@ -109,5 +109,7 @@ The 5.2.x image names and `images.conf` stanzas keep working, but the contents c
 ### Run and test your container locally
 You can run your container locally, e.g. with `docker run -it --rm --name mltk-container-golden-cpu -p 5000:5000 -p 8888:8888 -p 6006:6006 -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD=<password> -v mltk-container-data:/srv splunk/mltk-container-golden-cpu:5.3.0`
 
+**Apple silicon (Docker Desktop on a Mac):** use the arm64 images there: `golden-cpu-arm` (`golden-cpu:<v>-arm64`), and `llm-rag`, `agentic-ai` and `spark`, which are multi-platform and run natively. An amd64 image runs under Rosetta emulation, and Rosetta deadlocks in Jupyter kernels: JupyterLab opens, but a notebook stays at "Connecting" and no cell runs (the 5.2.x images show the same). `gpu` and `rapids` are amd64 only and need an NVIDIA GPU host anyway. To build an arm64 image locally: `PLATFORM=linux/arm64 ./build.sh agentic local/ <version>`.
+
 ## Further documentation and usage
 Please find further information and documentation on splunkbase: [Download and install the Splunk App for Data Science and Deep Learning](https://splunkbase.splunk.com/app/4607/) and refer to the [official documentation pages](https://docs.splunk.com/Documentation/DSDL) on how to install and use the app.
