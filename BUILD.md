@@ -12,7 +12,7 @@ name. The internal `agentic-ai-debian` test image is retired.
 | Trivy findings | 32,357 | 1,914 | −94.1 % |
 | CRITICAL | 157 | 0 | −100 % |
 | HIGH + CRITICAL | 3,383 | 132 | −96.1 % |
-| Distinct images and size | 10 images, 38.3 GB | 6 images (cpu amd64 + arm64, llm, gpu, rapids, spark), 19.2 GB | −50 % |
+| Distinct images and size | 10 images, 38.3 GB | 6 images (cpu amd64 + arm64, llm, gpu, rapids, spark), 20.3 GB | −47 % |
 | Operating systems | 6 (UBI 9, Debian 11 and 13, DHI Debian 13, Ubuntu 20.04 and 22.04) | 1 (UBI 9.8) | |
 | Python versions | 4 (3.8, 3.9, 3.10, 3.11) | 1 (3.12) | |
 
@@ -24,7 +24,9 @@ their Python findings there.
 
 Built locally for linux/amd64 (and linux/arm64 for `cpu`) from this branch, smoke-tested with
 `tools/smoke-test.sh` and scanned with Trivy 0.64.1 (`tools/scan.sh --gate`, vulnerability DB of
-2026-10-20). Sizes from `docker image inspect` (same method as the 5.2.5 report).
+2026-10-20; `gpu` and `rapids` rebuilt and rescanned with the DB of 2026-10-21 after the move to
+CUDA 12.9, see [GPU images on the RAPIDS CUDA version](#gpu-images-on-the-rapids-cuda-version)).
+Sizes from `docker image inspect` (same method as the 5.2.5 report).
 
 | Target | Published as (5.2.x names) | Size | Modules importing (5.2.5 union) | Findings | CRIT | HIGH |
 |---|---|---:|---:|---:|---:|---:|
@@ -32,8 +34,8 @@ Built locally for linux/amd64 (and linux/arm64 for `cpu`) from this branch, smok
 | `cpu` arm64 | `golden-cpu:<v>-arm64` | 1.35 GB | 47 (40) | 180 | 0 | 11 |
 | `llm` | `ubi-llm-rag` (stanza `llm-rag`) | 1.77 GB | 61 (46) | 185 | 0 | 12 |
 | `agentic` | `ubi-llm-rag:agentic-ai-<v>` | 1.77 GB | 61 (46) | 185 | 0 | 12 |
-| `gpu` | `golden-gpu`, `golden-gpu-transformers` | 5.23 GB | 51 (48) | 184 | 0 | 11 |
-| `rapids` | `golden-gpu-rapids` | 7.03 GB | 36 (22) | 191 | 0 | 10 |
+| `gpu` | `golden-gpu`, `golden-gpu-transformers` | 5.75 GB | 51 (48) | 184 | 0 | 11 |
+| `rapids` | `golden-gpu-rapids` | 7.57 GB | 36 (22) | 191 | 0 | 10 |
 | `spark` | `spark` | 2.12 GB | 51 (44) | 253 | 0 | 32 |
 
 "Modules importing" counts the `app/model` modules that import in the image; the number in
@@ -67,7 +69,60 @@ brackets is the union of the modules that imported in the 5.2.5 images the targe
    2.10, spaCy 2, xgboost 0.90, ...).
 4. **Spark:** no jupyter/conda base, unused Spark components removed, bundled netty, Jackson and
    lz4-java replaced by hash-pinned patch releases.
-5. **GPU:** CUDA from the NVIDIA wheels only (5.2.5 shipped a second, unused CUDA in the OS layer).
+5. **GPU:** CUDA from the NVIDIA wheels only (5.2.5 shipped a second, unused CUDA in the OS layer);
+   `gpu` and `rapids` share one CUDA 12.9.1 user space, the CUDA of RAPIDS 26.10 (5.2.5: three
+   images on CUDA 12.4, 11.3 and 12.2).
+
+## GPU images on the RAPIDS CUDA version
+
+5.2.5 built its GPU images on three CUDA versions: `golden-gpu` on nvidia/cuda 12.4.1 (Ubuntu 20.04,
+torch 2.4.1+cu121), `golden-gpu-transformers` on nvidia/cuda 11.3.1 (Ubuntu 20.04, with torch
+2.9.0+cu128 in its venv) and `golden-gpu-rapids` on rapidsai/base 24.04 (nvidia/cuda 12.2.2, Ubuntu
+22.04). The latest stable RAPIDS, 26.10, is built with CUDA 12.9.1 (`rapidsai/base:26.10-cuda12`;
+the CUDA 13 variant `26.10-cuda13` uses 13.3.0).
+
+`gpu` (`golden-gpu`, `golden-gpu-transformers`) and `rapids` now use exactly that CUDA: cuda-toolkit
+12.9.1, cuDNN 9.20.0.48, NCCL 2.29.7 and nvJitLink 12.9.86, at the same versions in both locks and
+without any CUDA 13 package (smoke check `cuda_user_space`). This takes torch 2.13.0+cu129, the
+newest PyTorch with a CUDA 12.9 build (2.14 ships CUDA 12.6 and CUDA 13 builds only). The CPU
+images keep torch 2.14.1.
+
+| | before (torch 2.14.1+cu126) | now (torch 2.13.0+cu129) |
+|---|---|---|
+| CUDA libraries | 12.6.3 (nvJitLink 12.9) | 12.9.1, as RAPIDS 26.10 |
+| cuDNN | 9.10.2 | 9.20.0 |
+| PyTorch kernels | sm_50 to sm_90 (Maxwell to Hopper) | sm_75 to sm_120 (Turing to Blackwell) |
+| TensorFlow cuDNN ops on Pascal/Volta | yes | no (cuDNN 9.11 and later need Turing) |
+| Minimum driver | R535 | R535 (Blackwell: R570) |
+| Size `gpu` / `rapids` | 5.23 / 7.03 GB | 5.75 / 7.57 GB |
+| Trivy `gpu` / `rapids` (findings, HIGH) | 184, 11 / 191, 10 | 184, 11 / 191, 10 |
+
+Versus 5.2.5, PyTorch gains Blackwell for `golden-gpu` and Hopper and Blackwell for
+`golden-gpu-rapids`; it loses Volta (V100) in all three, and Maxwell and Pascal in `golden-gpu`
+and `golden-gpu-rapids`. TensorFlow 2.21 does
+not run on Blackwell with either build (its XLA stops on sm_120; fixed in TensorFlow 2.22).
+torch 2.13 is one minor behind the CPU images, the cu129 build sits outside PyTorch's support matrix,
+and 2.13 gets no patch releases. Scanners report no advisory for either torch version today.
+
+Alternatives checked:
+- **torch 2.14.1+cu126 with the CUDA libraries overridden to 12.9.1** (uv `override-dependencies`
+  on `cuda-toolkit`). It resolves, with cuDNN 9.10.2. It keeps Maxwell to Hopper, the torch version
+  of the CPU images and the 2.14.0 security hardening. It has no Blackwell kernels, and torch then
+  runs on CUDA libraries it was not released with.
+- **CUDA 13** (torch 2.14.1+cu130/cu132, RAPIDS cu13 as `rapidsai/base:26.10-cuda13`). TensorFlow
+  has no CUDA 13 GPU wheels (2.21, and 2.22rc0 neither); it also needs driver R580+ and Turing or
+  newer. This is the planned next GPU line.
+
+Found and fixed while verifying:
+- `import triton` after `import tensorflow` crashes the process (segfault with triton 3.7.1 and
+  3.8.0, so the earlier build had it too). bitsandbytes and `torch.compile` import triton, so a
+  TensorFlow model followed by a quantised or compiled torch model in one DSDL process crashed.
+  The gpu venv now imports triton just before TensorFlow (`docker/finalize-venv.sh`, smoke check
+  `tensorflow_then_triton`).
+- `finalize-venv` kept all 16 bitsandbytes native libraries when no exact CUDA match existed. It
+  now keeps the one bitsandbytes loads (cuda128 for CUDA 12.9).
+- The PyTorch cu129 index publishes torchvision 0.28.0 without a hash. It is now a direct-URL
+  source, so `uv.lock` records its sha256; no lock has an unhashed artifact.
 
 ## Residual HIGH findings
 
@@ -93,8 +148,10 @@ For every image (`tools/smoke-test.sh`):
 - every `app/model` module imported; none of the 5.2.5 modules regressed;
 - functional checks: torch and TensorFlow compute; the ESCU pretrained models (the 3 torch models
   and the DGA notebook end to end, which failed in every 5.2.5 image); spaCy 3 with its model;
-  a Spark SQL/FPGrowth/ALS job; the CUDA 12.6 build of the GPU stack (GPU architectures sm_50 to
-  sm_90); cuDF import; the agentic application;
+  a Spark SQL/FPGrowth/ALS job; the GPU stack: one CUDA 12.9 wheel set without CUDA 13 packages in
+  `gpu` and `rapids`, PyTorch architectures sm_75 to sm_120, ptxas and libdevice 12.9 for XLA,
+  TensorFlow followed by bitsandbytes/triton in one process, the bitsandbytes library it loads, a
+  random-weight TimesFM checkpoint load and forecast; cuDF import; the agentic application;
 - PROD start (HTTPS API on 5000) as the default user and as an arbitrary UID with a read-only
   root filesystem; DEV start with JupyterLab (8888), MLflow UI (6000) and TensorBoard (6006).
 
@@ -105,8 +162,10 @@ verifier per area; the confirmed findings are fixed in commit 8984d9a and later.
 ## Not verified here
 
 - **No NVIDIA GPU** on the build host: the GPU and RAPIDS images were import- and CPU-tested only.
-  Driver matrix (R535+), TensorFlow and PyTorch sharing CUDA in one process, and RAPIDS kernels
-  need a GPU run before release. Blackwell GPUs are not supported by the CUDA 12.6 build.
+  Before release they need a GPU run: the driver matrix (R535 and R580 on Turing to Hopper, R570+
+  on Blackwell), TensorFlow on Hopper with R535 (PTX JIT of its compute_90 code), `torch.compile`
+  on Blackwell, TensorFlow and PyTorch sharing a GPU in one process, the bitsandbytes cuda128
+  library on CUDA 12.9, and RAPIDS kernels.
 - **arm64** was built and tested for `cpu` only; the `llm`, `agentic` and `spark` locks resolve for
   arm64 and the llm lock was install- and import-tested on arm64 during locking.
 - **Playwright UI tests** (`testing/`, against a Splunk instance) and calls to real LLM providers

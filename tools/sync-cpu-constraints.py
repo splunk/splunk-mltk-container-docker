@@ -54,7 +54,7 @@ def cpu_closure():
         for extra in new_extras:
             todo += packages[name].get("optional-dependencies", {}).get(extra, [])
     # path and URL sources (dsdlsupport, en-core-web-sm) are fixed by [tool.uv.sources];
-    # the local version label is dropped: "torch==2.14.1" also matches +cu126
+    # the local version label is dropped: "torch==2.14.1" also matches +cpu
     return {name: packages[name]["version"].split("+")[0] for name in seen
             if "registry" in packages[name].get("source", {})}
 

@@ -189,8 +189,11 @@ ENV DSDL_APP_MODULE=app.main_agentic:app
 LABEL org.opencontainers.image.title="Splunk DSDL Agentic AI"
 
 FROM runtime AS cuda-runtime
-# CUDA user space comes from the nvidia-*-cu12 wheels; libcuda is injected by the
-# NVIDIA container toolkit. cuda>=12.2 means driver R535 or newer.
+# The CUDA 12.9 user space comes from the nvidia-*-cu12 wheels; libcuda is injected by the
+# NVIDIA container toolkit. There is no cuda-compat, so the images rely on CUDA 12
+# minor-version compatibility: cuda>=12.2 means driver R535 or newer (the RAPIDS 26.10
+# minimum); Blackwell needs R570+. The toolkit checks it with `docker run --gpus`, not in
+# CDI mode.
 ENV NVIDIA_VISIBLE_DEVICES=all \
     NVIDIA_DRIVER_CAPABILITIES=compute,utility \
     NVIDIA_REQUIRE_CUDA="cuda>=12.2" \

@@ -60,7 +60,7 @@ All changes are to packaging. No Python source line was changed.
    mistaken for the PyPI artefact.
 3. **`requires-python = ">=3.10"`.** The upstream `<3.12` bound is dropped. The
    PyTorch path has no 3.12 incompatibility. All nine modules byte-compile on 3.12, and
-   the torch path runs on CPython 3.12.15 with torch 2.14.1.
+   the torch path runs on CPython 3.12.15 with torch 2.14.1 and 2.13.0+cu129.
 4. **Dependencies reduced** to what the PyTorch path imports: `numpy`, `pandas`,
    `utilsforecast` (used by `timesfm_base`), `huggingface-hub` (`timesfm_torch`) and
    `torch`. Removed: `wandb`, `typer`, `absl-py`, `einshape`, `scikit-learn`, the
@@ -85,6 +85,9 @@ As a result, `import timesfm` works without jax. This was validated with CPython
 3.12.15, torch 2.14.1 and the gpu-cu12 lock versions of numpy, pandas, huggingface-hub,
 utilsforecast and datasets: `timesfm.TimesFm is TimesFmTorch`, and jax is never loaded.
 Tiny random-weight `TimesFmTorch.forecast` and `CiscoTsmMR.forecast` runs also passed.
+The gpu lock now has torch 2.13.0+cu129 (CUDA 12.9, see `deps/gpu-cu12/pyproject.toml`);
+the gpu smoke test (`timesfm_torch` in `tests/smoke/functional.py`) repeats the import
+check and a random-weight `TimesFmTorch` checkpoint load and forecast with it.
 
 Consequences:
 

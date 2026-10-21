@@ -101,7 +101,7 @@
         "VCS_REF": "${VCS_REF}"
       },
       "labels": {
-        "org.opencontainers.image.description": "Deep learning and transformers on NVIDIA GPUs (CUDA 12 from wheels); also runs without a GPU"
+        "org.opencontainers.image.description": "Deep learning and transformers on NVIDIA GPUs (CUDA 12.9 from wheels, as RAPIDS 26.10); also runs without a GPU"
       },
       "tags": [
         "${REPO}mltk-container-golden-gpu-transformers:${VERSION}",
@@ -121,7 +121,7 @@
         "VCS_REF": "${VCS_REF}"
       },
       "labels": {
-        "org.opencontainers.image.description": "NVIDIA RAPIDS (cuDF, cuML, cuGraph) from pip wheels"
+        "org.opencontainers.image.description": "NVIDIA RAPIDS 26.10 (cuDF, cuML, cuGraph) and PyTorch from pip wheels (CUDA 12.9)"
       },
       "tags": [
         "${REPO}mltk-container-golden-gpu-rapids:${VERSION}"

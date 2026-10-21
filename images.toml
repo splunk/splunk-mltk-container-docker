@@ -40,7 +40,7 @@ publish = [
 ]
 
 [targets.gpu]
-description = "Deep learning and transformers on NVIDIA GPUs (CUDA 12 from wheels); also runs without a GPU"
+description = "Deep learning and transformers on NVIDIA GPUs (CUDA 12.9 from wheels, as RAPIDS 26.10); also runs without a GPU"
 profile = "gpu-cu12"
 platforms = ["linux/amd64"]
 publish = [
@@ -49,7 +49,7 @@ publish = [
 ]
 
 [targets.rapids]
-description = "NVIDIA RAPIDS (cuDF, cuML, cuGraph) from pip wheels"
+description = "NVIDIA RAPIDS 26.10 (cuDF, cuML, cuGraph) and PyTorch from pip wheels (CUDA 12.9)"
 profile = "rapids-cu12"
 platforms = ["linux/amd64"]
 publish = [

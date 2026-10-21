@@ -109,22 +109,98 @@ def spark_local_job():
         spark.stop()
 
 
+def cuda_user_space():
+    # gpu and rapids share one CUDA 12.9 user space from the nvidia-*-cu12 wheels: the CUDA
+    # that RAPIDS 26.10 is built with (rapidsai/base:26.10-cuda12 is CUDA 12.9.1)
+    import re
+    from importlib import metadata
+    import torch
+    names = {(d.metadata["Name"] or ""): d.version for d in metadata.distributions()}
+    toolkit = {name: version for name, version in names.items()
+               if name.startswith(("nvidia-cuda-", "nvidia-cublas", "nvidia-nvjitlink", "cuda-toolkit"))}
+    off = {name: version for name, version in toolkit.items() if not version.startswith("12.9.")}
+    assert torch.version.cuda == "12.9" and toolkit and not off, (torch.version.cuda, off)
+    cu13 = [name for name in names if re.search(r"cu(da)?13", name)]
+    assert not cu13 and names.get("cuda-bindings", "12.").startswith("12."), (cu13, names.get("cuda-bindings"))
+    return f"torch cuda {torch.version.cuda}, {len(toolkit)} CUDA 12.9 wheels, no CUDA 13 package"
+
+
 def gpu_build():
     import tensorflow as tf
     import torch
-    assert torch.version.cuda and torch.version.cuda.startswith("12."), torch.version.cuda
     assert tf.test.is_built_with_cuda()
     archs = torch._C._cuda_getArchFlags().split()
-    # cu126 covers Maxwell to Hopper (sm_50-sm_90); Blackwell (sm_100/sm_120) needs a CUDA 13 build
-    assert "sm_80" in archs and "sm_90" in archs, archs
+    # cu129 ships SASS for Turing to Blackwell only (no PTX); Maxwell, Pascal and Volta are not built
+    assert archs == ["sm_75", "sm_80", "sm_86", "sm_90", "sm_100", "sm_120"], archs
     return f"torch cuda {torch.version.cuda} ({' '.join(archs)}), " \
            f"tf cuda {tf.sysconfig.get_build_info().get('cuda_version')}, gpu visible: {torch.cuda.is_available()}"
 
 
+def xla_toolchain():
+    # TensorFlow's XLA compiles with ptxas and libdevice from nvidia-cuda-nvcc-cu12
+    import subprocess
+    import sysconfig
+    nvcc = os.path.join(sysconfig.get_paths()["purelib"], "nvidia", "cuda_nvcc")
+    assert os.path.isfile(os.path.join(nvcc, "nvvm", "libdevice", "libdevice.10.bc")), nvcc
+    version = subprocess.run([os.path.join(nvcc, "bin", "ptxas"), "--version"], capture_output=True, text=True,
+                             check=True).stdout
+    assert "release 12.9" in version, version
+    return f"ptxas {version.strip().splitlines()[-1]}, libdevice present"
+
+
+def tensorflow_then_triton():
+    # triton (bitsandbytes, torch.compile) after tensorflow crashed the process before the
+    # import-order hook of finalize-venv; a subprocess turns a crash into a FAIL
+    import subprocess
+    code = "import tensorflow, bitsandbytes, triton; print('triton', triton.__version__)"
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,
+                            env=dict(os.environ, TF_CPP_MIN_LOG_LEVEL="3"))
+    assert result.returncode == 0, f"exit {result.returncode}: {result.stderr.strip()[-200:]}"
+    return f"tensorflow, then bitsandbytes and {result.stdout.strip().splitlines()[-1]} in one process"
+
+
+def bitsandbytes_library():
+    # finalize-venv must keep the CPU build and the CUDA build bitsandbytes selects from the full
+    # wheel (exact version, else newest lower, else oldest higher of the same major)
+    import re
+    from importlib import metadata
+    import torch
+    from bitsandbytes import cextension, cuda_specs
+    major, minor = (int(part) for part in torch.version.cuda.split("."))
+    # RECORD lists the whole wheel (metadata.files() skips the files finalize-venv removed)
+    record = metadata.distribution("bitsandbytes").read_text("RECORD")
+    shipped = sorted((int(m[1]), int(m[2])) for m in re.finditer(r"libbitsandbytes_cuda(\d\d)(\d+)\.so,", record))
+    same = [v for v in shipped if v[0] == major]
+    lower = [v for v in same if v[1] <= minor]
+    expected = max(lower) if lower else min(same)
+    expected_name = f"libbitsandbytes_cuda{expected[0]}{expected[1]}.so"
+    specs = cuda_specs.CUDASpecs(highest_compute_capability=(8, 0), cuda_version_string=f"{major}{minor}",
+                                 cuda_version_tuple=(major, minor))
+    path = cextension.get_cuda_bnb_library_path(specs)
+    native = sorted(p.name for p in path.parent.glob("libbitsandbytes_*.so"))
+    assert path.name == expected_name and native == ["libbitsandbytes_cpu.so", expected_name], (path.name, native)
+    return f"torch cuda {torch.version.cuda} loads {path.name}; {len(shipped)} CUDA builds in the wheel, 1 kept"
+
+
 def timesfm_torch():
+    # a tiny random-weight model through the public torch path: checkpoint load and forecast
+    import numpy as np
     import timesfm
-    from timesfm.timesfm_torch import TimesFmTorch  # noqa: F401
-    return f"timesfm {getattr(timesfm, '__version__', 'vendored 1.3.0.post1')}"
+    import torch
+    from timesfm import pytorch_patched_decoder as ppd
+    from timesfm.timesfm_torch import TimesFmTorch
+    assert timesfm.TimesFm is TimesFmTorch and "jax" not in sys.modules
+    # TimesFmTorch keeps the decoder's default num_kv_heads (16), so num_heads stays 16
+    hparams = timesfm.TimesFmHparams(context_len=64, horizon_len=16, input_patch_len=32, output_patch_len=32,
+                                     num_layers=1, num_heads=16, model_dims=64, per_core_batch_size=2)
+    config = ppd.TimesFMConfig(num_layers=1, num_heads=16, hidden_size=64, intermediate_size=64, patch_len=32,
+                               horizon_len=32, head_dim=4, quantiles=hparams.quantiles)
+    checkpoint = "/tmp/timesfm-smoke.ckpt"
+    torch.save(ppd.PatchedTimeSeriesDecoder(config).state_dict(), checkpoint)
+    model = timesfm.TimesFm(hparams=hparams, checkpoint=timesfm.TimesFmCheckpoint(version="torch", path=checkpoint))
+    mean, full = model.forecast([np.sin(np.arange(80) / 5.0), np.arange(50, dtype=float)], freq=[0, 1])
+    assert mean.shape == (2, 16) and full.shape[:2] == (2, 16) and np.isfinite(mean).all(), (mean.shape, full.shape)
+    return f"timesfm vendored 1.3.0.post1, random-weight forecast {mean.shape} on torch {torch.__version__}"
 
 
 def rapids_import():
@@ -151,8 +227,9 @@ CHECKS = {
     "spark": [sklearn_fit, spark_local_job],
     "llm": [torch_compute, tensorflow_compute, sklearn_fit, agentic_app],
     "agentic": [agentic_app],
-    "gpu": [torch_compute, tensorflow_compute, gpu_build, timesfm_torch, spacy_model],
-    "rapids": [torch_compute, sklearn_fit, rapids_import],
+    "gpu": [torch_compute, tensorflow_compute, cuda_user_space, gpu_build, xla_toolchain, tensorflow_then_triton,
+            bitsandbytes_library, timesfm_torch, spacy_model],
+    "rapids": [torch_compute, sklearn_fit, cuda_user_space, rapids_import],
 }
 if target not in CHECKS:
     print(f"unknown target {target} (known: {', '.join(CHECKS)})")

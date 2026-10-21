@@ -1,5 +1,6 @@
 # Dependency profile "rapids-cu12": the "gpu-rapids" image (replaces golden-gpu-rapids).
-# RAPIDS 26.10 CUDA 12 pip wheels from pypi.org + torch cu126, linux/x86_64 only.
+# RAPIDS 26.10 CUDA 12 pip wheels from pypi.org + torch cu129, linux/x86_64 only. CUDA 12.9.1,
+# the CUDA of rapidsai/base:26.10-cuda12, shared with the gpu profile.
 #
 # Declare top-level intent only. tools/lock.sh resolves the full, hashed
 # closure into uv.lock for linux/amd64.
@@ -7,7 +8,8 @@
 # base, dev and core are kept identical to deps/cpu/pyproject.toml (plus the
 # jupyterlab-nvdashboard DEV extension), and every package shared with the cpu image is
 # pinned to its deps/cpu/uv.lock version through constraint-dependencies
-# (see tools/sync-cpu-constraints.py), except where RAPIDS 26.10 forbids it.
+# (see tools/sync-cpu-constraints.py), except where RAPIDS 26.10 or the torch build shared
+# with deps/gpu-cu12 (2.13.0+cu129) forbids it.
 #
 # Differences to deps/cpu by design:
 # - no TensorFlow / tf-keras: RAPIDS documents its pip wheels as incompatible with the
@@ -107,8 +109,8 @@ core = [
 ]
 # deep learning: torch only (no TensorFlow, see header)
 dl = [
-  # 2.14 is the last torch release with CUDA 12 wheels; 2.15+ is CUDA 13 only
-  "torch==2.14.*",
+  # 2.13 is the newest torch with a CUDA 12.9 build; same torch as deps/gpu-cu12 (see there)
+  "torch==2.13.*",
 ]
 # NLP: transformers only. Keeps the 5 transformers modules that import in golden-gpu-rapids
 # 5.2.5 (bert_phishing, intent_detection_bert, transformers_*, fdai_zeroshot_classification)
@@ -123,10 +125,11 @@ rapids = [
   # core package only: graphistry[all] pulled torch 1.13, dgl, pyppeteer, gremlinpython (D16)
   "graphistry",
   # NVRTC (cuDF JIT, Numba-CUDA UDFs) must come from pip, the rootfs has no CUDA toolkit.
-  # ==12.*: CUDA 12 user space only (never mix cu12 and cu13). torch 2.14.1+cu126 pins
-  # cuda-toolkit 12.6.3; RAPIDS adds nvidia-nvjitlink-cu12>=12.9 (CUDA 12 minor-version
-  # compatible, so one driver >= R535 covers both)
-  "cuda-toolkit[nvrtc]==12.*",
+  # ==12.9.*: the CUDA that RAPIDS 26.10 is built with (rapidsai/base:26.10-cuda12 is
+  # CUDA 12.9.1) and that torch 2.13.0+cu129 pins; never mix cu12 and cu13. RAPIDS 26.10
+  # needs driver R535+; through CUDA 12 minor-version compatibility (cuDF/Numba-CUDA JIT link
+  # to cubins with nvJitLink) one driver >= R535 runs the whole image
+  "cuda-toolkit[nvrtc]==12.9.*",
 ]
 
 # Removed against 5.2.5 golden-gpu-rapids: the conda RAPIDS 24.04 base (cuspatial, cuproj,
@@ -452,7 +455,7 @@ constraint-dependencies = [
   "tinycss2==1.5.1",
   "tokenizers==0.23.3",
   "toolz==1.2.0",
-  "torch==2.14.1",
+  # torch==2.14.1 not pinned: 2.13 is the newest torch with a CUDA 12.9 build (cu129); the cpu image has 2.14
   "torchmetrics==1.9.0",
   "tornado==6.5.10",
   "tqdm==4.70.1",
@@ -495,18 +498,19 @@ required-environments = [
 
 # PyPI is the only default index. The PyTorch index serves torch and nothing else.
 [[tool.uv.index]]
-name = "pytorch-cu126"
-url = "https://download.pytorch.org/whl/cu126"
+name = "pytorch-cu129"
+url = "https://download.pytorch.org/whl/cu129"
 explicit = true
 
 [tool.uv.sources]
-torch = { index = "pytorch-cu126" }
+torch = { index = "pytorch-cu129" }
 dsdlsupport = { path = "../../package-dsdlsupport" }
 
 # Shared packages that must NOT follow the deps/cpu/uv.lock version, with the reason
 # (read by tools/sync-cpu-constraints.py).
 [tool.dsdl.cpu-constraints.exclude]
 pandas = "cudf-cu12 26.10 requires pandas>=3.0,<3.1 (cpu stays on pandas<3)"
+torch = "2.13 is the newest torch with a CUDA 12.9 build (cu129); the cpu image has 2.14"
 numba = "cudf/cuml/cugraph-cu12 26.10 require numba<0.65"
 llvmlite = "numba 0.64 requires llvmlite<0.47"
 numpy = "numba 0.64 requires numpy<2.5"

@@ -1,12 +1,14 @@
 # Dependency profile "gpu-cu12": the DSDL GPU image (golden-gpu, golden-gpu-transformers).
-# linux/x86_64 only. CUDA 12 user space comes from the nvidia-*-cu12 wheels that torch
-# and tensorflow[and-cuda] share; the image has no OS CUDA and no cuda-compat.
+# linux/x86_64 only. The CUDA 12.9 user space (the CUDA of RAPIDS 26.10 and of the rapids
+# profile) comes from the nvidia-*-cu12 wheels that torch and tensorflow[and-cuda] share;
+# the image has no OS CUDA and no cuda-compat.
 #
 # Declare top-level intent only. tools/lock.sh resolves the full, hashed closure into
 # uv.lock. Floors are fine; every upper cap needs a comment with the reason.
 # base, dev, core and nlp are kept identical to deps/cpu/pyproject.toml, and every
 # package shared with the cpu image is pinned to its deps/cpu/uv.lock version through
-# constraint-dependencies (see tools/sync-cpu-constraints.py).
+# constraint-dependencies (see tools/sync-cpu-constraints.py), except the entries of
+# [tool.dsdl.cpu-constraints.exclude] (fsspec, torch).
 
 [project]
 name = "dsdl-gpu-cu12"
@@ -94,11 +96,16 @@ core = [
   "protobuf>=6.33.5,<7",
   "grpcio",
 ]
-# deep learning on CUDA 12
+# deep learning on CUDA 12.9
 dl = [
-  # 2.14 is the last torch release with CUDA 12 wheels (2.15+ is CUDA 13 only) and
+  # 2.13 is the newest torch with a CUDA 12.9 build: 2.14 has cu126 and CUDA 13 builds only,
+  # and 2.15 is planned as CUDA 13 only (pytorch/pytorch#190385). cu129 pins cuda-toolkit
+  # 12.9.1, the CUDA that RAPIDS 26.10 is built with (rapidsai/base:26.10-cuda12). Its kernels
+  # cover sm_75-sm_120 (Turing to Blackwell); its cuDNN 9.20 pin supports Turing and newer
+  # only, which also applies to TensorFlow's cuDNN ops. cu129 is a Linux-only build outside
+  # PyTorch's support matrix (pytorch/pytorch#187834) and 2.13 gets no patch releases.
   # TensorFlow's GPU wheels are CUDA 12 only; both must share one set of nvidia-*-cu12
-  "torch==2.14.*",
+  "torch==2.13.*",
   "torchvision",
   "torchmetrics",
   "tensorflow[and-cuda]>=2.21",
@@ -461,7 +468,7 @@ constraint-dependencies = [
   "tinycss2==1.5.1",
   "tokenizers==0.23.3",
   "toolz==1.2.0",
-  "torch==2.14.1",
+  # torch==2.14.1 not pinned: 2.13 is the newest torch with a CUDA 12.9 build (cu129); the cpu image has 2.14
   "torchmetrics==1.9.0",
   "tornado==6.5.10",
   "tqdm==4.70.1",
@@ -496,16 +503,18 @@ constraint-dependencies = [
   # <<< cpu-lock constraints
 ]
 
-# PyPI is the only default index. The PyTorch CUDA 12.6 index serves torch and
-# torchvision and nothing else; the nvidia-*-cu12 wheels come from PyPI.
+# PyPI is the only default index. The PyTorch CUDA 12.9 index serves torch and nothing
+# else; the nvidia-*-cu12 wheels come from PyPI.
 [[tool.uv.index]]
-name = "pytorch-cu126"
-url = "https://download.pytorch.org/whl/cu126"
+name = "pytorch-cu129"
+url = "https://download.pytorch.org/whl/cu129"
 explicit = true
 
 [tool.uv.sources]
-torch = { index = "pytorch-cu126" }
-torchvision = { index = "pytorch-cu126" }
+torch = { index = "pytorch-cu129" }
+# the cu129 index publishes torchvision 0.28.0 (the release for torch 2.13) without a sha256;
+# uv.lock records one for a direct URL
+torchvision = { url = "https://download-r2.pytorch.org/whl/cu129/torchvision-0.28.0%2Bcu129-cp312-cp312-manylinux_2_28_x86_64.whl" }
 dsdlsupport = { path = "../../package-dsdlsupport" }
 en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
 timesfm = { path = "../../vendor/timesfm" }
@@ -514,3 +523,4 @@ timesfm = { path = "../../vendor/timesfm" }
 # (read by tools/sync-cpu-constraints.py).
 [tool.dsdl.cpu-constraints.exclude]
 fsspec = "datasets caps fsspec[http] at the last release it tested (5.1.0: <=2026.7.0)"
+torch = "2.13 is the newest torch with a CUDA 12.9 build (cu129); the cpu image has 2.14"
