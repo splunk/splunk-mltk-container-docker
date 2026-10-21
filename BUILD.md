@@ -157,9 +157,14 @@ For every image (`tools/smoke-test.sh`):
   `gpu` and `rapids`, PyTorch architectures sm_75 to sm_120, ptxas and libdevice 12.9 for XLA,
   TensorFlow followed by bitsandbytes/triton in one process, the bitsandbytes library it loads, a
   random-weight TimesFM checkpoint load and forecast; cuDF import; the agentic application;
-- PROD start (HTTPS API on 5000) as the default user and as an arbitrary UID with a read-only
-  root filesystem; DEV start with JupyterLab (8888), MLflow UI (6000) and TensorBoard (6006), and a
-  notebook kernel started through JupyterLab (login, websocket) running a cell.
+- an unknown host name fails as "not known" (NSS modules present), and every shipped notebook is
+  valid nbformat (JupyterLab's post-save export needs that);
+- PROD start (HTTPS API on 5000) as the default user, and as an arbitrary UID with a read-only root
+  filesystem on a volume whose TLS files belong to another UID; DEV start with JupyterLab (8888),
+  MLflow UI (6000) and TensorBoard (6006), a notebook kernel started through JupyterLab (login,
+  websocket) running a cell, and the MLflow API serving its store; the same DEV start on a volume as
+  5.2.x left it (MLflow file store with a run, which is migrated to SQLite, and an existing
+  `~/.ipython`); no DEV service may exit.
 - Jupyter kernels of amd64 images hang under Rosetta (Docker Desktop on Apple silicon): Rosetta
   deadlocks in its own lock inside the kernel (also with the 5.2.x images). On Apple silicon use the
   arm64 images; the smoke test reports the kernel check as SKIP there.

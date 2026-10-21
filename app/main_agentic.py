@@ -95,8 +95,15 @@ async def lifespan(app: FastAPI):
         print("Starting MCP Connection...")
 
         tools = await app.state.splunk_mcp.connect(log=log)
-        log.info("Success: MCP Connection!")
-        print("Success: MCP Connection!")
+        if app.state.splunk_mcp.is_connected:
+            log.info("Success: MCP Connection!")
+            print("Success: MCP Connection!")
+        elif not SPLUNK_MCP_URL:
+            log.info("No Splunk MCP server configured")
+            print("No Splunk MCP server configured")
+        else:
+            log.warning("MCP Connection failed: no Splunk MCP tools available")
+            print("WARNING: MCP Connection failed: no Splunk MCP tools available")
 
         log.info("Starting Testing of LLM Clients...")
         print("Starting Testing of LLM Clients...")
@@ -284,7 +291,8 @@ async def chat(req:Request):
     userName = body.get("userName")
     userSession = body.get("sessionID")
     userMessage = body.get("message", "")
-    llm_option = body.get("llmOption")
+    # DSDL may pass the option in literal double quotes, like DEFAULT_LLM
+    llm_option = (body.get("llmOption") or "").strip().strip('"')
     # currentUser = body.get("currentUser", "default")
     
     ## Setup logger
@@ -299,10 +307,14 @@ async def chat(req:Request):
     print(f"Type for User Message {type(userMessage)}")
     print(f"User Message: {userMessage}\n")
     print(f"LLM Option: {llm_option}")
-    if llm_option == None or llm_option == "":
+    if llm_option == "":
         log.error(f"LLM Option not selected! Informing user to select LLM!\n")
         log.info(f"===========================================================================\n")
         return ChatResponse(data="Please select your LLM Option!")
+    elif llm_option not in app.state.chatbot_graph_with_splunk_mcp_dict:
+        available = ", ".join(sorted(app.state.chatbot_graph_with_splunk_mcp_dict)) or "none"
+        log.error(f"LLM Option {llm_option!r} is not available (available: {available})\n")
+        return ChatResponse(data=f"LLM option '{llm_option}' is not available. Available options: {available}")
     else:
         print("===========================================================================\n")
         llm_client_graph = app.state.chatbot_graph_with_splunk_mcp_dict[llm_option]

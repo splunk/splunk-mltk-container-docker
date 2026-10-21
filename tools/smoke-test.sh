@@ -97,6 +97,17 @@ print(json.load(urllib.request.urlopen(url, timeout=30))['experiment']['name'])"
     then echo "PASS MLflow serves experiment '$MLFLOW_EXPERIMENT'"
     else echo "FAIL MLflow does not serve experiment '$MLFLOW_EXPERIMENT'"; ok=0; fi
   fi
+  # read the log once: with pipefail, `docker logs | grep -q` fails when grep stops early on a match
+  local container_log
+  container_log="$(docker logs "$name" 2>&1)"
+  if [ -n "${EXPECT_LOG:-}" ]; then
+    if grep -qF "$EXPECT_LOG" <<< "$container_log"; then echo "PASS log shows: $EXPECT_LOG"
+    else echo "FAIL log does not show: $EXPECT_LOG"; ok=0; fi
+  fi
+  if grep -qE '^\[dsdl\] warning: .* exited with status' <<< "$container_log"; then
+    echo "FAIL a service exited: $(grep -E '^\[dsdl\] warning: .* exited with status' <<< "$container_log" \
+      | head -3 | tr '\n' ' ')"; ok=0
+  fi
   if [ "$ok" = 0 ]; then docker logs "$name" 2>&1 | tail -30; failed=1; fi
   docker rm -f "$name" >/dev/null
   docker volume rm "$name-srv" >/dev/null
@@ -107,7 +118,20 @@ jupyter_password=smoke-test-password
 jupyter_hash="$("${run[@]}" --entrypoint /opt/dltk/venv/bin/python "$image" \
   -c "from jupyter_server.auth.security import passwd; print(passwd('$jupyter_password', 'sha512'))")"
 start_and_probe dsdl-smoke-prod "PROD start (default user)" -e api_token=smoke-token -- 5000:https
-start_and_probe dsdl-smoke-uid "PROD start (arbitrary UID, read-only root filesystem)" \
+# the volume was used by another UID before: its TLS directory and key are not readable
+other_uid_tls='
+import os
+os.umask(0o002)  # as the entrypoint; earlier images then created the TLS directory with 0700
+os.makedirs("/srv/.dsdl/site-packages")
+os.makedirs("/srv/.dsdl/tls")
+for name in ("dltk.pem", "dltk.key"):
+    fd = os.open("/srv/.dsdl/tls/" + name, os.O_WRONLY | os.O_CREAT, 0o600)
+    os.write(fd, b"written by another UID\n")
+    os.close(fd)
+os.chmod("/srv/.dsdl/tls", 0o700)
+'
+SEED="$other_uid_tls" EXPECT_LOG="using a certificate for this container only" start_and_probe dsdl-smoke-uid \
+  "PROD start (arbitrary UID, read-only root filesystem, TLS files of another UID)" \
   --user 1000660000:0 --read-only --tmpfs /tmp -e api_token=smoke-token -- 5000:https
 # a volume as 5.2.x left it: experiments in the MLflow file store /srv/mlruns, and ~/.ipython
 # from earlier kernels (jupyter_core then tries its one-time config migration)
@@ -126,7 +150,8 @@ if [ "$quick" != "--quick" ]; then
     "DEV start (JupyterLab, MLflow UI, TensorBoard)" \
     -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD="$jupyter_hash" -e api_token=smoke-token \
     -- 5000:https 8888:https 6000:http 6006:http
-  SEED="$legacy_volume" KERNEL_CHECK=1 MLFLOW_EXPERIMENT=dsdl-smoke-legacy start_and_probe dsdl-smoke-dev-legacy \
+  SEED="$legacy_volume" KERNEL_CHECK=1 MLFLOW_EXPERIMENT=dsdl-smoke-legacy \
+    EXPECT_LOG="MLflow: migrated the 5.2.x file store" start_and_probe dsdl-smoke-dev-legacy \
     "DEV start on a 5.2.x volume (MLflow file store, existing ~/.ipython)" \
     -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD="$jupyter_hash" -e api_token=smoke-token \
     -- 5000:https 8888:https 6000:http 6006:http

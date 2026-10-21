@@ -4,6 +4,7 @@ from typing import Optional, List
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.tools import load_mcp_tools 
+import re
 import os, httpx
 
 from app.model.llm_utils_chat import create_llm
@@ -42,6 +43,9 @@ class SplunkMCPManager:
         """
         if self.tools is not None:
             return self.tools  # already connected
+        if not self.url:  # no Splunk MCP server configured in DSDL
+            self.tools, self.num_of_tools = [], 0
+            return self.tools
 
         self.client = MultiServerMCPClient(
             {
@@ -78,6 +82,15 @@ class SplunkMCPManager:
         except Exception as e:
             self.tools = []
             self.num_of_tools = 0
+            # the MCP client wraps the cause (refused, 401, TLS, DNS) in exception groups
+            causes = [e]
+            while any(isinstance(cause, BaseExceptionGroup) for cause in causes):
+                causes = [leaf for cause in causes
+                          for leaf in (cause.exceptions if isinstance(cause, BaseExceptionGroup) else [cause])]
+            reason = "; ".join(f"{type(cause).__name__}: {cause}" for cause in causes)
+            url = re.sub(r"//[^/@]*@", "//", str(self.url))  # never log credentials in the URL
+            print(f"Splunk MCP connection to {url} failed: {reason}")
+            log.error(f"Splunk MCP connection to {url} failed: {reason}")
             return self.tools
 
     async def get_llm(self, tools, log, llm):

@@ -160,7 +160,12 @@ ENV PATH=/opt/dltk/venv/bin:/usr/bin:/bin \
     JUPYTERLAB_WORKSPACES_DIR=/srv/.dsdl-home/.jupyter/lab/workspaces \
     MPLCONFIGDIR=/tmp/matplotlib \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    # print() of the API and the model modules reaches docker logs (and DSDL) immediately
+    PYTHONUNBUFFERED=1 \
+    # MLflow 3 and other libraries send usage telemetry unless told not to
+    MLFLOW_DISABLE_TELEMETRY=true \
+    DO_NOT_TRACK=true
 LABEL org.opencontainers.image.source="https://github.com/splunk/splunk-mltk-container-docker" \
       org.opencontainers.image.vendor="Splunk" \
       org.opencontainers.image.licenses="Apache-2.0" \

@@ -10,7 +10,9 @@ At start the container uses, in this order:
 2. `/dltk/.jupyter/dltk.pem` and `/dltk/.jupyter/dltk.key` if a derived image
    provides them,
 3. a self-signed pair generated for this installation into `/srv/.dsdl/tls`
-   (valid for one year and renewed automatically before it expires).
+   (valid for one year and renewed automatically before it expires; readable by
+   group 0, so the volume can move to another UID). If that directory cannot be
+   written, a certificate for this container only is generated in `/tmp`.
 
 To create a certificate for option 1 or 2, for example:
 

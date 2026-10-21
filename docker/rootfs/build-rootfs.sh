@@ -62,6 +62,11 @@ case "${1:-}" in
     dnf_root upgrade
     dnf_install $(lines "$policy/packages.txt")
     trim "$policy/trim.txt"
+    # trim.txt removes systemd-libs (libnss_myhostname, libnss_systemd) and sssd is not installed:
+    # point NSS at the modules that exist, or a lookup of an unknown host name fails with EBUSY
+    # ("Device or resource busy") instead of "Name or service not known"
+    sed -i -E -e 's/^(passwd|group|services|netgroup|automount):.*/\1: files/' \
+      -e 's/^hosts:.*/hosts: files dns/' "$root/etc/nsswitch.conf"
     # one static account; arbitrary UIDs get an entry through nss_wrapper at start
     printf 'dltk:x:1001:0:dltk user:/srv/.dsdl-home:/bin/bash\n' >> "$root/etc/passwd"
     chmod 0644 "$root/etc/passwd" "$root/etc/group"

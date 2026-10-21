@@ -27,6 +27,21 @@ check "runs as uid 1001 / gid 0 by default" test "$(id -u):$(id -g)" = "1001:0"
 check "time zone database present" test -f /usr/share/zoneinfo/America/New_York
 check "no world-writable files outside /tmp" none_found find / -xdev ! -type l -perm -o+w ! -path '/tmp*' ! -path '/var/tmp*' ! -path '/proc/*' ! -path '/dev/*'
 check "tar available (kubectl cp)" command -v tar
+# nsswitch.conf must only name NSS modules that exist, or unknown names fail with EBUSY
+check "an unknown host name fails as 'not known' (NSS modules present)" /opt/dltk/venv/bin/python -c "
+import socket, sys
+try:
+    socket.getaddrinfo('dsdl-smoke.invalid', 80)
+except socket.gaierror:
+    sys.exit(0)
+except OSError:
+    sys.exit(1)
+sys.exit(1)"
+# JupyterLab's post-save export fails on notebooks that violate the nbformat schema
+check "shipped notebooks are valid nbformat" /opt/dltk/venv/bin/python -c "
+import glob, nbformat
+for path in glob.glob('/dltk/notebooks/**/*.ipynb', recursive=True):
+    nbformat.validate(nbformat.read(path, as_version=4))"
 
 # every ELF dependency of the venv and the OS must resolve inside the image. OPTIONAL: libraries
 # that are injected at run time (libcuda), multi-node fabrics, alternative accelerator backends,
