@@ -13,6 +13,7 @@
 #      notebook kernel started through JupyterLab runs a cell (tests/smoke/jupyter_kernel.py)
 #      and the MLflow API serves its store; on a fresh volume and on a volume as 5.2.x left
 #      it (MLflow file store in /srv/mlruns, ~/.ipython from earlier kernels)
+#   6. agentic only: chat routes against fake LLM and MCP services (tools/agentic-security-test.sh)
 # --quick runs only 1 and 3.
 set -Eeuo pipefail
 
@@ -155,6 +156,17 @@ if [ "$quick" != "--quick" ]; then
     "DEV start on a 5.2.x volume (MLflow file store, existing ~/.ipython)" \
     -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD="$jupyter_hash" -e api_token=smoke-token \
     -- 5000:https 8888:https 6000:http 6006:http
+fi
+
+# agentic image: chat routes against fake LLM and MCP services (token check, no config leak, no
+# path traversal, no CORS, the DSDL API not blocked by unreachable endpoints)
+if [ "$target" = agentic ] && [ "$quick" != "--quick" ]; then
+  step "agentic security checks (tools/agentic-security-test.sh)"
+  if security_log="$(tools/agentic-security-test.sh "$image" 2>&1)"; then
+    grep -E '^(== |PASS|FAIL)' <<< "$security_log"
+  else
+    echo "$security_log"; failed=1  # with the API log tail the test prints on a failure
+  fi
 fi
 
 echo

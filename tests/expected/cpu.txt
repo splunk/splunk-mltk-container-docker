@@ -1,5 +1,6 @@
 # app/model modules that must import in the cpu image: the union of the modules
 # that imported in the 5.2.5 images it replaces (golden-cpu, golden-cpu-arm, escu-cpu, golden-cpu-transformers).
+# Plus transformers_classification and transformers_summarization, which failed there.
 RAG_milvus_manager
 a_threat_hunting_notebook
 agentic_workflow_execution
@@ -34,7 +35,9 @@ random_cut_forest
 seasonality_and_trend_decomposition
 shap_xgboost
 stumpy
+transformers_classification
 transformers_sentencebert
+transformers_summarization
 transformers_zeroshot_classification
 umap
 univariate_cnn_forecast

@@ -39,8 +39,10 @@ Sizes from `docker image inspect` (same method as the 5.2.5 report).
 | `spark` | `spark` | 2.12 GB | 51 (44) | 253 | 0 | 32 |
 
 "Modules importing" counts the `app/model` modules that import in the image; the number in
-brackets is the union of the modules that imported in the 5.2.5 images the target replaces
-(`tests/expected/<target>.txt`). No module regressed in any image.
+brackets is the union of the modules that imported in the 5.2.5 images the target replaces. The
+smoke test's lists (`tests/expected/<target>.txt`) hold that union plus `transformers_classification`
+and, where they import, `transformers_summarization`, which failed in 5.2.5 and import since 5.2.5-dev.
+No module regressed in any image.
 
 ### Per published reference
 
@@ -157,6 +159,8 @@ For every image (`tools/smoke-test.sh`):
   `gpu` and `rapids`, PyTorch architectures sm_75 to sm_120, ptxas and libdevice 12.9 for XLA,
   TensorFlow followed by bitsandbytes/triton in one process, the bitsandbytes library it loads, a
   random-weight TimesFM checkpoint load and forecast; cuDF import; the agentic application;
+  transformers in `cpu` and `gpu`: BERT and T5 with their tokenizers loaded from a local directory
+  (as the assistants load their base models), MeCab with ipadic, Janome and ROUGE;
 - an unknown host name fails as "not known" (NSS modules present), and every shipped notebook is
   valid nbformat (JupyterLab's post-save export needs that);
 - PROD start (HTTPS API on 5000) as the default user, and as an arbitrary UID with a read-only root
@@ -165,6 +169,29 @@ For every image (`tools/smoke-test.sh`):
   websocket) running a cell, and the MLflow API serving its store; the same DEV start on a volume as
   5.2.x left it (MLflow file store with a run, which is migrated to SQLite, and an existing
   `~/.ipython`); no DEV service may exit.
+- `agentic` only (`tools/agentic-security-test.sh`, against a fake OpenAI-compatible LLM, a fake
+  Splunk MCP server and a blackhole that accepts connections and never answers): `/mcp/status`
+  returns no client configuration, and only the configured LLM is available (`is_configured`
+  "true" is, "false" and 0 are not); a wrong token gets 401 on all chat routes, and no token gets
+  401 with `DSDL_AGENTIC_REQUIRE_TOKEN=true`; a two-turn chat runs the MCP tool once with the
+  configured MCP token; the replies "what about yesterday?", "yes, but only for index=main" and "y"
+  do not approve it, a "yes" after switching the LLM option does not run the other option's pending
+  call, and `/logReview` drops a pending approval, without leaving a checkpoint behind; a failing
+  tool call is answered and the session goes on, and so is a tool call during which the MCP server
+  dies (`DSDL_AGENTIC_TOOL_TIMEOUT`); a session answers one message at a time, and a turn over
+  `DSDL_AGENTIC_TURN_TIMEOUT` ends with a short answer; user and session names cannot escape `/srv/logs`; `/logReview` reads at most
+  5000 events, and `/logReview` and `/chatbox` bodies over their limit, also chunked, get a short
+  answer; no CORS headers; one start-up probe; a probe without answer ends after its timeout and
+  keeps tool calling; an evicted session (`MAX_SESSIONS`) loses its pending approval and graph
+  checkpoint; while MCP and LLM endpoints never answer, the DSDL API and `/mcp/status` answer at
+  once and a chat after about 20 s; while the LLM probe hangs, the DSDL API and `/mcp/status`
+  answer at once; without `llm_config` the chat says so; an MCP server that is down at start-up is
+  connected once it is up, and reconnected after it restarts and after it stopped answering for a
+  while (paused: two failed pings, reported disconnected meanwhile), with the tool working each time
+  and an approval from before the reconnect not resumed; SIGTERM shuts the API down within seconds and
+  without errors with an open MCP session (closing it), during the MCP connect, during the LLM
+  probe and while the start-up waits. In mutation runs, removing any of 14 protections in turn
+  (token, approval, eviction, body limits, supervisor, timeouts, ...) makes the suite fail.
 - Jupyter kernels of amd64 images hang under Rosetta (Docker Desktop on Apple silicon): Rosetta
   deadlocks in its own lock inside the kernel (also with the 5.2.x images). On Apple silicon use the
   arm64 images; the smoke test reports the kernel check as SKIP there.
@@ -187,8 +214,12 @@ verifier per area; the confirmed findings are fixed in commit 8984d9a and later.
   were not run. Images were not pushed or signed.
 - **Known application issues** unchanged by this branch: `ServiceContext` (llama-index 0.12) fails
   at fit time in `RAG_Encoding`, `RAG_Inferencing` and `llm_rag_script_saas_llm`;
-  `timesfm_multi_resolution` imports a missing name; the agentic routes `/chatbox`, `/logReview`
-  and `/mcp/status` have no token check.
+  `timesfm_multi_resolution` imports a missing name. The agentic chat routes require the api token
+  only with `DSDL_AGENTIC_REQUIRE_TOKEN=true`, which needs a DSDL app that sends it. `validate_token`
+  (`app/main.py`, all images) accepts any header that contains the token, without a constant-time
+  compare. Chat sessions are keyed by the client's session id only, not bound to a user. The agentic
+  image runs one API worker, and `/fit` and `/apply` run on its event loop, so a long fit on that
+  container holds the chat until it finishes.
 
 ## Reproduce
 

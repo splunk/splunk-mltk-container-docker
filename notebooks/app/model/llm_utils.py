@@ -23,19 +23,27 @@ import json
 import os
 
 
+def is_configured(item):
+    """DSDL marks a configured entry with "1" (or true); 0, "0", "false" and "" mean not configured."""
+    return str(item.get("is_configured", "")).strip().lower() in ("1", "true", "yes")
+
+
+def configured_entries(entries):
+    """The configured entries of a service. DSDL's setup page manages the first entry; later ones
+    are presets (such as a second Hugging Face model) that follow its choice."""
+    if not entries or not is_configured(entries[0]):
+        return []
+    return [entry for entry in entries if is_configured(entry)]
+
+
 def create_llm(service=None, model=None):
     config = json.loads(os.environ['llm_config'])
     service_list = ['ollama','azure_openai','openai','bedrock','gemini']
     if service in service_list:
         llm_config_list = config['llm'][service]
         print(f"Initializing LLM object from {service}")
-        success = 0
-        for llm_config_item in llm_config_list:
-            if llm_config_item['is_configured']:
-                success = 1
-            else:
-                llm_config_list.remove(llm_config_item)
-        if not success:
+        llm_config_list[:] = configured_entries(llm_config_list)
+        if not llm_config_list:
             err = f"Service {service} is not configured. Please configure the service."
             return None, err
     else:
@@ -103,13 +111,8 @@ def create_embedding_model(service=None, model=None, use_local=0):
     if service in service_list:
         emb_config_list = config['embedding_model'][service]
         print(f"Initializing embedding model object from {service}")
-        success = 0
-        for emb_config_item in emb_config_list:
-            if emb_config_item['is_configured']:
-                success = 1
-            else:
-                emb_config_list.remove(emb_config_item)
-        if not success:
+        emb_config_list[:] = configured_entries(emb_config_list)
+        if not emb_config_list:
             err = f"Service {service} is not configured. Please configure the service."
             return None, None, err
     else:
@@ -204,13 +207,8 @@ def create_vector_db(service=None, collection_name=None, dim=None):
     if service in service_list:
         vec_config_list = config['vector_db'][service]
         print(f"Initializing vector database object from {service}")
-        success = 0
-        for vec_config_item in vec_config_list:
-            if vec_config_item['is_configured']:
-                success = 1
-            else:
-                vec_config_list.remove(vec_config_item)
-        if not success:
+        vec_config_list[:] = configured_entries(vec_config_list)
+        if not vec_config_list:
             err = f"Service {service} is not configured. Please configure the service."
             return None, err
     else:

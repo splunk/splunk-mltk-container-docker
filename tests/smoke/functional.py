@@ -77,6 +77,51 @@ def escu_dga_notebook():
     return f"pred_dga {result['pred_dga'].tolist()}"
 
 
+def transformers_stack():
+    """What the transformers assistants need, offline: the base models (BERT, T5) are not in the
+    image and load from a local directory, so tiny random ones stand in for them, with a BERT
+    vocabulary and a SentencePiece model (T5Tokenizer, is_fast=True, as the summarization
+    assistant loads it)."""
+    import tempfile
+    import sentencepiece
+    import torch
+    from transformers import BertConfig, BertModel, BertTokenizer, T5Config, T5ForConditionalGeneration, T5Tokenizer
+    torch.manual_seed(0)
+    bert = BertModel(BertConfig(vocab_size=100, hidden_size=32, num_hidden_layers=2, num_attention_heads=2,
+                                intermediate_size=64))
+    t5 = T5ForConditionalGeneration(T5Config(vocab_size=100, d_model=32, d_ff=64, d_kv=16, num_layers=2, num_heads=2,
+                                             decoder_start_token_id=0, pad_token_id=0, eos_token_id=1))
+    with tempfile.TemporaryDirectory() as tmp:
+        bert.save_pretrained(tmp + "/bert")
+        t5.save_pretrained(tmp + "/t5")
+        with open(tmp + "/bert/vocab.txt", "w") as f:
+            f.write("\n".join(["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]", "the", "cat", "sat"]) + "\n")
+        with open(tmp + "/corpus.txt", "w") as f:
+            f.write("\n".join(["the cat sat on the mat", "summarize: the dog ran in the park"] * 50))
+        sentencepiece.SentencePieceTrainer.train(
+            input=tmp + "/corpus.txt", model_prefix=tmp + "/t5/spiece", vocab_size=30, hard_vocab_limit=False,
+            pad_id=0, eos_id=1, unk_id=2, bos_id=-1, minloglevel=2)
+        bert = BertModel.from_pretrained(tmp + "/bert", local_files_only=True)
+        t5 = T5ForConditionalGeneration.from_pretrained(tmp + "/t5", local_files_only=True)
+        bert_tokenizer = BertTokenizer.from_pretrained(tmp + "/bert", do_lower_case=True)
+        t5_tokenizer = T5Tokenizer.from_pretrained(tmp + "/t5", is_fast=True)
+    ids = bert_tokenizer("The cat sat", return_tensors="pt")["input_ids"]
+    assert bert_tokenizer.convert_ids_to_tokens(ids[0].tolist()) == ["[CLS]", "the", "cat", "sat", "[SEP]"]
+    assert bert(input_ids=ids).last_hidden_state.shape == (1, 5, 32)
+    ids = t5_tokenizer("summarize: the cat sat", return_tensors="pt")["input_ids"]
+    assert t5_tokenizer.decode(ids[0], skip_special_tokens=True) == "summarize: the cat sat"
+    assert t5.generate(ids, max_new_tokens=4).shape[0] == 1
+    import fugashi
+    import ipadic
+    from janome.tokenizer import Tokenizer
+    from sumeval.metrics.rouge import RougeCalculator
+    assert len(fugashi.GenericTagger(ipadic.MECAB_ARGS).parse("今日は良い天気です").split()) >= 4
+    assert list(Tokenizer().tokenize("今日は良い天気です", wakati=True))
+    assert RougeCalculator(lang="en").rouge_n(summary="the cat sat", references="the cat sat down", n=1) > 0.5
+    import transformers
+    return (f"transformers {transformers.__version__}: BERT and T5 with their tokenizers from a local directory, "
+            "MeCab (ipadic), Janome, ROUGE")
+
 def spacy_model():
     import spacy
     doc = spacy.load("en_core_web_sm")("Splunk is based in San Francisco.")
@@ -223,12 +268,13 @@ def agentic_app():
 
 
 CHECKS = {
-    "cpu": [torch_compute, tensorflow_compute, sklearn_fit, escu_torch_models, escu_dga_notebook, spacy_model],
+    "cpu": [torch_compute, tensorflow_compute, sklearn_fit, escu_torch_models, escu_dga_notebook, spacy_model,
+            transformers_stack],
     "spark": [sklearn_fit, spark_local_job],
     "llm": [torch_compute, tensorflow_compute, sklearn_fit, agentic_app],
     "agentic": [agentic_app],
     "gpu": [torch_compute, tensorflow_compute, cuda_user_space, gpu_build, xla_toolchain, tensorflow_then_triton,
-            bitsandbytes_library, timesfm_torch, spacy_model],
+            bitsandbytes_library, timesfm_torch, spacy_model, transformers_stack],
     "rapids": [torch_compute, sklearn_fit, cuda_user_space, rapids_import],
 }
 if target not in CHECKS:

@@ -1,5 +1,6 @@
 # app/model modules that must import in the spark image: the cpu set plus the modules
 # that imported in the 5.2.5 spark image (the spark image is built FROM cpu).
+# Plus transformers_classification and transformers_summarization, which failed to import in 5.2.5 and import since 5.2.5-dev.
 RAG_milvus_manager
 a_threat_hunting_notebook
 agentic_workflow_execution
@@ -38,7 +39,9 @@ spark_fp_growth
 spark_gradient_boosting_classifier
 spark_recommender
 stumpy
+transformers_classification
 transformers_sentencebert
+transformers_summarization
 transformers_zeroshot_classification
 umap
 univariate_cnn_forecast

@@ -347,8 +347,13 @@ def uvicorn_command(env, tls):
     # 5.2.x passed --reload-dir app in DEV mode without --reload, which never reloaded and only
     # made uvicorn warn; the API reloads a model module itself on /fit
     workers = env.get("api_workers") or "1"
-    command = ["uvicorn", env.get("DSDL_APP_MODULE", "app.main:app"),
-               "--host", "0.0.0.0", "--port", "5000", "--workers", workers]
+    module = env.get("DSDL_APP_MODULE", "app.main:app")
+    if module.startswith("app.main_agentic:") and workers != "1":
+        # chat sessions and tool approvals live in the worker process; DSDL sets one
+        # api_workers value for all containers
+        log(f"api_workers={workers} ignored: the agentic API runs one worker")
+        workers = "1"
+    command = ["uvicorn", module, "--host", "0.0.0.0", "--port", "5000", "--workers", workers]
     if tls:
         command += ["--ssl-certfile", tls[0], "--ssl-keyfile", tls[1]]
     return command
