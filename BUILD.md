@@ -215,7 +215,8 @@ verifier per area; the confirmed findings are fixed in commit 8984d9a and later.
 - **Known application issues** unchanged by this branch: `ServiceContext` (llama-index 0.12) fails
   at fit time in `RAG_Encoding`, `RAG_Inferencing` and `llm_rag_script_saas_llm`;
   `timesfm_multi_resolution` imports a missing name. The agentic chat routes require the api token
-  only with `DSDL_AGENTIC_REQUIRE_TOKEN=true`, which needs a DSDL app that sends it. `validate_token`
+  only with `DSDL_AGENTIC_REQUIRE_TOKEN=true`, which the DSDL app sets from 5.2.5 on (it also sends the
+  token); started by an older DSDL app, the chat accepts requests without a token. `validate_token`
   (`app/main.py`, all images) accepts any header that contains the token, without a constant-time
   compare. Chat sessions are keyed by the client's session id only, not bound to a user. The agentic
   image runs one API worker, and `/fit` and `/apply` run on its event loop, so a long fit on that
