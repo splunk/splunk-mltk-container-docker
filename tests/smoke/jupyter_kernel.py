@@ -2,7 +2,7 @@
 
 Runs inside a container started with MODE_DEV_PROD=DEV and JUPYTER_PASSWD set to a password hash, as
 DSDL does (python - < jupyter_kernel.py, plain password in SMOKE_JUPYTER_PASSWORD), the way a user's
-notebook talks to the kernel. Prints PASS, FAIL or (amd64 under Rosetta) SKIP; exits 1 on FAIL.
+notebook talks to the kernel. Prints PASS, FAIL or (emulated platform, SMOKE_EMULATED=1) SKIP; exits 1 on FAIL.
 """
 
 import asyncio
@@ -94,15 +94,13 @@ def main():
 
 
 def failed(detail):
-    try:
-        rosetta = os.path.basename(os.readlink("/proc/self/exe")) == "rosetta"
-    except OSError:
-        rosetta = False
-    if rosetta:
-        # amd64 image on Apple silicon: Rosetta deadlocks in the kernel (futex LOCK_PI in Rosetta
-        # itself, also with the 5.2.x images); not a defect of the image, so do not fail the run
-        print(f"SKIP kernel check under Rosetta (amd64 emulation hangs Jupyter kernels; use the arm64 image "
-              f"on Apple silicon): {detail}")
+    # tools/smoke-test.sh sets SMOKE_EMULATED=1 when the image platform differs from the Docker
+    # engine's (amd64 on Apple silicon): Rosetta deadlocks in the kernel (futex LOCK_PI in Rosetta
+    # itself, also with the 5.2.x images), and /proc/self/exe shows the guest binary, so the
+    # emulator cannot be detected from inside. Not a defect of the image: do not fail the run.
+    if os.environ.get("SMOKE_EMULATED") == "1":
+        print(f"SKIP kernel check under emulation (amd64 on Apple silicon hangs Jupyter kernels; verify on "
+              f"an amd64 host): {detail}")
         return 0
     print(f"FAIL kernel did not run a cell: {detail}")
     return 1

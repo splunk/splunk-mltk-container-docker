@@ -27,7 +27,10 @@ if [ ! -f "tests/expected/$target.txt" ]; then
   exit 2
 fi
 platform="${DSDL_TEST_PLATFORM:-$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$image")}"
-echo "Testing $image ($target) on $platform"
+engine="linux/$(docker version --format '{{.Server.Arch}}' 2>/dev/null)"
+emulated=0
+[ "$platform" != "$engine" ] && emulated=1  # e.g. amd64 under Rosetta or QEMU on Apple silicon
+echo "Testing $image ($target) on $platform$([ $emulated = 1 ] && echo " (emulated on $engine)")"
 run=(docker run --rm -i --platform "$platform" --network none)
 failed=0
 step() { echo; echo "== $*"; }
@@ -89,7 +92,7 @@ user = sys.path.index('/srv/.dsdl/site-packages')
 sys.exit(0 if user > site else 1)" 2>/dev/null; then echo "PASS user package dir is searched after the image site-packages"
   else echo "FAIL user package dir missing from sys.path or ahead of the image site-packages"; ok=0; fi
   if [ -n "${KERNEL_CHECK:-}" ]; then
-    docker exec -i -e SMOKE_JUPYTER_PASSWORD="$jupyter_password" "$name" /opt/dltk/venv/bin/python - \
+    docker exec -i -e SMOKE_JUPYTER_PASSWORD="$jupyter_password" -e SMOKE_EMULATED="$emulated" "$name" /opt/dltk/venv/bin/python - \
       < tests/smoke/jupyter_kernel.py || ok=0
   fi
   if [ -n "${MLFLOW_EXPERIMENT:-}" ]; then
