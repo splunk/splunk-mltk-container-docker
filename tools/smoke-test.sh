@@ -101,9 +101,12 @@ print(json.load(urllib.request.urlopen(url, timeout=30))['experiment']['name'])"
   # read the log once: with pipefail, `docker logs | grep -q` fails when grep stops early on a match
   local container_log
   container_log="$(docker logs "$name" 2>&1)"
-  if [ -n "${EXPECT_LOG:-}" ]; then
-    if grep -qF "$EXPECT_LOG" <<< "$container_log"; then echo "PASS log shows: $EXPECT_LOG"
-    else echo "FAIL log does not show: $EXPECT_LOG"; ok=0; fi
+  if [ -n "${EXPECT_LOG:-}" ]; then # one expected line per line of EXPECT_LOG
+    local expected
+    while IFS= read -r expected; do
+      if grep -qF "$expected" <<< "$container_log"; then echo "PASS log shows: $expected"
+      else echo "FAIL log does not show: $expected"; ok=0; fi
+    done <<< "$EXPECT_LOG"
   fi
   if grep -qE '^\[dsdl\] warning: .* exited with status' <<< "$container_log"; then
     echo "FAIL a service exited: $(grep -E '^\[dsdl\] warning: .* exited with status' <<< "$container_log" \
@@ -134,10 +137,18 @@ os.chmod("/srv/.dsdl/tls", 0o700)
 SEED="$other_uid_tls" EXPECT_LOG="using a certificate for this container only" start_and_probe dsdl-smoke-uid \
   "PROD start (arbitrary UID, read-only root filesystem, TLS files of another UID)" \
   --user 1000660000:0 --read-only --tmpfs /tmp -e api_token=smoke-token -- 5000:https
-# a volume as 5.2.x left it: experiments in the MLflow file store /srv/mlruns, and ~/.ipython
-# from earlier kernels (jupyter_core then tries its one-time config migration)
+# a volume as 5.2.x left it: experiments in the MLflow file store /srv/mlruns, ~/.ipython from
+# earlier kernels (jupyter_core then tries its one-time config migration), and version.md with
+# this image's own version, as the 5.2.5 test images wrote "5.2.5", plus a shipped notebook
+# edited in place: it must be backed up although the number matches
 legacy_volume='
-import os
+import os, shutil
+os.makedirs("/srv/notebooks", exist_ok=True)
+shutil.copyfile("/dltk/notebooks/barebone_template.ipynb", "/srv/notebooks/barebone_template.ipynb")
+with open("/srv/notebooks/barebone_template.ipynb", "a") as notebook:
+    notebook.write(" ")
+with open("/srv/version.md", "w") as version:
+    version.write(os.environ["DSDL_VERSION"] + "\n")
 os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
 import mlflow
 mlflow.set_tracking_uri("file:///srv/mlruns")
@@ -152,7 +163,8 @@ if [ "$quick" != "--quick" ]; then
     -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD="$jupyter_hash" -e api_token=smoke-token \
     -- 5000:https 8888:https 6000:http 6006:http
   SEED="$legacy_volume" KERNEL_CHECK=1 MLFLOW_EXPERIMENT=dsdl-smoke-legacy \
-    EXPECT_LOG="MLflow: migrated the 5.2.x file store" start_and_probe dsdl-smoke-dev-legacy \
+    EXPECT_LOG="MLflow: migrated the 5.2.x file store
+Backed up 1 notebook files from an earlier" start_and_probe dsdl-smoke-dev-legacy \
     "DEV start on a 5.2.x volume (MLflow file store, existing ~/.ipython)" \
     -e MODE_DEV_PROD=DEV -e JUPYTER_PASSWD="$jupyter_hash" -e api_token=smoke-token \
     -- 5000:https 8888:https 6000:http 6006:http

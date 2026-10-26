@@ -1231,7 +1231,7 @@ wheels = [
 
 [[package]]
 name = "dsdl-rapids-cu12"
-version = "5.3.0"
+version = "5.2.5"
 source = { virtual = "." }
 default-groups = []
 dependencies = [

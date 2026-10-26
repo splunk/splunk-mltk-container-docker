@@ -6,9 +6,9 @@
 #
 # One build target can be published under several names. The extra names keep
 # the image references and images.conf stanzas of 5.2.x working:
-# 11 images in 5.2.5 are 6 build targets from 5.3.0 on.
+# the 10 image references of the 5.2.5 test images (Docker Hub, September 2026) are 6 build targets.
 
-version = "5.3.0"
+version = "5.2.5"
 repo = "splunk/"
 python = "3.12"
 

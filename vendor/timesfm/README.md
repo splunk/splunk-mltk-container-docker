@@ -26,7 +26,7 @@ The 1.3.0 release on PyPI cannot be installed into the DSDL images:
 - It declares `Requires-Python: >=3.10,<3.12`. The images use Python 3.12. The upper
   bound only comes from the jax / paxml / lingvo extras, not from the PyTorch path.
 - It depends on `wandb`. wandb ships a Go binary (`wandb-core`) with 120 scanner findings,
-  54 of them High or Critical, in 5.2.5 golden-gpu-transformers. It also brings `typer`,
+  54 of them High or Critical, in the 5.2.5 golden-gpu-transformers test image. It also brings `typer`,
   and through the finetuning example `yfinance`, `curl-cffi`, `peewee` and
   `multitasking`.
 - TimesFM 2.x and 3.x have a different API, so a newer release needs a code port first.

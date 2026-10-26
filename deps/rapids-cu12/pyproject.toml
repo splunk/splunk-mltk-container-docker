@@ -20,7 +20,7 @@
 
 [project]
 name = "dsdl-rapids-cu12"
-version = "5.3.0"
+version = "5.2.5"
 requires-python = "==3.12.*"
 # base: needed by the DSDL API (app/main.py) in every image
 dependencies = [
@@ -112,8 +112,8 @@ dl = [
   # 2.13 is the newest torch with a CUDA 12.9 build; same torch as deps/gpu-cu12 (see there)
   "torch==2.13.*",
 ]
-# NLP: transformers only. Keeps the 5 transformers modules that import in golden-gpu-rapids
-# 5.2.5 (bert_phishing, intent_detection_bert, transformers_*, fdai_zeroshot_classification)
+# NLP: transformers only. Keeps the 5 transformers modules that import in the 5.2.5
+# golden-gpu-rapids test image (bert_phishing, intent_detection_bert, transformers_*, fdai_zeroshot_classification)
 nlp = [
   "transformers>=5",
 ]
@@ -132,7 +132,7 @@ rapids = [
   "cuda-toolkit[nvrtc]==12.9.*",
 ]
 
-# Removed against 5.2.5 golden-gpu-rapids: the conda RAPIDS 24.04 base (cuspatial, cuproj,
+# Removed against the 5.2.5 golden-gpu-rapids test image: the conda RAPIDS 24.04 base (cuspatial, cuproj,
 # cucim, cuxfilter, custreamz, cudf-kafka, dask-sql, geo stack), graphistry[all] (torch 1.13,
 # torchdata, dgl, nvidia-*-cu11, pyppeteer, gremlinpython, neotime, google-cloud-spanner),
 # and the RAPIDS 24.04 ABI pins (numpy 1.26, pandas 2.2.1, pyarrow 14, protobuf 4, urllib3 1.26).

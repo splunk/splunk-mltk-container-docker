@@ -1,7 +1,8 @@
 """Start-up logic for every Splunk DSDL container image.
 
 Replaces bootstrap_fast.sh, bootstrap_transformers.sh, bootstrap_rapids.sh,
-bootstrap_spark.sh and bootstrap_backup.sh. Behaviour kept from 5.2.x:
+bootstrap_spark.sh and bootstrap_backup.sh. Behaviour kept from 5.2.4 and the 5.2.5
+test images (the splunk/mltk-container-*:5.2.5 test builds of September 2026):
 
 * /srv is the persistent volume: on every start the image's /dltk/app is
   overlaid onto /srv/app (stale __pycache__ removed first) and /dltk/notebooks
@@ -15,7 +16,7 @@ bootstrap_spark.sh and bootstrap_backup.sh. Behaviour kept from 5.2.x:
 * ENABLE_HTTPS (default true), api_workers and API_SSL_CERT / API_SSL_KEY are
   honoured as before.
 
-New in 5.3.0:
+New in the 5.2.5 release:
 
 * No TLS private key is baked into the image. The certificate is taken from
   API_SSL_CERT / API_SSL_KEY, else from /dltk/.jupyter/dltk.{pem,key} if a
@@ -37,7 +38,9 @@ New in 5.3.0:
   MLFLOW_SERVER_ALLOWED_HOSTS and MLFLOW_SERVER_CORS_ALLOWED_ORIGINS open it to
   the Docker host's name or address).
 * /srv/version.md records the image version that last used the volume; a change
-  in either direction triggers the backup above, into a new folder each time.
+  in either direction triggers the backup above, into a new folder each time. So
+  does the same version written by a 5.2.x bootstrap (the 5.2.5 test images also
+  wrote "5.2.5"): only this script also writes /srv/.dsdl/image-version.
 """
 
 import datetime
@@ -92,15 +95,22 @@ def version_tuple(version):
 
 def backup_notebooks(image_version):
     version_file = os.path.join(SRV, "version.md")
+    # written only by this entrypoint: a version.md without it comes from a 5.2.x bootstrap
+    marker = os.path.join(SRV, ".dsdl", "image-version")
     notebooks_dir = os.path.join(SRV, "notebooks")
     recorded = ""
     try:
         if os.path.isfile(version_file):
             with open(version_file, encoding="utf-8") as handle:
                 recorded = handle.read().strip()
-        if recorded == image_version:
+        earlier = recorded or "an earlier version"
+        if recorded == image_version and os.path.isfile(marker):
             log(f"Notebook backup not needed (volume at {recorded}).")
             return
+        if recorded == image_version:
+            # the same number from a 5.2.x bootstrap: the 5.2.5 test images, a different image
+            earlier = f"an earlier {recorded} build"
+            log(f"The volume was last used by {earlier} (5.2.x start-up scripts).")
         if version_tuple(recorded) > version_tuple(image_version):
             log(f"warning: the volume was last used by DSDL {recorded}, newer than this image ({image_version})")
         if os.path.isdir(notebooks_dir) and os.listdir(notebooks_dir):
@@ -115,12 +125,14 @@ def backup_notebooks(image_version):
                                 ignore=kept_by_refresh(notebooks_dir, os.path.join(DLTK, "notebooks")))
                 copied = remove_empty_dirs(backup_dir)
                 if copied:
-                    log(f"Backed up {copied} notebook files from {recorded or 'an earlier version'} that this "
+                    log(f"Backed up {copied} notebook files from {earlier} that this "
                         f"image replaces to {backup_dir}.")
             except shutil.Error as error:
                 # recorded anyway, so a permanently unreadable file does not add a copy per start
                 log(f"warning: notebook backup {backup_dir} is incomplete: {len(error.args[0])} files not copied")
         write_atomically(version_file, (image_version + "\n").encode())
+        os.makedirs(os.path.dirname(marker), exist_ok=True)
+        write_atomically(marker, (image_version + "\n").encode())
     except OSError as error:
         log(f"warning: notebook backup failed: {error}")
 

@@ -1,6 +1,7 @@
 # Certificates
 
-From 5.3.0 no certificate or private key is built into the DSDL images, and this
+From the 5.2.5 release no certificate or private key is built into the DSDL images (the 5.2.5 test
+images pushed to Docker Hub in September 2026 still contain a build-time key), and this
 directory is not part of the image build.
 
 At start the container uses, in this order:

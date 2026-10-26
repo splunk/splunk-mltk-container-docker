@@ -13,7 +13,7 @@
 
 [project]
 name = "dsdl-llm"
-version = "5.3.0"
+version = "5.2.5"
 requires-python = "==3.12.*"
 # base: needed by the DSDL API (app/main.py) in every image
 dependencies = [
@@ -144,7 +144,7 @@ llm = [
   "llama-index-utils-workflow",
   "llama-index-llms-anthropic",
   "llama-index-llms-azure-openai",
-  # imported by app/model/llm_utils.py:4 (missing in the 5.2.5 agentic image)
+  # imported by app/model/llm_utils.py:4 (missing in the 5.2.5 agentic-ai test image)
   "llama-index-llms-bedrock",
   "llama-index-llms-bedrock-converse",
   # replacements for llama-index-llms-gemini / -embeddings-gemini (see "Removed" below)
@@ -223,7 +223,7 @@ llm = [
   "pyjwt",
 ]
 
-# Removed against 5.2.5 (specific_llm_rag.txt + specific_llm_agentic.txt):
+# Removed against the 5.2.5 test images (specific_llm_rag.txt + specific_llm_agentic.txt):
 # - llama-index (meta package; pins llms-openai<0.8), llama-index-multi-modal-llms-openai,
 #   -agent-openai, -program-openai, -question-gen-openai: frozen legacy packages
 # - llama-index-llms-gemini, -embeddings-gemini, google-generativeai: final SDK needs protobuf<6,

@@ -1,13 +1,20 @@
-# Image Build Report (branch `v5.2.5-dev`, images built as 5.3.0)
+# Image Build Report (branch `v5.2.5-dev`, release 5.2.5)
+
+**5.2.5 test images** below are the `splunk/mltk-container-*:5.2.5` images pushed to Docker Hub in
+September 2026 from the original v5.2.5 branch (10 image references built the 5.2.4 way; the internal
+`agentic-ai-debian` image was built but not pushed), for testing only and never released with the
+DSDL app. The images of this build replace them under the same tags.
 
 ## Result
 
-The 11 images of 5.2.5 are built from **one multi-stage Dockerfile** (`docker/Dockerfile`) as
-**6 build targets**. All 10 published 5.2.5 image references and `images.conf` stanzas are kept:
+What the 11 images of the original v5.2.5 branch contained (the 10 5.2.5 test images and the internal
+`agentic-ai-debian`) is now built from **one multi-stage Dockerfile**
+(`docker/Dockerfile`) as **6 build targets**. All 10 published image references and `images.conf`
+stanzas are kept:
 images that only differed in their library mix were merged and are published under every old
 name. The internal `agentic-ai-debian` test image is retired.
 
-| | 5.2.5 (10 published references) | 5.3.0 (same 10 references) | Change |
+| | 5.2.5 test images (10 published references) | 5.2.5 (same 10 references) | Change |
 |---|---:|---:|---:|
 | Trivy findings | 32,357 | 1,914 | −94.1 % |
 | CRITICAL | 157 | 0 | −100 % |
@@ -16,7 +23,7 @@ name. The internal `agentic-ai-debian` test image is retired.
 | Operating systems | 6 (UBI 9, Debian 11 and 13, DHI Debian 13, Ubuntu 20.04 and 22.04) | 1 (UBI 9.8) | |
 | Python versions | 4 (3.8, 3.9, 3.10, 3.11) | 1 (3.12) | |
 
-The 5.2.5 numbers understate that baseline: Trivy reports no OS findings at all for the two
+The numbers of the 5.2.5 test images understate that baseline: Trivy reports no OS findings at all for the two
 Ubuntu 20.04 images (end of life), so `golden-gpu` and `golden-gpu-transformers` show only
 their Python findings there.
 
@@ -26,9 +33,9 @@ Built locally for linux/amd64 (and linux/arm64 for `cpu`) from this branch, smok
 `tools/smoke-test.sh` and scanned with Trivy 0.64.1 (`tools/scan.sh --gate`, vulnerability DB of
 2026-10-20; `gpu` and `rapids` rebuilt and rescanned with the DB of 2026-10-21 after the move to
 CUDA 12.9, see [GPU images on the RAPIDS CUDA version](#gpu-images-on-the-rapids-cuda-version)).
-Sizes from `docker image inspect` (same method as the 5.2.5 report).
+Sizes from `docker image inspect` (same method as the report of the 5.2.5 test images).
 
-| Target | Published as (5.2.x names) | Size | Modules importing (5.2.5 union) | Findings | CRIT | HIGH |
+| Target | Published as (5.2.x names) | Size | Modules importing (test images union) | Findings | CRIT | HIGH |
 |---|---|---:|---:|---:|---:|---:|
 | `cpu` amd64 | `golden-cpu`, `escu-cpu`, `golden-cpu-transformers` | 1.70 GB | 47 (40) | 184 | 0 | 11 |
 | `cpu` arm64 | `golden-cpu:<v>-arm64` | 1.35 GB | 47 (40) | 180 | 0 | 11 |
@@ -39,14 +46,14 @@ Sizes from `docker image inspect` (same method as the 5.2.5 report).
 | `spark` | `spark` | 2.12 GB | 51 (44) | 253 | 0 | 32 |
 
 "Modules importing" counts the `app/model` modules that import in the image; the number in
-brackets is the union of the modules that imported in the 5.2.5 images the target replaces. The
+brackets is the union of the modules that imported in the 5.2.5 test images the target replaces. The
 smoke test's lists (`tests/expected/<target>.txt`) hold that union plus `transformers_classification`
-and, where they import, `transformers_summarization`, which failed in 5.2.5 and import since 5.2.5-dev.
+and, where they import, `transformers_summarization`, which failed in the 5.2.5 test images and import now.
 No module regressed in any image.
 
 ### Per published reference
 
-| Reference | 5.2.5 base | 5.2.5 findings / H+C | 5.3.0 findings / H+C |
+| Reference | test image base | test image findings / H+C | 5.2.5 findings / H+C |
 |---|---|---:|---:|
 | `golden-cpu:<v>` | UBI 9 | 881 / 127 | 184 / 11 |
 | `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | 180 / 11 |
@@ -62,7 +69,8 @@ No module regressed in any image.
 ## Where the reduction comes from
 
 1. **No build tools in runtime images.** Compilers, `-devel` packages and kernel headers stay in
-   the builder stage. In 5.2.5 they were about 75 % of all findings (kernel headers alone 67.6 %).
+   the builder stage. In the 5.2.5 test images they were about 75 % of all findings (kernel headers
+   alone 67.6 %).
 2. **A minimal operating system.** The runtime is an exact list of 71 UBI 9 RPMs in a ubi-micro
    root (`docker/rootfs/allow.txt`), without package manager, PAM, su/sudo, ssh, Node.js, setuid
    files or a second Python. The Spark image adds 10 RPMs for Java 21 (`allow-jre.txt`).
@@ -71,13 +79,13 @@ No module regressed in any image.
    2.10, spaCy 2, xgboost 0.90, ...).
 4. **Spark:** no jupyter/conda base, unused Spark components removed, bundled netty, Jackson and
    lz4-java replaced by hash-pinned patch releases.
-5. **GPU:** CUDA from the NVIDIA wheels only (5.2.5 shipped a second, unused CUDA in the OS layer);
-   `gpu` and `rapids` share one CUDA 12.9.1 user space, the CUDA of RAPIDS 26.10 (5.2.5: three
-   images on CUDA 12.4, 11.3 and 12.2).
+5. **GPU:** CUDA from the NVIDIA wheels only (the 5.2.5 test images shipped a second, unused CUDA in
+   the OS layer); `gpu` and `rapids` share one CUDA 12.9.1 user space, the CUDA of RAPIDS 26.10
+   (5.2.5 test images: three images on CUDA 12.4, 11.3 and 12.2).
 
 ## GPU images on the RAPIDS CUDA version
 
-5.2.5 built its GPU images on three CUDA versions: `golden-gpu` on nvidia/cuda 12.4.1 (Ubuntu 20.04,
+In the 5.2.5 test images the GPU images were built on three CUDA versions: `golden-gpu` on nvidia/cuda 12.4.1 (Ubuntu 20.04,
 torch 2.4.1+cu121), `golden-gpu-transformers` on nvidia/cuda 11.3.1 (Ubuntu 20.04, with torch
 2.9.0+cu128 in its venv) and `golden-gpu-rapids` on rapidsai/base 24.04 (nvidia/cuda 12.2.2, Ubuntu
 22.04). The latest stable RAPIDS, 26.10, is built with CUDA 12.9.1 (`rapidsai/base:26.10-cuda12`;
@@ -99,7 +107,7 @@ images keep torch 2.14.1.
 | Size `gpu` / `rapids` | 5.23 / 7.03 GB | 5.75 / 7.57 GB |
 | Trivy `gpu` / `rapids` (findings, HIGH) | 184, 11 / 191, 10 | 184, 11 / 191, 10 |
 
-Versus 5.2.5, PyTorch gains Blackwell for `golden-gpu` and Hopper and Blackwell for
+Versus the 5.2.5 test images, PyTorch gains Blackwell for `golden-gpu` and Hopper and Blackwell for
 `golden-gpu-rapids`; it loses Volta (V100) in all three, and Maxwell and Pascal in `golden-gpu`
 and `golden-gpu-rapids`. TensorFlow 2.21 does
 not run on Blackwell with either build (its XLA stops on sm_120; fixed in TensorFlow 2.22).
@@ -152,9 +160,9 @@ For every image (`tools/smoke-test.sh`):
 - security invariants: no setuid/setgid files, compilers, headers, package manager, Node.js, ssh,
   su/sudo, curl/wget/openssl/perl; one Python; read-only `/etc/passwd` and image content; no
   private key; no world-writable files; time zone database present; every ELF dependency resolves;
-- every `app/model` module imported; none of the 5.2.5 modules regressed;
+- every `app/model` module imported; none of the modules of the 5.2.5 test images regressed;
 - functional checks: torch and TensorFlow compute; the ESCU pretrained models (the 3 torch models
-  and the DGA notebook end to end, which failed in every 5.2.5 image); spaCy 3 with its model;
+  and the DGA notebook end to end, which failed in every 5.2.5 test image); spaCy 3 with its model;
   a Spark SQL/FPGrowth/ALS job; the GPU stack: one CUDA 12.9 wheel set without CUDA 13 packages in
   `gpu` and `rapids`, PyTorch architectures sm_75 to sm_120, ptxas and libdevice 12.9 for XLA,
   TensorFlow followed by bitsandbytes/triton in one process, the bitsandbytes library it loads, a
@@ -225,9 +233,9 @@ verifier per area; the confirmed findings are fixed in commit 8984d9a and later.
 ## Reproduce
 
 ```
-./build.sh golden-cpu local/ 5.3.0                  # one target, one platform
-tools/smoke-test.sh local/mltk-container-golden-cpu:5.3.0 cpu
-tools/scan.sh --gate local/mltk-container-golden-cpu:5.3.0
+./build.sh golden-cpu local/ 5.2.5                  # one target, one platform
+tools/smoke-test.sh local/mltk-container-golden-cpu:5.2.5 cpu
+tools/scan.sh --gate local/mltk-container-golden-cpu:5.2.5
 tools/lock.sh --check                               # locks and cpu-constraint blocks are current
 ```
 

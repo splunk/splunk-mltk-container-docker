@@ -3,7 +3,7 @@
 # Splunk instance configured in testing/config.yaml. The container is selected in
 # the DSDL app by its stanza title from images.toml.
 #
-# Usage: ./test_container.sh <stanza> [version]      e.g. ./test_container.sh golden-cpu 5.3.0
+# Usage: ./test_container.sh <stanza> [version]      e.g. ./test_container.sh golden-cpu 5.2.5
 cd "$(dirname "$0")"
 
 if [ -d "./testing/venv" ]; then

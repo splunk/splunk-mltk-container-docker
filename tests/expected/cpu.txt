@@ -1,6 +1,6 @@
 # app/model modules that must import in the cpu image: the union of the modules
-# that imported in the 5.2.5 images it replaces (golden-cpu, golden-cpu-arm, escu-cpu, golden-cpu-transformers).
-# Plus transformers_classification and transformers_summarization, which failed there.
+# that imported in the 5.2.5 test images it replaces (golden-cpu, golden-cpu-arm, escu-cpu, golden-cpu-transformers).
+# Plus transformers_classification and transformers_summarization, which failed in those test images.
 RAG_milvus_manager
 a_threat_hunting_notebook
 agentic_workflow_execution

@@ -7,7 +7,7 @@
 
 [project]
 name = "dsdl-cpu"
-version = "5.3.0"
+version = "5.2.5"
 requires-python = "==3.12.*"
 # base: needed by the DSDL API (app/main.py) in every image
 dependencies = [
@@ -118,7 +118,7 @@ spark = [
   "pyspark>=4.2,<4.3",
 ]
 
-# Removed against 5.2.5 (no import in app/ or notebooks/, or broken in every image):
+# Removed against the 5.2.5 test images (no import in app/ or notebooks/, or broken in every image):
 # pymc3/theano-pymc, dask-xgboost (forced xgboost 0.90), spaCy 2.3.2, TF 2.8-2.10 pins,
 # tf2onnx 1.8, PyPDF2, wandb, pydgraph, torch-geometric, pygod, pytorch-tabular.
 

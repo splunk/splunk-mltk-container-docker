@@ -4,7 +4,7 @@
       "default": "splunk/"
     },
     "VERSION": {
-      "default": "5.3.0"
+      "default": "5.2.5"
     },
     "DSDL_PYTHON_VERSION": {
       "default": "3.12"

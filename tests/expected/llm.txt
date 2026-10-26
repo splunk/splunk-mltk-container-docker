@@ -1,6 +1,7 @@
 # app/model modules that must import in the llm image: the union of the modules
-# that imported in the 5.2.5 images it replaces (ubi-llm-rag, agentic-ai, agentic-ai-debian).
-# Plus transformers_classification, which failed to import in 5.2.5 and imports since 5.2.5-dev.
+# that imported in the 5.2.5 test images it replaces (ubi-llm-rag, agentic-ai) and in the internal
+# agentic-ai-debian build of the original v5.2.5 branch.
+# Plus transformers_classification, which failed to import in the 5.2.5 test images.
 RAG_Encoding
 RAG_Inferencing
 RAG_milvus_manager
