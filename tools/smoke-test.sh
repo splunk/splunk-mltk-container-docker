@@ -14,7 +14,8 @@
 #      and the MLflow API serves its store; on a fresh volume and on a volume as 5.2.x left
 #      it (MLflow file store in /srv/mlruns, ~/.ipython from earlier kernels)
 #   6. agentic only: chat routes against fake LLM and MCP services (tools/agentic-security-test.sh)
-# --quick runs only 1 and 3.
+# --quick runs only 1 and 3. DSDL_TEST_PLATFORM (e.g. linux/amd64) tests that platform of a
+# multi-platform local image (PLATFORM=all builds); default: the platform docker picks.
 set -Eeuo pipefail
 
 cd "$(dirname "$0")/.."
@@ -25,7 +26,8 @@ if [ ! -f "tests/expected/$target.txt" ]; then
   echo "unknown target '$target' (cpu, llm, agentic, gpu, rapids, spark)" >&2
   exit 2
 fi
-platform="$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$image")"
+platform="${DSDL_TEST_PLATFORM:-$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$image")}"
+echo "Testing $image ($target) on $platform"
 run=(docker run --rm -i --platform "$platform" --network none)
 failed=0
 step() { echo; echo "== $*"; }

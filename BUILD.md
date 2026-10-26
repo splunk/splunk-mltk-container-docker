@@ -182,7 +182,8 @@ For every image (`tools/smoke-test.sh`):
   returns no client configuration, and only the configured LLM is available (`is_configured`
   "true" is, "false" and 0 are not); a wrong token gets 401 on all chat routes, and no token gets
   401 with `DSDL_AGENTIC_REQUIRE_TOKEN=true`; a two-turn chat runs the MCP tool once with the
-  configured MCP token; the replies "what about yesterday?", "yes, but only for index=main" and "y"
+  configured MCP token; a header that only contains the api token is refused (`validate_token`
+  compares the whole header in every image); the replies "what about yesterday?", "yes, but only for index=main" and "y"
   do not approve it, a "yes" after switching the LLM option does not run the other option's pending
   call, and `/logReview` drops a pending approval, without leaving a checkpoint behind; a failing
   tool call is answered and the session goes on, and so is a tool call during which the MCP server
@@ -224,11 +225,10 @@ verifier per area; the confirmed findings are fixed in commit 8984d9a and later.
   at fit time in `RAG_Encoding`, `RAG_Inferencing` and `llm_rag_script_saas_llm`;
   `timesfm_multi_resolution` imports a missing name. The agentic chat routes require the api token
   only with `DSDL_AGENTIC_REQUIRE_TOKEN=true`, which the DSDL app sets from 5.2.5 on (it also sends the
-  token); started by an older DSDL app, the chat accepts requests without a token. `validate_token`
-  (`app/main.py`, all images) accepts any header that contains the token, without a constant-time
-  compare. Chat sessions are keyed by the client's session id only, not bound to a user. The agentic
-  image runs one API worker, and `/fit` and `/apply` run on its event loop, so a long fit on that
-  container holds the chat until it finishes.
+  token); started by an older DSDL app, the chat accepts requests without a token. Chat sessions
+  are keyed by the client's session id only, not bound to a user. The agentic image runs one API
+  worker, and `/fit` and `/apply` run on its event loop, so a long fit on that container holds the
+  chat until it finishes.
 
 ## Reproduce
 

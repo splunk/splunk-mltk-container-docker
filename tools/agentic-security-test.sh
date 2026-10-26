@@ -26,12 +26,13 @@
 # during the MCP connect, during the LLM probe, and while the start-up waits for its endpoints.
 # Containers, volumes and the network are removed afterwards. AGENTIC_TEST_DOCKER_ARGS adds
 # docker run options to the API container, split on spaces and without quotes, e.g.
-# AGENTIC_TEST_DOCKER_ARGS="-v $PWD/app:/dltk/app:ro" to test a working tree.
+# AGENTIC_TEST_DOCKER_ARGS="-v $PWD/app:/dltk/app:ro" to test a working tree. DSDL_TEST_PLATFORM
+# selects the platform of a multi-platform local image, as in tools/smoke-test.sh.
 set -Eeuo pipefail
 
 cd "$(dirname "$0")/.."
 image="${1:?agentic image reference}"
-platform="$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$image")"
+platform="${DSDL_TEST_PLATFORM:-$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$image")}"
 net=dsdl-agentic-test-net
 token=agentic-test-api-token
 mcp_token=agentic-test-mcp-token

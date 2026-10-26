@@ -135,6 +135,11 @@ if phase == "default":
     for method, path, body in routes:
         code, text, _, _ = call(method, path, body, token="wrong-token")
         check(code == 401, f"{method} {path} with a wrong token: {code}")
+    # validate_token (app/main.py, every image) compares the whole header, not a substring
+    code, _, _, _ = call("GET", "/mcp/status", token="x" + TOKEN + "y")
+    check(code == 401, f"a header that only contains the token is refused: {code}")
+    code, _, _, _ = call("GET", "/mcp/status", token="Bearer " + TOKEN)
+    check(code == 200, f"'Bearer <token>' is accepted: {code}")
     turn = {"userName": "../../tmp/agentic-traversal", "sessionID": "../../../tmp/agentic-session",
             "message": "list the indexes", "llmOption": '"openai"'}
     code, text, _, _ = call("POST", "/chatbox", turn, token=TOKEN)

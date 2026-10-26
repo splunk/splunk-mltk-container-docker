@@ -12,6 +12,7 @@ from importlib import import_module, reload
 import pandas as pd
 import json
 import csv
+import hmac
 import os
 import uvicorn
 
@@ -78,8 +79,12 @@ def validate_token(header):
             detail="No token defined",
             headers={"WWW-Authenticate": "Bearer"},
         )    
-    # check if token is matching
-    if not token in header:
+    # check if token is matching: the whole header (DSDL sends the bare token; a "Bearer " prefix is
+    # accepted too), compared in constant time. 5.2.4 accepted any header that contained the token.
+    sent = header.strip()
+    if sent[:7].lower() == "bearer ":
+        sent = sent[7:].strip()
+    if not hmac.compare_digest(sent.encode(), token.encode()):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
