@@ -16,9 +16,9 @@ name. The internal `agentic-ai-debian` test image is retired.
 
 | | 5.2.5 test images (10 published references) | 5.2.5 (same 10 references) | Change |
 |---|---:|---:|---:|
-| Trivy findings | 32,357 | 1,914 | −94.1 % |
+| Trivy findings | 32,357 | 1,927 | −94.0 % |
 | CRITICAL | 157 | 0 | −100 % |
-| HIGH + CRITICAL | 3,383 | 132 | −96.1 % |
+| HIGH + CRITICAL | 3,383 | 120 | −96.5 % |
 | Distinct images and size | 10 images, 38.3 GB | 6 images (cpu amd64 + arm64, llm, gpu, rapids, spark), 20.3 GB | −47 % |
 | Operating systems | 6 (UBI 9, Debian 11 and 13, DHI Debian 13, Ubuntu 20.04 and 22.04) | 1 (UBI 9.8) | |
 | Python versions | 4 (3.8, 3.9, 3.10, 3.11) | 1 (3.12) | |
@@ -29,21 +29,23 @@ their Python findings there.
 
 ## Images
 
-Built locally for linux/amd64 (and linux/arm64 for `cpu`) from this branch, smoke-tested with
-`tools/smoke-test.sh` and scanned with Trivy 0.64.1 (`tools/scan.sh --gate`, vulnerability DB of
-2026-10-20; `gpu` and `rapids` rebuilt and rescanned with the DB of 2026-10-21 after the move to
-CUDA 12.9, see [GPU images on the RAPIDS CUDA version](#gpu-images-on-the-rapids-cuda-version)).
-Sizes from `docker image inspect` (same method as the report of the 5.2.5 test images).
+The 5.2.5 release images, built on 2026-10-26 from commit 27230c9 with `PLATFORM=all ./build.sh all
+splunk/ 5.2.5`: `cpu`, `llm`, `agentic` and `spark` for linux/amd64 and linux/arm64, `gpu` and
+`rapids` for linux/amd64. Every image was smoke-tested on each platform with `tools/smoke-test.sh`
+(arm64 natively, amd64 under emulation on Apple silicon) and scanned per platform with Trivy 0.64.1
+(`tools/scan.sh --gate`, vulnerability DB of 2026-10-26). Sizes from `docker image inspect` (same
+method as the report of the 5.2.5 test images); arm64: `llm`/`agentic` 1.42 GB, `spark` 1.77 GB,
+with the same findings as amd64.
 
 | Target | Published as (5.2.x names) | Size | Modules importing (test images union) | Findings | CRIT | HIGH |
 |---|---|---:|---:|---:|---:|---:|
-| `cpu` amd64 | `golden-cpu`, `escu-cpu`, `golden-cpu-transformers` | 1.70 GB | 47 (40) | 184 | 0 | 11 |
-| `cpu` arm64 | `golden-cpu:<v>-arm64` | 1.35 GB | 47 (40) | 180 | 0 | 11 |
-| `llm` | `ubi-llm-rag` (stanza `llm-rag`) | 1.77 GB | 61 (46) | 185 | 0 | 12 |
-| `agentic` | `ubi-llm-rag:agentic-ai-<v>` | 1.77 GB | 61 (46) | 185 | 0 | 12 |
-| `gpu` | `golden-gpu`, `golden-gpu-transformers` | 5.75 GB | 51 (48) | 184 | 0 | 11 |
-| `rapids` | `golden-gpu-rapids` | 7.57 GB | 36 (22) | 191 | 0 | 10 |
-| `spark` | `spark` | 2.12 GB | 51 (44) | 253 | 0 | 32 |
+| `cpu` amd64 | `golden-cpu`, `escu-cpu`, `golden-cpu-transformers` | 1.70 GB | 47 (40) | 179 | 0 | 9 |
+| `cpu` arm64 | `golden-cpu:<v>-arm64` | 1.35 GB | 47 (40) | 179 | 0 | 9 |
+| `llm` | `ubi-llm-rag` (stanza `llm-rag`) | 1.77 GB | 61 (46) | 183 | 0 | 13 |
+| `agentic` | `ubi-llm-rag:agentic-ai-<v>` | 1.77 GB | 61 (46) | 183 | 0 | 13 |
+| `gpu` | `golden-gpu`, `golden-gpu-transformers` | 5.75 GB | 51 (48) | 183 | 0 | 9 |
+| `rapids` | `golden-gpu-rapids` | 7.57 GB | 36 (22) | 190 | 0 | 8 |
+| `spark` | `spark` | 2.12 GB | 51 (44) | 289 | 0 | 32 |
 
 "Modules importing" counts the `app/model` modules that import in the image; the number in
 brackets is the union of the modules that imported in the 5.2.5 test images the target replaces. The
@@ -55,16 +57,16 @@ No module regressed in any image.
 
 | Reference | test image base | test image findings / H+C | 5.2.5 findings / H+C |
 |---|---|---:|---:|
-| `golden-cpu:<v>` | UBI 9 | 881 / 127 | 184 / 11 |
-| `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | 180 / 11 |
-| `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | 184 / 11 |
-| `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | 184 / 11 |
-| `ubi-llm-rag:<v>` | UBI 9 | 1,105 / 224 | 185 / 12 |
-| `ubi-llm-rag:agentic-ai-<v>` | UBI 9 | 7,079 / 253 | 185 / 12 |
-| `golden-gpu:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 357 / 152 | 184 / 11 |
-| `golden-gpu-transformers:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 289 / 138 | 184 / 11 |
-| `golden-gpu-rapids:<v>` | Ubuntu 22.04 + conda | 4,664 / 508 | 191 / 10 |
-| `spark:<v>` | Ubuntu 22.04 + conda | 5,841 / 694 | 253 / 32 |
+| `golden-cpu:<v>` | UBI 9 | 881 / 127 | 179 / 9 |
+| `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | 179 / 9 |
+| `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | 179 / 9 |
+| `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | 179 / 9 |
+| `ubi-llm-rag:<v>` | UBI 9 | 1,105 / 224 | 183 / 13 |
+| `ubi-llm-rag:agentic-ai-<v>` | UBI 9 | 7,079 / 253 | 183 / 13 |
+| `golden-gpu:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 357 / 152 | 183 / 9 |
+| `golden-gpu-transformers:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 289 / 138 | 183 / 9 |
+| `golden-gpu-rapids:<v>` | Ubuntu 22.04 + conda | 4,664 / 508 | 190 / 8 |
+| `spark:<v>` | Ubuntu 22.04 + conda | 5,841 / 694 | 289 / 32 |
 
 ## Where the reduction comes from
 
@@ -139,9 +141,13 @@ Found and fixed while verifying:
 
 ## Residual HIGH findings
 
-- **OS packages without a released fix** (Red Hat status "affected"): expat (2), libuuid (2) and
-  python3.12 (2) in every image. They are picked up by the monthly
-  rebuild (`tools/update-digests.sh`) once Red Hat ships fixes.
+- **OS packages without a released fix** (Red Hat status "affected"): expat (1) and libuuid (2) in
+  every image, java-21-openjdk-headless (2) in `spark`. They are picked up by the monthly rebuild
+  (`tools/update-digests.sh`) once Red Hat ships fixes.
+- **mlflow 3.17.1:** one HIGH (CVE-2026-53995) in every image, and **pypdf 6.21.1:** three HIGH in the
+  llm images, both fixed in releases of 2026-10-21 (mlflow 3.17.2, pypdf 6.21.2) after these images
+  were locked. The 5.2.5 images ship as built; the next lock refresh (`tools/lock.sh
+  --upgrade-package=mlflow`, `--upgrade-package=pypdf llm`) takes the fixes.
 - **pip's vendored copies** of urllib3 (2), msgpack and setuptools: 4 HIGH in every image, fixed
   when pip ships a release with newer vendored libraries. A CRITICAL published on 2026-10-20 in
   pip 26.2.1's vendored certifi (GHSA-6q48-6c7w-9gw2, compromised emSign intermediate CAs) is fixed
@@ -216,9 +222,9 @@ verifier per area; the confirmed findings are fixed in commit 8984d9a and later.
   on Blackwell), TensorFlow on Hopper with R535 (PTX JIT of its compute_90 code), `torch.compile`
   on Blackwell, TensorFlow and PyTorch sharing a GPU in one process, the bitsandbytes cuda128
   library on CUDA 12.9, and RAPIDS kernels.
-- **arm64** was built and smoke-tested for `cpu`, and on 2026-10-21 for `llm` and `agentic` (all checks
-  passed, including the JupyterLab kernel; Trivy then flagged the pip certifi CRITICAL above). The
-  `spark` lock resolves for arm64, but no arm64 `spark` image was built.
+- **amd64 Jupyter kernels:** amd64 was smoke-tested under emulation on Apple silicon, where Jupyter
+  kernels hang (Rosetta deadlock, also with the 5.2.x images), so the kernel check reports SKIP
+  there; on arm64 it passed for every image. Run the kernel check on an amd64 host before release.
 - **Playwright UI tests** (`testing/`, against a Splunk instance) and calls to real LLM providers
   were not run. Images were not pushed or signed.
 - **Known application issues** unchanged by this branch: `ServiceContext` (llama-index 0.12) fails
@@ -233,6 +239,11 @@ verifier per area; the confirmed findings are fixed in commit 8984d9a and later.
 ## Reproduce
 
 ```
+PLATFORM=all ./build.sh all splunk/ 5.2.5          # the release images, every declared platform
+./build.sh golden-cpu-arm splunk/ 5.2.5             # the golden-cpu:5.2.5-arm64 alias, locally
+DSDL_TEST_PLATFORM=linux/amd64 tools/smoke-test.sh splunk/mltk-container-golden-cpu:5.2.5 cpu
+tools/scan.sh --gate --platform linux/amd64,linux/arm64 splunk/mltk-container-golden-cpu:5.2.5
+./build.sh --push all splunk/ 5.2.5                 # rebuild and push with SBOM and provenance
 ./build.sh golden-cpu local/ 5.2.5                  # one target, one platform
 tools/smoke-test.sh local/mltk-container-golden-cpu:5.2.5 cpu
 tools/scan.sh --gate local/mltk-container-golden-cpu:5.2.5
