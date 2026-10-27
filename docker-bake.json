@@ -20,8 +20,7 @@
         "llm",
         "agentic",
         "gpu",
-        "rapids",
-        "spark"
+        "rapids"
       ]
     }
   },
@@ -40,12 +39,13 @@
         "VCS_REF": "${VCS_REF}"
       },
       "labels": {
-        "org.opencontainers.image.description": "Classic ML, deep learning (CPU) and NLP; includes the ESCU pretrained models"
+        "org.opencontainers.image.description": "Classic ML, deep learning (CPU), NLP and Spark 4.2 (local mode, Java 21); includes the ESCU pretrained models"
       },
       "tags": [
         "${REPO}mltk-container-escu-cpu:${VERSION}",
         "${REPO}mltk-container-golden-cpu-transformers:${VERSION}",
-        "${REPO}mltk-container-golden-cpu:${VERSION}"
+        "${REPO}mltk-container-golden-cpu:${VERSION}",
+        "${REPO}mltk-container-spark:${VERSION}"
       ]
     },
     "llm": {
@@ -125,26 +125,6 @@
       },
       "tags": [
         "${REPO}mltk-container-golden-gpu-rapids:${VERSION}"
-      ]
-    },
-    "spark": {
-      "context": ".",
-      "dockerfile": "docker/Dockerfile",
-      "target": "spark",
-      "platforms": [
-        "linux/amd64",
-        "linux/arm64"
-      ],
-      "args": {
-        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
-        "DSDL_VERSION": "${VERSION}",
-        "VCS_REF": "${VCS_REF}"
-      },
-      "labels": {
-        "org.opencontainers.image.description": "The cpu image plus a headless Java 21 runtime and PySpark 4.2 (local mode)"
-      },
-      "tags": [
-        "${REPO}mltk-container-spark:${VERSION}"
       ]
     }
   }

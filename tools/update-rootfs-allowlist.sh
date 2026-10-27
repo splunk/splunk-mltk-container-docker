@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Rebuild the runtime rootfs (and the JRE delta of the Spark image) without the
+# Rebuild the runtime rootfs (and the JRE delta that the cpu image adds for Spark) without the
 # allow-list checks and write the resulting RPM lists to docker/rootfs/allow.txt and
 # docker/rootfs/allow-jre.txt. Review the git diff before committing them.
 set -Eeuo pipefail

@@ -7,7 +7,8 @@ Usage: tools/sync-cpu-constraints.py [--check] <profile>...    (gpu-cu12, rapids
 
 Rewrites the generated block of [tool.uv] constraint-dependencies in
 deps/<profile>/pyproject.toml with "name==version" for every registry package the
-cpu image installs (base + the dev, core, dl and nlp groups). Packages that cannot
+cpu image installs (base + the dev, core, dl and nlp groups; its spark group adds only
+pyspark and py4j, which no other profile installs). Packages that cannot
 follow the cpu version are listed with their reason in the profile's own
 [tool.dsdl.cpu-constraints] exclude table. uv ignores pins of packages that are not
 part of a resolution.

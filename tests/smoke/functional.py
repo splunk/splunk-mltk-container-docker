@@ -269,8 +269,7 @@ def agentic_app():
 
 CHECKS = {
     "cpu": [torch_compute, tensorflow_compute, sklearn_fit, escu_torch_models, escu_dga_notebook, spacy_model,
-            transformers_stack],
-    "spark": [sklearn_fit, spark_local_job],
+            transformers_stack, spark_local_job],
     "llm": [torch_compute, tensorflow_compute, sklearn_fit, agentic_app],
     "agentic": [agentic_app],
     "gpu": [torch_compute, tensorflow_compute, cuda_user_space, gpu_build, xla_toolchain, tensorflow_then_triton,

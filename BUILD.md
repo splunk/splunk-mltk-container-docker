@@ -9,7 +9,7 @@ DSDL app. The images of this build replace them under the same tags.
 
 What the 11 images of the original v5.2.5 branch contained (the 10 5.2.5 test images and the internal
 `agentic-ai-debian`) is now built from **one multi-stage Dockerfile**
-(`docker/Dockerfile`) as **6 build targets**. All 10 published image references and `images.conf`
+(`docker/Dockerfile`) as **6 build targets** (5 since Spark became part of `cpu`, see [Images](#images)). All 10 published image references and `images.conf`
 stanzas are kept:
 images that only differed in their library mix were merged and are published under every old
 name. The internal `agentic-ai-debian` test image is retired.
@@ -28,6 +28,11 @@ Ubuntu 20.04 images (end of life), so `golden-gpu` and `golden-gpu-transformers`
 their Python findings there.
 
 ## Images
+
+**Spark is now part of `cpu`.** After this build, the `spark` target was folded into `cpu` (5 build targets;
+`spark` is published as another name of `cpu`). The results below are of the 6-target build and are
+replaced by the next one. The merged `cpu` image corresponds to the `spark` row below (2.12 GB amd64,
+1.77 GB arm64, 289 findings, 32 HIGH), now under every cpu name.
 
 The 5.2.5 release images, built on 2026-10-26 from commit 27230c9 with `PLATFORM=all ./build.sh all
 splunk/ 5.2.5`: `cpu`, `llm`, `agentic` and `spark` for linux/amd64 and linux/arm64, `gpu` and

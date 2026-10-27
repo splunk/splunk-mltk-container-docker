@@ -20,10 +20,10 @@ set -Eeuo pipefail
 
 cd "$(dirname "$0")/.."
 image="${1:?image reference}"
-target="${2:?target name (cpu, llm, agentic, gpu, rapids, spark)}"
+target="${2:?target name (cpu, llm, agentic, gpu, rapids)}"
 quick="${3:-}"
 if [ ! -f "tests/expected/$target.txt" ]; then
-  echo "unknown target '$target' (cpu, llm, agentic, gpu, rapids, spark)" >&2
+  echo "unknown target '$target' (cpu, llm, agentic, gpu, rapids)" >&2
   exit 2
 fi
 platform="${DSDL_TEST_PLATFORM:-$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$image")}"

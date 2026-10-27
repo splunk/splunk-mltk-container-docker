@@ -6,14 +6,14 @@
 #
 # One build target can be published under several names. The extra names keep
 # the image references and images.conf stanzas of 5.2.x working:
-# the 10 image references of the 5.2.5 test images (Docker Hub, September 2026) are 6 build targets.
+# the 10 image references of the 5.2.5 test images (Docker Hub, September 2026) are 5 build targets.
 
 version = "5.2.5"
 repo = "splunk/"
 python = "3.12"
 
 [targets.cpu]
-description = "Classic ML, deep learning (CPU) and NLP; includes the ESCU pretrained models"
+description = "Classic ML, deep learning (CPU), NLP and Spark 4.2 (local mode, Java 21); includes the ESCU pretrained models"
 profile = "cpu"
 platforms = ["linux/amd64", "linux/arm64"]
 publish = [
@@ -21,6 +21,7 @@ publish = [
   { stanza = "golden-cpu-arm", image = "mltk-container-golden-cpu", tag = "{version}-arm64", platform = "linux/arm64", title = "Red Hat UBI Golden CPU ARM64 ({version})", runtime = "none" },
   { stanza = "escu-cpu", image = "mltk-container-escu-cpu", tag = "{version}", title = "ESCU ({version})", runtime = "none" },
   { stanza = "golden-cpu-transformers", image = "mltk-container-golden-cpu-transformers", tag = "{version}", title = "Transformers CPU ({version})", runtime = "none" },
+  { stanza = "spark", image = "mltk-container-spark", tag = "{version}", title = "Spark 4.2 ({version})", runtime = "none" },
 ]
 
 [targets.llm]
@@ -54,12 +55,4 @@ profile = "rapids-cu12"
 platforms = ["linux/amd64"]
 publish = [
   { stanza = "golden-gpu-rapids", image = "mltk-container-golden-gpu-rapids", tag = "{version}", title = "Rapids 26.10 ({version})", runtime = "none,nvidia" },
-]
-
-[targets.spark]
-description = "The cpu image plus a headless Java 21 runtime and PySpark 4.2 (local mode)"
-profile = "cpu"
-platforms = ["linux/amd64", "linux/arm64"]
-publish = [
-  { stanza = "spark", image = "mltk-container-spark", tag = "{version}", title = "Spark 4.2 ({version})", runtime = "none" },
 ]

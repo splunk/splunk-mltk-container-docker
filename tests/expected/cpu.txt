@@ -1,11 +1,13 @@
 # app/model modules that must import in the cpu image: the union of the modules
-# that imported in the 5.2.5 test images it replaces (golden-cpu, golden-cpu-arm, escu-cpu, golden-cpu-transformers).
+# that imported in the 5.2.5 test images it replaces (golden-cpu, golden-cpu-arm, escu-cpu, golden-cpu-transformers
+# and spark, which the cpu image includes since 5.2.5).
 # Plus transformers_classification and transformers_summarization, which failed in those test images.
 RAG_milvus_manager
 a_threat_hunting_notebook
 agentic_workflow_execution
 anomaly_detection_ecod
 autoencoder
+barebone_spark
 barebone_template
 bert_phishing
 binary_nn_classifier
@@ -34,6 +36,9 @@ pytorch_nn
 random_cut_forest
 seasonality_and_trend_decomposition
 shap_xgboost
+spark_fp_growth
+spark_gradient_boosting_classifier
+spark_recommender
 stumpy
 transformers_classification
 transformers_sentencebert

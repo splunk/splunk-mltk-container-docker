@@ -1,5 +1,5 @@
 # Dependency profile "cpu": the default DSDL image (golden-cpu, golden-cpu-arm,
-# escu-cpu, golden-cpu-transformers) and the base of the Spark add-on image.
+# escu-cpu, golden-cpu-transformers, spark).
 #
 # Declare top-level intent only. tools/lock.sh resolves the full, hashed
 # closure into uv.lock for linux/amd64 and linux/arm64 at the same time.
@@ -113,7 +113,7 @@ nlp = [
   "spacytextblob",
   "en-core-web-sm",
 ]
-# only installed into the Spark add-on image (pyspark bundles the Spark jars)
+# pyspark bundles the Spark jars (trimmed and patched by docker/spark-jars.sh); cpu image only
 spark = [
   "pyspark>=4.2,<4.3",
 ]

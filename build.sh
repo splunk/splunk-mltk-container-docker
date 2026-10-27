@@ -16,8 +16,8 @@
 #                                              local load keeps none), then create the
 #                                              aliases; --dry-run only checks and prints
 #
-# <name> is a target (cpu, llm, agentic, gpu, rapids, spark) or a 5.2.x name such as
-# golden-cpu, golden-cpu-arm, escu-cpu, golden-gpu-transformers or ubi-llm-rag.
+# <name> is a target (cpu, llm, agentic, gpu, rapids) or a 5.2.x name such as
+# golden-cpu, golden-cpu-arm, escu-cpu, spark, golden-gpu-transformers or ubi-llm-rag.
 #
 # Local builds load ONE platform: a 5.2.x name builds the platform it was published for
 # (golden-cpu-arm: linux/arm64, the others linux/amd64); a target name builds the host's
@@ -28,7 +28,8 @@
 # Every build writes images_conf_files/images.conf with the stanzas of what was built.
 #
 # --push-only first checks every published tag of the targets: it must exist locally with
-# all declared platforms and the version label <version>; otherwise nothing is pushed.
+# all declared platforms and the version label <version>, and all tags of a target must be
+# the same local image; otherwise nothing is pushed.
 set -Eeuo pipefail
 
 cd "$(dirname "$0")"
@@ -126,8 +127,16 @@ for name, target in json.load(sys.stdin)["target"].items():
     for tag in target.get("tags", []):
         print(name, ",".join(target.get("platforms", [])), tag)')"
   if [ -z "$plan" ]; then echo "No tags found for ${targets[*]}" >&2; exit 1; fi
-  problems=0
+  problems=0 first_target="" first_id="" first_tag=""
   while read -r target platforms tag; do
+    # all tags of a target must be one local image: a tag left from an earlier build (e.g. of
+    # a name that used to be its own target, like spark) would otherwise be pushed as it is
+    id="$(docker image inspect --format '{{.Id}}' "$tag" 2>/dev/null || true)"
+    if [ "$target" != "$first_target" ]; then
+      first_target="$target" first_id="$id" first_tag="$tag"
+    elif [ -n "$id" ] && [ -n "$first_id" ] && [ "$id" != "$first_id" ]; then
+      echo "different image: $tag is not the image of $first_tag (both are tags of $target)" >&2; problems=1
+    fi
     for platform in ${platforms//,/ }; do
       if ! labels="$(docker image inspect --platform "$platform" --format \
           '{{index .Config.Labels "org.opencontainers.image.version"}} {{index .Config.Labels "org.opencontainers.image.revision"}}' \
