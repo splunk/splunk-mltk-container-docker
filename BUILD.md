@@ -16,7 +16,7 @@ name. The internal `agentic-ai-debian` test image is retired.
 
 | | 5.2.5 test images (10 published references) | 5.2.5 (same 10 references) | Change |
 |---|---:|---:|---:|
-| Trivy findings | 32,357 | 2,367 | −92.7 % |
+| Trivy findings | 32,357 | 2,362 | −92.7 % |
 | CRITICAL | 157 | 0 | −100 % |
 | HIGH + CRITICAL | 3,383 | 212 | −93.7 % |
 | Distinct images and size | 10 images, 38.3 GB | 5 images (cpu amd64 + arm64, llm, gpu, rapids), 19.0 GB | −50 % |
@@ -29,26 +29,25 @@ their Python findings there.
 
 ## Images
 
-The 5.2.5 release images. `llm`, `agentic`, `gpu` and `rapids` were built on 2026-10-26 from commit
-27230c9 with `PLATFORM=all ./build.sh all splunk/ 5.2.5` (`llm` and `agentic` for linux/amd64 and
-linux/arm64, `gpu` and `rapids` for linux/amd64). `cpu`, which now includes Spark, was rebuilt on
-2026-10-27 from commit c184064 with `PLATFORM=all ./build.sh cpu splunk/ 5.2.5` for linux/amd64 and
-linux/arm64 (and `./build.sh golden-cpu-arm splunk/ 5.2.5` for the single-platform arm64 tag); it is
-also the first image with the notebook layout of 8a2a7a0 (`notebooks/deprecated/`, `notebooks/README.md`),
-which the four images of 27230c9 do not have yet. Every image was smoke-tested on each platform with
-`tools/smoke-test.sh` (arm64 natively, amd64 under emulation on Apple silicon) and scanned per platform
-with Trivy 0.64.1 (`tools/scan.sh --gate`, vulnerability DB of the build day). Sizes from
-`docker image inspect` (same method as the report of the 5.2.5 test images); arm64: `llm`/`agentic`
-1.42 GB, with the same findings as amd64.
+The 5.2.5 release images, all built on 2026-10-27 with `PLATFORM=all ./build.sh <target> splunk/ 5.2.5`,
+one target at a time: `cpu` (which now includes Spark) from commit c184064, `llm`, `agentic`, `gpu` and
+`rapids` from commit 3efba5a, which changes only this report, so every image has the same payload
+(including the notebook layout of 8a2a7a0: `notebooks/deprecated/`, `notebooks/README.md`). `cpu`, `llm`
+and `agentic` are built for linux/amd64 and linux/arm64, `gpu` and `rapids` for linux/amd64; the
+single-platform `golden-cpu:<v>-arm64` tag comes from `./build.sh golden-cpu-arm splunk/ 5.2.5`. Every
+image was smoke-tested on each platform with `tools/smoke-test.sh` (arm64 natively, amd64 under emulation
+on Apple silicon, where the Jupyter kernel check is skipped) and scanned per platform with Trivy 0.64.1
+(`tools/scan.sh --gate`, vulnerability DB of 2026-10-27). Sizes from `docker image inspect` (same method
+as the report of the 5.2.5 test images); arm64: `llm`/`agentic` 1.42 GB, with the same findings as amd64.
 
 | Target | Published as (5.2.x names) | Size | Modules importing (test images union) | Findings | CRIT | HIGH |
 |---|---|---:|---:|---:|---:|---:|
 | `cpu` amd64 | `golden-cpu`, `escu-cpu`, `golden-cpu-transformers`, `spark` | 2.12 GB | 51 (44) | 289 | 0 | 32 |
 | `cpu` arm64 | `golden-cpu:<v>-arm64` | 1.77 GB | 51 (44) | 289 | 0 | 32 |
-| `llm` | `ubi-llm-rag` (stanza `llm-rag`) | 1.77 GB | 61 (46) | 183 | 0 | 13 |
-| `agentic` | `ubi-llm-rag:agentic-ai-<v>` | 1.77 GB | 61 (46) | 183 | 0 | 13 |
-| `gpu` | `golden-gpu`, `golden-gpu-transformers` | 5.75 GB | 51 (48) | 183 | 0 | 9 |
-| `rapids` | `golden-gpu-rapids` | 7.57 GB | 36 (22) | 190 | 0 | 8 |
+| `llm` | `ubi-llm-rag` (stanza `llm-rag`) | 1.77 GB | 61 (46) | 182 | 0 | 13 |
+| `agentic` | `ubi-llm-rag:agentic-ai-<v>` | 1.77 GB | 61 (46) | 182 | 0 | 13 |
+| `gpu` | `golden-gpu`, `golden-gpu-transformers` | 5.75 GB | 51 (48) | 182 | 0 | 9 |
+| `rapids` | `golden-gpu-rapids` | 7.57 GB | 36 (22) | 189 | 0 | 8 |
 
 "Modules importing" counts the `app/model` modules that import in the image; the number in
 brackets is the union of the modules that imported in the 5.2.5 test images the target replaces. The
@@ -64,11 +63,11 @@ No module regressed in any image.
 | `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | 289 / 32 |
 | `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | 289 / 32 |
 | `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | 289 / 32 |
-| `ubi-llm-rag:<v>` | UBI 9 | 1,105 / 224 | 183 / 13 |
-| `ubi-llm-rag:agentic-ai-<v>` | UBI 9 | 7,079 / 253 | 183 / 13 |
-| `golden-gpu:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 357 / 152 | 183 / 9 |
-| `golden-gpu-transformers:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 289 / 138 | 183 / 9 |
-| `golden-gpu-rapids:<v>` | Ubuntu 22.04 + conda | 4,664 / 508 | 190 / 8 |
+| `ubi-llm-rag:<v>` | UBI 9 | 1,105 / 224 | 182 / 13 |
+| `ubi-llm-rag:agentic-ai-<v>` | UBI 9 | 7,079 / 253 | 182 / 13 |
+| `golden-gpu:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 357 / 152 | 182 / 9 |
+| `golden-gpu-transformers:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 289 / 138 | 182 / 9 |
+| `golden-gpu-rapids:<v>` | Ubuntu 22.04 + conda | 4,664 / 508 | 189 / 8 |
 | `spark:<v>` | Ubuntu 22.04 + conda | 5,841 / 694 | 289 / 32 |
 
 ## Where the reduction comes from
