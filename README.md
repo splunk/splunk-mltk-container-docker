@@ -46,7 +46,7 @@ From 5.2.5 all DSDL images are built from one multi-stage template (`docker/Dock
 - **Pinned bases.** Base images are pinned by digest (`tools/update-digests.sh`); rebuild monthly so OS and Python fixes reach the images.
 
 ### Building containers
-Requirements: Docker with buildx (Docker Desktop, or Docker Engine 25+ with the buildx plugin). A local build loads one platform into Docker: a 5.2.x name builds the platform it was published for, a target name the host's platform if the target supports it. `PLATFORM=linux/amd64` (or `linux/arm64`) selects another platform; building a foreign platform needs QEMU (`docker run --privileged --rm tonistiigi/binfmt --install all`) and is slow. `PLATFORM=all` and `--push` build every declared platform and need the containerd image store (Docker Desktop: Settings > General) or a `docker-container` buildx builder (`docker buildx create --use`).
+Requirements: Docker with buildx (Docker Desktop, or Docker Engine 25+ with the buildx plugin). A local build loads one platform into Docker: a 5.2.x name builds the platform it was published for, a target name the host's platform if the target supports it. `PLATFORM=linux/amd64` (or `linux/arm64`) selects another platform; building a foreign platform needs QEMU (`docker run --privileged --rm tonistiigi/binfmt --install all`) and is slow. `PLATFORM=all` and `--push-rebuild` build every declared platform and need the containerd image store (Docker Desktop: Settings > General) or a `docker-container` buildx builder (`docker buildx create --use`).
 
 ```
 ./build.sh                               # list targets and published names
@@ -55,8 +55,13 @@ Requirements: Docker with buildx (Docker Desktop, or Docker Engine 25+ with the 
 ./build.sh cpu local_build/ 1.0.0        # a target name: the host's platform
 PLATFORM=all ./build.sh cpu              # all platforms of the target
 ./build.sh all splunk/ 5.2.5             # every target
-./build.sh --push all splunk/ 5.2.5      # push with SBOM and provenance attestations
+./build.sh --push-rebuild all splunk/ 5.2.5          # rebuild every platform, push with SBOM and provenance (also --push)
+PLATFORM=all ./build.sh all splunk/ 5.2.5            # build every platform locally, test, then:
+./build.sh --push-only --dry-run all splunk/ 5.2.5   # check what would be pushed
+./build.sh --push-only all splunk/ 5.2.5             # push exactly the tested local images
 ```
+
+Two ways to publish. `--push-rebuild` (the same as `--push`) builds every declared platform again and pushes with SBOM and provenance attestations; what it pushes is a new build of the same commit. `--push-only` pushes the images that are loaded locally, exactly as they were built and tested, without a rebuild and without attestations (a local `--load` keeps none). It first checks every published tag of the requested targets: each must exist locally with all declared platforms (build with `PLATFORM=all`) and carry the version label of the push; otherwise nothing is pushed. Both create the single-platform aliases (`golden-cpu:<v>-arm64`) from the pushed index. `docker login` first.
 
 Every build writes `images_conf_files/images.conf` with the stanzas of the images it built; copy them to `<splunk>/etc/apps/mltk-container/local/images.conf` to make the images available in the DSDL app.
 

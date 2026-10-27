@@ -5,10 +5,16 @@
 #   ./build.sh                                 list build targets and published names
 #   ./build.sh <name> [repo] [version]         build one target and load it locally
 #   ./build.sh all [repo] [version]            build every target
-#   ./build.sh --push <name|all> [repo] [version]
+#   ./build.sh --push-rebuild <name|all> [repo] [version]   (or --push)
 #                                              build all declared platforms, push with
 #                                              SBOM and provenance, then create the
 #                                              single-platform aliases (golden-cpu:<v>-arm64)
+#   ./build.sh --push-only [--dry-run] <name|all> [repo] [version]
+#                                              push the images already built and loaded
+#                                              here (PLATFORM=all), as tested, without a
+#                                              rebuild and without SBOM or provenance (a
+#                                              local load keeps none), then create the
+#                                              aliases; --dry-run only checks and prints
 #
 # <name> is a target (cpu, llm, agentic, gpu, rapids, spark) or a 5.2.x name such as
 # golden-cpu, golden-cpu-arm, escu-cpu, golden-gpu-transformers or ubi-llm-rag.
@@ -20,12 +26,23 @@
 # Building for a foreign platform uses QEMU emulation and is slow.
 #
 # Every build writes images_conf_files/images.conf with the stanzas of what was built.
+#
+# --push-only first checks every published tag of the targets: it must exist locally with
+# all declared platforms and the version label <version>; otherwise nothing is pushed.
 set -Eeuo pipefail
 
 cd "$(dirname "$0")"
 
-push=false
-if [ "${1:-}" = "--push" ]; then push=true; shift; fi
+mode=build
+case "${1:-}" in
+  --push|--push-rebuild) mode=push-rebuild; shift ;;
+  --push-only) mode=push-only; shift ;;
+esac
+dry_run=false
+if [ "${1:-}" = "--dry-run" ]; then
+  if [ "$mode" != push-only ]; then echo "--dry-run works with --push-only" >&2; exit 2; fi
+  dry_run=true; shift
+fi
 name="${1:-}"
 repo="${2:-splunk/}"
 version="${3:-$(sed -n 's/^version = "\(.*\)"/\1/p' images.toml)}"
@@ -60,7 +77,10 @@ fi
 
 export REPO="$repo" VERSION="$version" VCS_REF="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 export DSDL_PYTHON_VERSION="$(sed -n 's/^python = "\(.*\)"/\1/p' images.toml)"
-echo "Building ${targets[*]} as ${repo}*:${version} (revision ${VCS_REF}, Python ${DSDL_PYTHON_VERSION})"
+case "$mode" in
+  push-only) echo "Pushing the local ${targets[*]} images as ${repo}*:${version} (no rebuild$([ "$dry_run" = true ] && echo ", dry run"))" ;;
+  *) echo "Building ${targets[*]} as ${repo}*:${version} (revision ${VCS_REF}, Python ${DSDL_PYTHON_VERSION})" ;;
+esac
 
 # the multi-platform index reference of the same repository as a single-platform alias
 index_digest() { # index-reference platform
@@ -74,13 +94,15 @@ for m in json.load(sys.stdin).get("manifests", []):
         break' "$2"
 }
 
-if [ "$push" = true ]; then
-  docker buildx bake -f docker-bake.json --push \
-    --set '*.attest=type=sbom' --set '*.attest=type=provenance,mode=max' "${targets[@]}"
-  # Single-platform aliases point at one platform manifest of the pushed index. They carry
-  # no attestations of their own: the SBOM and provenance stay attached to the index.
+# Single-platform aliases point at one platform manifest of the pushed index. They carry
+# no attestations of their own: SBOM and provenance (push-rebuild) stay attached to the index.
+create_aliases() {
   render --aliases --repo "$repo" --version "$version" | while read -r target platform alias index; do
     case " ${targets[*]} " in *" $target "*) ;; *) continue ;; esac
+    if [ "$dry_run" = true ]; then
+      echo "would run: docker buildx imagetools create --prefer-index=false -t $alias ${index%:*}@<$platform manifest of the pushed $index>"
+      continue
+    fi
     digest="$(index_digest "$index" "$platform")"
     if [ -z "$digest" ]; then
       echo "No $platform manifest in $index; cannot create $alias" >&2
@@ -89,6 +111,45 @@ if [ "$push" = true ]; then
     echo "Alias $alias -> ${index%:*}@$digest ($platform)"
     docker buildx imagetools create --prefer-index=false -t "$alias" "${index%:*}@$digest"
   done
+}
+
+if [ "$mode" = push-rebuild ]; then
+  docker buildx bake -f docker-bake.json --push \
+    --set '*.attest=type=sbom' --set '*.attest=type=provenance,mode=max' "${targets[@]}"
+  create_aliases
+  only="$(IFS=,; echo "${targets[*]}")"
+elif [ "$mode" = push-only ]; then
+  # "<target> <platforms> <tag>" for every multi-platform tag, as the build resolves them
+  plan="$(docker buildx bake -f docker-bake.json --progress=quiet --print "${targets[@]}" | python3 -c '
+import json, sys
+for name, target in json.load(sys.stdin)["target"].items():
+    for tag in target.get("tags", []):
+        print(name, ",".join(target.get("platforms", [])), tag)')"
+  if [ -z "$plan" ]; then echo "No tags found for ${targets[*]}" >&2; exit 1; fi
+  problems=0
+  while read -r target platforms tag; do
+    for platform in ${platforms//,/ }; do
+      if ! labels="$(docker image inspect --platform "$platform" --format \
+          '{{index .Config.Labels "org.opencontainers.image.version"}} {{index .Config.Labels "org.opencontainers.image.revision"}}' \
+          "$tag" 2>/dev/null)"; then
+        echo "missing locally: $tag ($platform)" >&2; problems=1
+      elif [ "${labels%% *}" != "$version" ]; then
+        echo "wrong version: $tag ($platform) is labelled '${labels%% *}', not $version" >&2; problems=1
+      else
+        echo "ready: $tag ($platform, revision ${labels#* })"
+      fi
+    done
+  done <<< "$plan"
+  if [ "$problems" != 0 ]; then
+    echo "Nothing pushed. Build these images for every platform first: PLATFORM=all ./build.sh $name $repo $version" >&2
+    exit 1
+  fi
+  while read -r target platforms tag; do
+    if [ "$dry_run" = true ]; then echo "would run: docker push $tag   ($platforms)"; continue; fi
+    echo "Pushing $tag ($platforms)"
+    docker push --quiet "$tag"   # the image index with every platform loaded here
+  done <<< "$plan"
+  create_aliases
   only="$(IFS=,; echo "${targets[*]}")"
 else
   host_platform="linux/$(docker version --format '{{.Server.Arch}}' 2>/dev/null || uname -m)"

@@ -243,7 +243,9 @@ PLATFORM=all ./build.sh all splunk/ 5.2.5          # the release images, every d
 ./build.sh golden-cpu-arm splunk/ 5.2.5             # the golden-cpu:5.2.5-arm64 alias, locally
 DSDL_TEST_PLATFORM=linux/amd64 tools/smoke-test.sh splunk/mltk-container-golden-cpu:5.2.5 cpu
 tools/scan.sh --gate --platform linux/amd64,linux/arm64 splunk/mltk-container-golden-cpu:5.2.5
-./build.sh --push all splunk/ 5.2.5                 # rebuild and push with SBOM and provenance
+./build.sh --push-only --dry-run all splunk/ 5.2.5  # check the tested local images for a push
+./build.sh --push-only all splunk/ 5.2.5            # push them as tested (no rebuild, no attestations)
+./build.sh --push-rebuild all splunk/ 5.2.5         # or: rebuild and push with SBOM and provenance
 ./build.sh golden-cpu local/ 5.2.5                  # one target, one platform
 tools/smoke-test.sh local/mltk-container-golden-cpu:5.2.5 cpu
 tools/scan.sh --gate local/mltk-container-golden-cpu:5.2.5
