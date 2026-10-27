@@ -8,6 +8,7 @@ scan_logs
 *.log
 images_conf_files
 testing
+# the repository's top-level deprecated/ only; notebooks/deprecated/ ships on purpose
 deprecated
 beta_content
 docker_compose
