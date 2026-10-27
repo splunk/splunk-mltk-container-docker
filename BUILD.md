@@ -9,17 +9,17 @@ DSDL app. The images of this build replace them under the same tags.
 
 What the 11 images of the original v5.2.5 branch contained (the 10 5.2.5 test images and the internal
 `agentic-ai-debian`) is now built from **one multi-stage Dockerfile**
-(`docker/Dockerfile`) as **6 build targets** (5 since Spark became part of `cpu`, see [Images](#images)). All 10 published image references and `images.conf`
+(`docker/Dockerfile`) as **5 build targets** (Spark is part of `cpu`). All 10 published image references and `images.conf`
 stanzas are kept:
 images that only differed in their library mix were merged and are published under every old
 name. The internal `agentic-ai-debian` test image is retired.
 
 | | 5.2.5 test images (10 published references) | 5.2.5 (same 10 references) | Change |
 |---|---:|---:|---:|
-| Trivy findings | 32,357 | 1,927 | −94.0 % |
+| Trivy findings | 32,357 | 2,367 | −92.7 % |
 | CRITICAL | 157 | 0 | −100 % |
-| HIGH + CRITICAL | 3,383 | 120 | −96.5 % |
-| Distinct images and size | 10 images, 38.3 GB | 6 images (cpu amd64 + arm64, llm, gpu, rapids, spark), 20.3 GB | −47 % |
+| HIGH + CRITICAL | 3,383 | 212 | −93.7 % |
+| Distinct images and size | 10 images, 38.3 GB | 5 images (cpu amd64 + arm64, llm, gpu, rapids), 19.0 GB | −50 % |
 | Operating systems | 6 (UBI 9, Debian 11 and 13, DHI Debian 13, Ubuntu 20.04 and 22.04) | 1 (UBI 9.8) | |
 | Python versions | 4 (3.8, 3.9, 3.10, 3.11) | 1 (3.12) | |
 
@@ -29,28 +29,26 @@ their Python findings there.
 
 ## Images
 
-**Spark is now part of `cpu`.** After this build, the `spark` target was folded into `cpu` (5 build targets;
-`spark` is published as another name of `cpu`). The results below are of the 6-target build and are
-replaced by the next one. The merged `cpu` image corresponds to the `spark` row below (2.12 GB amd64,
-1.77 GB arm64, 289 findings, 32 HIGH), now under every cpu name.
-
-The 5.2.5 release images, built on 2026-10-26 from commit 27230c9 with `PLATFORM=all ./build.sh all
-splunk/ 5.2.5`: `cpu`, `llm`, `agentic` and `spark` for linux/amd64 and linux/arm64, `gpu` and
-`rapids` for linux/amd64. Every image was smoke-tested on each platform with `tools/smoke-test.sh`
-(arm64 natively, amd64 under emulation on Apple silicon) and scanned per platform with Trivy 0.64.1
-(`tools/scan.sh --gate`, vulnerability DB of 2026-10-26). Sizes from `docker image inspect` (same
-method as the report of the 5.2.5 test images); arm64: `llm`/`agentic` 1.42 GB, `spark` 1.77 GB,
-with the same findings as amd64.
+The 5.2.5 release images. `llm`, `agentic`, `gpu` and `rapids` were built on 2026-10-26 from commit
+27230c9 with `PLATFORM=all ./build.sh all splunk/ 5.2.5` (`llm` and `agentic` for linux/amd64 and
+linux/arm64, `gpu` and `rapids` for linux/amd64). `cpu`, which now includes Spark, was rebuilt on
+2026-10-27 from commit c184064 with `PLATFORM=all ./build.sh cpu splunk/ 5.2.5` for linux/amd64 and
+linux/arm64 (and `./build.sh golden-cpu-arm splunk/ 5.2.5` for the single-platform arm64 tag); it is
+also the first image with the notebook layout of 8a2a7a0 (`notebooks/deprecated/`, `notebooks/README.md`),
+which the four images of 27230c9 do not have yet. Every image was smoke-tested on each platform with
+`tools/smoke-test.sh` (arm64 natively, amd64 under emulation on Apple silicon) and scanned per platform
+with Trivy 0.64.1 (`tools/scan.sh --gate`, vulnerability DB of the build day). Sizes from
+`docker image inspect` (same method as the report of the 5.2.5 test images); arm64: `llm`/`agentic`
+1.42 GB, with the same findings as amd64.
 
 | Target | Published as (5.2.x names) | Size | Modules importing (test images union) | Findings | CRIT | HIGH |
 |---|---|---:|---:|---:|---:|---:|
-| `cpu` amd64 | `golden-cpu`, `escu-cpu`, `golden-cpu-transformers` | 1.70 GB | 47 (40) | 179 | 0 | 9 |
-| `cpu` arm64 | `golden-cpu:<v>-arm64` | 1.35 GB | 47 (40) | 179 | 0 | 9 |
+| `cpu` amd64 | `golden-cpu`, `escu-cpu`, `golden-cpu-transformers`, `spark` | 2.12 GB | 51 (44) | 289 | 0 | 32 |
+| `cpu` arm64 | `golden-cpu:<v>-arm64` | 1.77 GB | 51 (44) | 289 | 0 | 32 |
 | `llm` | `ubi-llm-rag` (stanza `llm-rag`) | 1.77 GB | 61 (46) | 183 | 0 | 13 |
 | `agentic` | `ubi-llm-rag:agentic-ai-<v>` | 1.77 GB | 61 (46) | 183 | 0 | 13 |
 | `gpu` | `golden-gpu`, `golden-gpu-transformers` | 5.75 GB | 51 (48) | 183 | 0 | 9 |
 | `rapids` | `golden-gpu-rapids` | 7.57 GB | 36 (22) | 190 | 0 | 8 |
-| `spark` | `spark` | 2.12 GB | 51 (44) | 289 | 0 | 32 |
 
 "Modules importing" counts the `app/model` modules that import in the image; the number in
 brackets is the union of the modules that imported in the 5.2.5 test images the target replaces. The
@@ -62,10 +60,10 @@ No module regressed in any image.
 
 | Reference | test image base | test image findings / H+C | 5.2.5 findings / H+C |
 |---|---|---:|---:|
-| `golden-cpu:<v>` | UBI 9 | 881 / 127 | 179 / 9 |
-| `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | 179 / 9 |
-| `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | 179 / 9 |
-| `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | 179 / 9 |
+| `golden-cpu:<v>` | UBI 9 | 881 / 127 | 289 / 32 |
+| `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | 289 / 32 |
+| `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | 289 / 32 |
+| `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | 289 / 32 |
 | `ubi-llm-rag:<v>` | UBI 9 | 1,105 / 224 | 183 / 13 |
 | `ubi-llm-rag:agentic-ai-<v>` | UBI 9 | 7,079 / 253 | 183 / 13 |
 | `golden-gpu:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 357 / 152 | 183 / 9 |
@@ -80,7 +78,7 @@ No module regressed in any image.
    alone 67.6 %).
 2. **A minimal operating system.** The runtime is an exact list of 71 UBI 9 RPMs in a ubi-micro
    root (`docker/rootfs/allow.txt`), without package manager, PAM, su/sudo, ssh, Node.js, setuid
-   files or a second Python. The Spark image adds 10 RPMs for Java 21 (`allow-jre.txt`).
+   files or a second Python. The `cpu` image adds 10 RPMs for Java 21, for Spark (`allow-jre.txt`).
 3. **One Python and fresh, locked libraries.** Python 3.12 everywhere, four `uv.lock` profiles with
    hashes (`deps/`), shared packages at the same versions; legacy pins removed (pymc3, TF 2.8 to
    2.10, spaCy 2, xgboost 0.90, ...).
@@ -147,7 +145,7 @@ Found and fixed while verifying:
 ## Residual HIGH findings
 
 - **OS packages without a released fix** (Red Hat status "affected"): expat (1) and libuuid (2) in
-  every image, java-21-openjdk-headless (2) in `spark`. They are picked up by the monthly rebuild
+  every image, java-21-openjdk-headless (2) in `cpu`. They are picked up by the monthly rebuild
   (`tools/update-digests.sh`) once Red Hat ships fixes.
 - **mlflow 3.17.1:** one HIGH (CVE-2026-53995) in every image, and **pypdf 6.21.1:** three HIGH in the
   llm images, both fixed in releases of 2026-10-21 (mlflow 3.17.2, pypdf 6.21.2) after these images
@@ -157,11 +155,12 @@ Found and fixed while verifying:
   when pip ships a release with newer vendored libraries. A CRITICAL published on 2026-10-20 in
   pip 26.2.1's vendored certifi (GHSA-6q48-6c7w-9gw2, compromised emSign intermediate CAs) is fixed
   by pip 26.2.2, which the locks now pin; images built before that need a rebuild.
-- **nltk 3.10.3:** one HIGH without a fix (cpu, llm, gpu, spark).
+- **nltk 3.10.3:** one HIGH without a fix (cpu, llm, gpu).
 - **llama-index-core 0.12:** one HIGH in the llm images, fixed only in 0.13, which needs a port of
   the LLM/RAG modules (they use APIs removed in 0.13).
-- **Spark:** jars that Hadoop and Parquet shade into their own artefacts (hadoop-client-runtime,
-  parquet-jackson); fixed only by Spark/Hadoop releases.
+- **Spark (in `cpu`):** 21 HIGH in Jackson, Jetty and jline copies that Hadoop, Parquet and Spark shade
+  into their own artefacts (hadoop-client-runtime, parquet-jackson, ...); fixed only by Spark/Hadoop releases.
+  Since Spark is part of `cpu`, every cpu name carries them (9 HIGH before the merge).
 
 No image has a CRITICAL finding, a secret, or a finding on an end-of-life OS.
 
