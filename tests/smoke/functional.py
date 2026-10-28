@@ -128,6 +128,16 @@ def spacy_model():
     return f"entities {[e.label_ for e in doc.ents]}"
 
 
+def tabpfn_stack():
+    # TabPFN downloads its weights from Hugging Face at the first fit, which --network none
+    # prevents: check that the package, its estimators and the Hub client import
+    from importlib.metadata import version
+    import huggingface_hub  # noqa: F401
+    from tabpfn import TabPFNClassifier, TabPFNRegressor
+    TabPFNClassifier(device="cpu"), TabPFNRegressor(device="cpu")
+    return f"tabpfn {version('tabpfn')}, lightgbm {version('lightgbm')}, huggingface-hub {version('huggingface-hub')}"
+
+
 def spark_local_job():
     # the APIs the DSDL Spark modules use: SQL, ml.fpm (FPGrowth), mllib (ALS). This runs with
     # --network none, where the hostname is not in /etc/hosts: apply the entrypoint's own
@@ -269,7 +279,7 @@ def agentic_app():
 
 CHECKS = {
     "cpu": [torch_compute, tensorflow_compute, sklearn_fit, escu_torch_models, escu_dga_notebook, spacy_model,
-            transformers_stack, spark_local_job],
+            transformers_stack, spark_local_job, tabpfn_stack],
     "llm": [torch_compute, tensorflow_compute, sklearn_fit, agentic_app],
     "agentic": [agentic_app],
     "gpu": [torch_compute, tensorflow_compute, cuda_user_space, gpu_build, xla_toolchain, tensorflow_then_triton,

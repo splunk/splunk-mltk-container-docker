@@ -20,7 +20,7 @@ From 5.2.5 all DSDL images are built from one multi-stage template (`docker/Dock
 
 | Build target | Replaces (5.2.x names, still published) | Platforms | Contents |
 | --- | --- | --- | --- |
-| `cpu` | `golden-cpu`, `golden-cpu-arm` (`golden-cpu:<v>-arm64`), `escu-cpu`, `golden-cpu-transformers`, `spark` | amd64, arm64 | classic ML, TensorFlow and PyTorch (CPU), transformers, spaCy 3, Japanese tokenizers, ESCU pretrained models, PySpark 4.2 (local mode) with a headless Java 21 runtime |
+| `cpu` | `golden-cpu`, `golden-cpu-arm` (`golden-cpu:<v>-arm64`), `escu-cpu`, `golden-cpu-transformers`, `spark` | amd64, arm64 | classic ML, TensorFlow and PyTorch (CPU), transformers, spaCy 3, Japanese tokenizers, ESCU pretrained models, TabPFN 9 (tabular foundation model; its weights come from Hugging Face), PySpark 4.2 (local mode) with a headless Java 21 runtime |
 | `llm` | `ubi-llm-rag` (stanza `llm-rag`) | amd64, arm64 | the `cpu` content without Spark, plus llama-index, vector stores and LLM provider SDKs |
 | `agentic` | `ubi-llm-rag:agentic-ai-<v>` (stanza `agentic-ai`) | amd64, arm64 | the `llm` image serving the agentic API (`app/main_agentic.py`) |
 | `gpu` | `golden-gpu`, `golden-gpu-transformers` | amd64 | PyTorch 2.13 and TensorFlow 2.21 from wheels on the CUDA 12.9 user space it shares with `rapids`, peft/bitsandbytes/accelerate, TimesFM; also runs without a GPU |

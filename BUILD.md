@@ -16,7 +16,7 @@ name. The internal `agentic-ai-debian` test image is retired.
 
 | | 5.2.5 test images (10 published references) | 5.2.5 (same 10 references) | Change |
 |---|---:|---:|---:|
-| Trivy findings | 32,357 | 2,362 | −92.7 % |
+| Trivy findings | 32,357 | 2,357 | −92.7 % |
 | CRITICAL | 157 | 0 | −100 % |
 | HIGH + CRITICAL | 3,383 | 212 | −93.7 % |
 | Distinct images and size | 10 images, 38.3 GB | 5 images (cpu amd64 + arm64, llm, gpu, rapids), 19.0 GB | −50 % |
@@ -32,7 +32,10 @@ their Python findings there.
 The 5.2.5 release images, all built on 2026-10-27 with `PLATFORM=all ./build.sh <target> splunk/ 5.2.5`,
 one target at a time: `cpu` (which now includes Spark) from commit c184064, `llm`, `agentic`, `gpu` and
 `rapids` from commit 3efba5a, which changes only this report, so every image has the same payload
-(including the notebook layout of 8a2a7a0: `notebooks/deprecated/`, `notebooks/README.md`). `cpu`, `llm`
+(including the notebook layout of 8a2a7a0: `notebooks/deprecated/`, `notebooks/README.md`). On
+2026-10-28 `cpu` was rebuilt with tabpfn 9.2.0 and huggingface-hub (1.33.0, already a dependency of
+transformers) as declared libraries, plus the new `tabpfn_model` notebook; the rows below show
+that build. `cpu`, `llm`
 and `agentic` are built for linux/amd64 and linux/arm64, `gpu` and `rapids` for linux/amd64; the
 single-platform `golden-cpu:<v>-arm64` tag comes from `./build.sh golden-cpu-arm splunk/ 5.2.5`. Every
 image was smoke-tested on each platform with `tools/smoke-test.sh` (arm64 natively, amd64 under emulation
@@ -42,8 +45,8 @@ as the report of the 5.2.5 test images); arm64: `llm`/`agentic` 1.42 GB, with th
 
 | Target | Published as (5.2.x names) | Size | Modules importing (test images union) | Findings | CRIT | HIGH |
 |---|---|---:|---:|---:|---:|---:|
-| `cpu` amd64 | `golden-cpu`, `escu-cpu`, `golden-cpu-transformers`, `spark` | 2.12 GB | 51 (44) | 289 | 0 | 32 |
-| `cpu` arm64 | `golden-cpu:<v>-arm64` | 1.77 GB | 51 (44) | 289 | 0 | 32 |
+| `cpu` amd64 | `golden-cpu`, `escu-cpu`, `golden-cpu-transformers`, `spark` | 2.13 GB | 51 (44) | 288 | 0 | 32 |
+| `cpu` arm64 | `golden-cpu:<v>-arm64` | 1.78 GB | 51 (44) | 288 | 0 | 32 |
 | `llm` | `ubi-llm-rag` (stanza `llm-rag`) | 1.77 GB | 61 (46) | 182 | 0 | 13 |
 | `agentic` | `ubi-llm-rag:agentic-ai-<v>` | 1.77 GB | 61 (46) | 182 | 0 | 13 |
 | `gpu` | `golden-gpu`, `golden-gpu-transformers` | 5.75 GB | 51 (48) | 182 | 0 | 9 |
@@ -59,16 +62,16 @@ No module regressed in any image.
 
 | Reference | test image base | test image findings / H+C | 5.2.5 findings / H+C |
 |---|---|---:|---:|
-| `golden-cpu:<v>` | UBI 9 | 881 / 127 | 289 / 32 |
-| `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | 289 / 32 |
-| `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | 289 / 32 |
-| `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | 289 / 32 |
+| `golden-cpu:<v>` | UBI 9 | 881 / 127 | 288 / 32 |
+| `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | 288 / 32 |
+| `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | 288 / 32 |
+| `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | 288 / 32 |
 | `ubi-llm-rag:<v>` | UBI 9 | 1,105 / 224 | 182 / 13 |
 | `ubi-llm-rag:agentic-ai-<v>` | UBI 9 | 7,079 / 253 | 182 / 13 |
 | `golden-gpu:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 357 / 152 | 182 / 9 |
 | `golden-gpu-transformers:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 289 / 138 | 182 / 9 |
 | `golden-gpu-rapids:<v>` | Ubuntu 22.04 + conda | 4,664 / 508 | 189 / 8 |
-| `spark:<v>` | Ubuntu 22.04 + conda | 5,841 / 694 | 289 / 32 |
+| `spark:<v>` | Ubuntu 22.04 + conda | 5,841 / 694 | 288 / 32 |
 
 ## Where the reduction comes from
 

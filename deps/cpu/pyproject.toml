@@ -97,6 +97,11 @@ dl = [
   "tensorflow>=2.21",
   # Keras 2 loader for the ESCU DGA SavedModel and binary_nn_classifier_designer
   "tf-keras",
+  # TabPFN tabular foundation model (classification, regression); it downloads its weights
+  # from Hugging Face at first use
+  "tabpfn",
+  # Hugging Face Hub client (model downloads); transformers and tabpfn depend on it too
+  "huggingface-hub",
 ]
 # NLP: transformers, Japanese tokenizers, spaCy 3 with its English model
 nlp = [

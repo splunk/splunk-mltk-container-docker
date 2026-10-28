@@ -843,6 +843,8 @@ dev = [
     { name = "widgetsnbextension" },
 ]
 dl = [
+    { name = "huggingface-hub" },
+    { name = "tabpfn" },
     { name = "tensorflow" },
     { name = "tf-keras" },
     { name = "torch" },
@@ -937,6 +939,8 @@ dev = [
     { name = "widgetsnbextension" },
 ]
 dl = [
+    { name = "huggingface-hub" },
+    { name = "tabpfn" },
     { name = "tensorflow", specifier = ">=2.21" },
     { name = "tf-keras" },
     { name = "torch", index = "https://download.pytorch.org/whl/cpu" },
@@ -962,6 +966,15 @@ spark = [{ name = "pyspark", specifier = ">=4.2,<4.3" }]
 name = "dsdlsupport"
 version = "1.0.0"
 source = { directory = "../../package-dsdlsupport" }
+
+[[package]]
+name = "einops"
+version = "0.8.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2c/77/850bef8d72ffb9219f0b1aac23fbc1bf7d038ee6ea666f331fa273031aa2/einops-0.8.2.tar.gz", hash = "sha256:609da665570e5e265e27283aab09e7f279ade90c4f01bcfca111f3d3e13f2827", size = 56261, upload-time = "2026-01-26T04:13:17.638Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2a/09/f8d8f8f31e4483c10a906437b4ce31bdf3d6d417b73fe33f1a8b59e34228/einops-0.8.2-py3-none-any.whl", hash = "sha256:54058201ac7087911181bfec4af6091bb59380360f069276601256a76af08193", size = 65638, upload-time = "2026-01-26T04:13:18.546Z" },
+]
 
 [[package]]
 name = "en-core-web-sm"
@@ -1959,6 +1972,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/1d/fc/716c1e62e512ef1c160e7984a73a5fc7df45166f2ff3f254e71c58076f7c/libclang-18.1.1-py2.py3-none-manylinux2010_x86_64.whl", hash = "sha256:c533091d8a3bbf7460a00cb6c1a71da93bffe148f172c7d03b1c31fbf8aa2a0b", size = 24515943, upload-time = "2024-03-17T16:03:45.942Z" },
     { url = "https://files.pythonhosted.org/packages/3c/3d/f0ac1150280d8d20d059608cf2d5ff61b7c3b7f7bcf9c0f425ab92df769a/libclang-18.1.1-py2.py3-none-manylinux2014_aarch64.whl", hash = "sha256:54dda940a4a0491a9d1532bf071ea3ef26e6dbaf03b5000ed94dd7174e8f9592", size = 23784972, upload-time = "2024-03-17T16:12:47.677Z" },
     { url = "https://files.pythonhosted.org/packages/2d/c2/de1db8c6d413597076a4259cea409b83459b2db997c003578affdd32bf66/libclang-18.1.1-py2.py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:69f8eb8f65c279e765ffd28aaa7e9e364c776c17618af8bff22a8df58677ff4f", size = 24921494, upload-time = "2024-03-17T16:14:20.132Z" },
+]
+
+[[package]]
+name = "lightgbm"
+version = "4.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "narwhals" },
+    { name = "numpy" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/63/8e/4db5e29290d7e619c307fdb8dab0a0514090af2ce3ec483050e024ec6126/lightgbm-4.7.0.tar.gz", hash = "sha256:f8e20f682c9aabd000bcf4a7ed8aa6f473c1adfecccae34ec24e823d156f4af0", size = 1792896, upload-time = "2026-07-18T21:00:56.139Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c6/a3/b29580948b92e8c2f84dea70118ac702ff067dc52ec4ffb5d73c953536a5/lightgbm-4.7.0-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:d4529acec5c6fefe4768302a529707d0ead90f6a6f42df694b856212e09695b8", size = 3349492, upload-time = "2026-07-18T21:00:37.943Z" },
+    { url = "https://files.pythonhosted.org/packages/15/eb/837ea3b40cc36e22eeebb9785c01e42b2c255d033eea1d2d9ee8e2540e55/lightgbm-4.7.0-py3-none-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d23e922acd891e77212e4d0fbcee9ba973c96dee479491341d05ba595357ebb7", size = 3476028, upload-time = "2026-07-18T21:00:39.331Z" },
 ]
 
 [[package]]
@@ -3199,6 +3227,33 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-settings"
+version = "2.16.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "typing-extensions" },
+    { name = "typing-inspection" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/05/ca/7817b4bf0c4b15c6a6ab8cdf4cb96c268335a8ca2f525de93b6ebe4c7d28/pydantic_settings-2.16.1.tar.gz", hash = "sha256:aff602a1886338c2df3d1e958e2193a8dc33cec75b91f202e83fd98484b4b0da", size = 303436, upload-time = "2026-10-20T11:37:19.024Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3c/74/fdf926afe145d8629c4b2ff57f4ea1d64ed7abc4d84d97463b2517a2547e/pydantic_settings-2.16.1-py3-none-any.whl", hash = "sha256:30f5313340da4e8f1b440d1910b92a5bc3ccbb6b4ba70ec2b8395bc921f418f5", size = 80771, upload-time = "2026-10-20T11:37:17.298Z" },
+]
+
+[[package]]
+name = "pydot"
+version = "4.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyparsing" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/50/35/b17cb89ff865484c6a20ef46bf9d95a5f07328292578de0b295f4a6beec2/pydot-4.0.1.tar.gz", hash = "sha256:c2148f681c4a33e08bf0e26a9e5f8e4099a82e0e2a068098f32ce86577364ad5", size = 162594, upload-time = "2025-06-17T20:09:56.454Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7e/32/a7125fb28c4261a627f999d5fb4afff25b523800faed2c30979949d6facd/pydot-4.0.1-py3-none-any.whl", hash = "sha256:869c0efadd2708c0be1f916eb669f3d664ca684bc57ffb7ecc08e70d5e93fee6", size = 37087, upload-time = "2025-06-17T20:09:55.25Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.21.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3742,6 +3797,27 @@ wheels = [
 ]
 
 [[package]]
+name = "skrub"
+version = "0.10.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cloudpickle" },
+    { name = "jinja2" },
+    { name = "joblib" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pydot" },
+    { name = "requests" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a3/a6/f4d0b7240ebf546d3a77f212958b930282cccb0a53d66b9b0e1639ce8230/skrub-0.10.1.tar.gz", hash = "sha256:39f58492f6889c5563a654478cd523771aaa8dab5a42ad2ce9f430efb3881f53", size = 4205317, upload-time = "2026-09-01T09:33:37.146Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0e/2d/492a8b0d0d8b344918312a6416c537e54081ca5d0aaf19d085a188905e41/skrub-0.10.1-py3-none-any.whl", hash = "sha256:553c6f9b19a2cb97bba776a28255e7e024e77d4f50d7c6c70b4805f4e668a3cc", size = 595919, upload-time = "2026-09-01T09:33:35.208Z" },
+]
+
+[[package]]
 name = "slicer"
 version = "0.0.8"
 source = { registry = "https://pypi.org/simple" }
@@ -4049,6 +4125,34 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/83/d3/803453b36afefb7c2bb238361cd4ae6125a569b4db67cd9e79846ba2d68c/sympy-1.14.0.tar.gz", hash = "sha256:d3d3fe8df1e5a0b42f0e7bdf50541697dbe7d23746e894990c030e2b05e72517", size = 7793921, upload-time = "2025-04-27T18:05:01.611Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl", hash = "sha256:e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5", size = 6299353, upload-time = "2025-04-27T18:04:59.103Z" },
+]
+
+[[package]]
+name = "tabpfn"
+version = "9.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "einops" },
+    { name = "filelock" },
+    { name = "huggingface-hub" },
+    { name = "joblib" },
+    { name = "lightgbm" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "safetensors" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+    { name = "skrub" },
+    { name = "torch" },
+    { name = "tqdm" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b0/03/1b48e093811877c651f731ac64e36a71b3ac44ec5c5c67a395422a6cbfed/tabpfn-9.2.0.tar.gz", hash = "sha256:e7fb2c6293ffef664c69838eb4cb215c79c85a0c0bd449fdf22489045d32b9eb", size = 937644, upload-time = "2026-10-12T15:12:56.56Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ac/a7/5c403c9fec9f726c91eaeaebaa8905530813ab58cb134a043c4b17afbd6a/tabpfn-9.2.0-py3-none-any.whl", hash = "sha256:bf8edb860cf490ab021d0ba6e91a9798f1b549bdb220066599661c8fc6d6089f", size = 850035, upload-time = "2026-10-12T15:12:54.671Z" },
 ]
 
 [[package]]
