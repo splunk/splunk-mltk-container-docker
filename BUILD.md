@@ -18,9 +18,9 @@ internal `agentic-ai-debian` test image is retired.
 
 | | 5.2.5 test images (10 published references) | 5.2.5 (5 published images) | Change |
 |---|---:|---:|---:|
-| Trivy findings | 32,357 | 1,023 | −96.8 % |
+| Trivy findings | 32,357 | 1,038 | −96.8 % |
 | CRITICAL | 157 | 0 | −100 % |
-| HIGH + CRITICAL | 3,383 | 75 | −97.8 % |
+| HIGH + CRITICAL | 3,383 | 89 | −97.4 % |
 | Distinct images and size | 10 images, 38.3 GB | 5 images (cpu amd64 + arm64, llm, gpu, rapids), 19.0 GB | −50 % |
 | Operating systems | 6 (UBI 9, Debian 11 and 13, DHI Debian 13, Ubuntu 20.04 and 22.04) | 1 (UBI 9.8) | |
 | Python versions | 4 (3.8, 3.9, 3.10, 3.11) | 1 (3.12) | |
@@ -31,27 +31,25 @@ their Python findings there.
 
 ## Images
 
-The 5.2.5 release images, all built on 2026-10-27 with `PLATFORM=all ./build.sh <target> splunk/ 5.2.5`,
-one target at a time: `cpu` (which now includes Spark) from commit c184064, `llm`, `agentic`, `gpu` and
-`rapids` from commit 3efba5a, which changes only this report, so every image has the same payload
-(including the notebook layout of 8a2a7a0: `notebooks/deprecated/`, `notebooks/README.md`). On
-2026-10-28 `cpu` was rebuilt with tabpfn 9.2.0 and huggingface-hub (1.33.0, already a dependency of
-transformers) as declared libraries, plus the new `tabpfn_model` notebook; the rows below show
-that build. `cpu`, `llm`
-and `agentic` are built for linux/amd64 and linux/arm64, `gpu` and `rapids` for linux/amd64. Every
-image was smoke-tested on each platform with `tools/smoke-test.sh` (arm64 natively, amd64 under emulation
-on Apple silicon, where the Jupyter kernel check is skipped) and scanned per platform with Trivy 0.64.1
-(`tools/scan.sh --gate`, vulnerability DB of 2026-10-27). Sizes from `docker image inspect` (same method
+The 5.2.5 release images, all built on 2026-10-28 from commit ea31934 with `PLATFORM=all ./build.sh
+<target> splunk/ 5.2.5`, one target at a time. Every image has the same payload: the notebook layout
+of 8a2a7a0 (`notebooks/deprecated/`, `notebooks/README.md`), the `tabpfn_model` notebook and the
+`multivariate_lstm` fix for numpy 2.5; `cpu` includes Spark, tabpfn 9.2.0 and huggingface-hub 1.33.0.
+`cpu`, `llm` and `agentic` are built for linux/amd64 and linux/arm64, `gpu` and `rapids` for
+linux/amd64. Every image was smoke-tested on each platform with `tools/smoke-test.sh` (arm64 natively,
+amd64 under emulation on Apple silicon, where the Jupyter kernel check is skipped) and scanned per
+platform with Trivy 0.64.1 (`tools/scan.sh --gate`, vulnerability DB of 2026-10-28). Sizes from
+`docker image inspect` (same method
 as the report of the 5.2.5 test images); arm64: `llm`/`agentic` 1.42 GB, with the same findings as amd64.
 
 | Target | Published as (title, stanza) | Size | Modules importing (test images union) | Findings | CRIT | HIGH |
 |---|---|---:|---:|---:|---:|---:|
-| `cpu` amd64 | Golden Image CPU (`golden-cpu`) | 2.13 GB | 51 (44) | 288 | 0 | 32 |
-| `cpu` arm64 | Golden Image CPU (`golden-cpu`), arm64 | 1.78 GB | 51 (44) | 288 | 0 | 32 |
-| `llm` | LLM RAG (`llm-rag`) | 1.77 GB | 61 (46) | 182 | 0 | 13 |
-| `agentic` | Agentic AI (`agentic-ai`) | 1.77 GB | 61 (46) | 182 | 0 | 13 |
-| `gpu` | Golden Image GPU (`golden-gpu`) | 5.75 GB | 51 (48) | 182 | 0 | 9 |
-| `rapids` | Rapids 26.10 (`golden-gpu-rapids`) | 7.57 GB | 36 (22) | 189 | 0 | 8 |
+| `cpu` amd64 | Golden Image CPU (`golden-cpu`) | 2.13 GB | 51 (44) | 296 | 0 | 39 |
+| `cpu` arm64 | Golden Image CPU (`golden-cpu`), arm64 | 1.78 GB | 51 (44) | 296 | 0 | 39 |
+| `llm` | LLM RAG (`llm-rag`) | 1.77 GB | 61 (46) | 184 | 0 | 15 |
+| `agentic` | Agentic AI (`agentic-ai`) | 1.77 GB | 61 (46) | 184 | 0 | 15 |
+| `gpu` | Golden Image GPU (`golden-gpu`) | 5.75 GB | 51 (48) | 184 | 0 | 11 |
+| `rapids` | Rapids 26.10 (`golden-gpu-rapids`) | 7.57 GB | 36 (22) | 190 | 0 | 9 |
 
 "Modules importing" counts the `app/model` modules that import in the image; the number in
 brackets is the union of the modules that imported in the 5.2.5 test images the target replaces. The
@@ -63,16 +61,16 @@ No module regressed in any image.
 
 | 5.2.5 test image | test image base | test image findings / H+C | replaced by (5.2.5) | findings / H+C |
 |---|---|---:|---|---:|
-| `golden-cpu:<v>` | UBI 9 | 881 / 127 | Golden Image CPU | 288 / 32 |
-| `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | Golden Image CPU (arm64) | 288 / 32 |
-| `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | Golden Image CPU | 288 / 32 |
-| `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | Golden Image CPU | 288 / 32 |
-| `ubi-llm-rag:<v>` | UBI 9 | 1,105 / 224 | LLM RAG | 182 / 13 |
-| `ubi-llm-rag:agentic-ai-<v>` | UBI 9 | 7,079 / 253 | Agentic AI | 182 / 13 |
-| `golden-gpu:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 357 / 152 | Golden Image GPU | 182 / 9 |
-| `golden-gpu-transformers:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 289 / 138 | Golden Image GPU | 182 / 9 |
-| `golden-gpu-rapids:<v>` | Ubuntu 22.04 + conda | 4,664 / 508 | Rapids 26.10 | 189 / 8 |
-| `spark:<v>` | Ubuntu 22.04 + conda | 5,841 / 694 | Golden Image CPU | 288 / 32 |
+| `golden-cpu:<v>` | UBI 9 | 881 / 127 | Golden Image CPU | 296 / 39 |
+| `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | Golden Image CPU (arm64) | 296 / 39 |
+| `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | Golden Image CPU | 296 / 39 |
+| `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | Golden Image CPU | 296 / 39 |
+| `ubi-llm-rag:<v>` | UBI 9 | 1,105 / 224 | LLM RAG | 184 / 15 |
+| `ubi-llm-rag:agentic-ai-<v>` | UBI 9 | 7,079 / 253 | Agentic AI | 184 / 15 |
+| `golden-gpu:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 357 / 152 | Golden Image GPU | 184 / 11 |
+| `golden-gpu-transformers:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 289 / 138 | Golden Image GPU | 184 / 11 |
+| `golden-gpu-rapids:<v>` | Ubuntu 22.04 + conda | 4,664 / 508 | Rapids 26.10 | 190 / 9 |
+| `spark:<v>` | Ubuntu 22.04 + conda | 5,841 / 694 | Golden Image CPU | 296 / 39 |
 
 The 5.2.5 totals above count each of the five published images once (Golden Image CPU on one
 platform, as the test images were counted).
@@ -157,16 +155,20 @@ Found and fixed while verifying:
   llm images, both fixed in releases of 2026-10-21 (mlflow 3.17.2, pypdf 6.21.2) after these images
   were locked. The 5.2.5 images ship as built; the next lock refresh (`tools/lock.sh
   --upgrade-package=mlflow`, `--upgrade-package=pypdf llm`) takes the fixes.
-- **pip's vendored copies** of urllib3 (2), msgpack and setuptools: 4 HIGH in every image, fixed
+- **pip's vendored copies** of urllib3 (2), msgpack (2) and setuptools: 5 HIGH in every image, fixed
   when pip ships a release with newer vendored libraries. A CRITICAL published on 2026-10-20 in
   pip 26.2.1's vendored certifi (GHSA-6q48-6c7w-9gw2, compromised emSign intermediate CAs) is fixed
   by pip 26.2.2, which the locks now pin; images built before that need a rebuild.
-- **nltk 3.10.3:** one HIGH without a fix (cpu, llm, gpu).
+- **nltk 3.10.3:** two HIGH (cpu, llm, gpu): CVE-2026-81726 without a fix, and GHSA-j456-xh4h-cpf2
+  (published 2026-10-27), fixed in nltk 3.10.4 after the images were locked; the next lock refresh
+  (`tools/lock.sh --upgrade-package=nltk`) takes it.
 - **llama-index-core 0.12:** one HIGH in the llm images, fixed only in 0.13, which needs a port of
   the LLM/RAG modules (they use APIs removed in 0.13).
-- **Spark (in `cpu`):** 21 HIGH in Jackson, Jetty and jline copies that Hadoop, Parquet and Spark shade
-  into their own artefacts (hadoop-client-runtime, parquet-jackson, ...); fixed only by Spark/Hadoop releases.
-  Since Spark is part of `cpu`, every cpu name carries them (9 HIGH before the merge).
+- **Spark (in `cpu`):** 26 HIGH in its bundled jars. 23 are Jackson, Jetty, jline and Guava copies that
+  Hadoop, Parquet and Spark shade into their own artefacts (hadoop-client-runtime, parquet-jackson,
+  spark-network-common, ...), fixed only by Spark/Hadoop releases. 3 are in the standalone
+  guava-33.6.0-jre.jar (fixed in 33.7.2) and snappy-java-1.1.10.8.jar (fixed in 1.1.10.9), published
+  after the hash-pinned overrides in `docker/spark-jar-overrides.txt` were chosen.
 
 No image has a CRITICAL finding, a secret, or a finding on an end-of-life OS.
 
