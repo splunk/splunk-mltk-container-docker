@@ -14,7 +14,10 @@
 #                                              here (PLATFORM=all), as tested, without a
 #                                              rebuild and without SBOM or provenance (a
 #                                              local load keeps none), then create the
-#                                              aliases; --dry-run only checks and prints
+#                                              aliases; --dry-run only checks and prints.
+#                                              Prints a push plan (layers per tag, new data),
+#                                              docker's per-layer progress, and the overall
+#                                              percentage, elapsed time and time left
 #
 # <name> is a target (cpu, llm, agentic, gpu, rapids) or a 5.2.x name such as
 # golden-cpu, golden-cpu-arm, escu-cpu, spark, golden-gpu-transformers or ubi-llm-rag.
@@ -153,11 +156,65 @@ for name, target in json.load(sys.stdin)["target"].items():
     echo "Nothing pushed. Build these images for every platform first: PLATFORM=all ./build.sh $name $repo $version" >&2
     exit 1
   fi
+  # "<tag> <layers> <new layers> <new bytes>" per tag: its layers on all platforms, and those no
+  # earlier tag of this push has with their uncompressed size, which weights the overall progress
+  # (a tag of an image pushed before in this run only adds its manifests)
+  weights="$(python3 - "$plan" <<'EOF'
+import json, subprocess, sys
+def docker(*args):
+    return subprocess.run(["docker", *args], check=True, capture_output=True, text=True).stdout
+seen = set()
+for line in sys.argv[1].splitlines():
+    target, platforms, tag = line.split()
+    layers = {}
+    for platform in platforms.split(","):
+        ids = json.loads(docker("image", "inspect", "--platform", platform, "--format", "{{json .RootFS.Layers}}", tag))
+        # docker history lists the newest step first; its non-empty steps are the layers in order
+        steps = [int(size) for size in reversed(docker("history", "--platform", platform, "--no-trunc",
+                                                       "--human=false", "--format", "{{.Size}}", tag).split())]
+        sizes = [size for size in steps if size > 0]
+        if len(sizes) != len(ids):   # an empty layer: spread the size of the image evenly
+            sizes = [sum(steps) // max(len(ids), 1)] * len(ids)
+        layers.update(zip(ids, sizes))
+    new = {layer: size for layer, size in layers.items() if layer not in seen}
+    seen.update(layers)
+    print(tag, len(layers), len(new), sum(new.values()))
+EOF
+)"
+  human() { awk -v b="$1" 'BEGIN { split("B kB MB GB TB", u); i = 1
+    while (b >= 1000 && i < 5) { b /= 1000; i++ }; printf(i == 1 ? "%d %s" : "%.1f %s", b, u[i]) }'; }
+  clock() { printf '%dm%02ds' $(($1 / 60)) $(($1 % 60)); }
+  count=0 total=0
+  while read -r tag layers new bytes; do count=$((count + 1)) total=$((total + bytes)); done <<< "$weights"
+  echo "Push plan: $count tags, about $(human "$total") of layers (uncompressed; the registry gets them"
+  echo "compressed, and skips layers it already has, so the push can be faster than this):"
+  i=0
+  while read -r tag layers new bytes; do
+    i=$((i + 1))
+    if [ "$new" = 0 ]; then extra="same layers as an earlier tag: manifests only"; else extra="$new new, about $(human "$bytes")"; fi
+    printf '  %2d/%d %s: %d layers, %s\n' "$i" "$count" "$tag" "$layers" "$extra"
+  done <<< "$weights"
+  i=0 sent=0 start=$SECONDS
   while read -r target platforms tag; do
+    i=$((i + 1))
+    read -r _ layers new bytes <<< "$(sed -n "${i}p" <<< "$weights")"
     if [ "$dry_run" = true ]; then echo "would run: docker push $tag   ($platforms)"; continue; fi
-    echo "Pushing $tag ($platforms)"
-    docker push --quiet "$tag"   # the image index with every platform loaded here
+    elapsed=$((SECONDS - start)) status=""
+    if [ "$total" -gt 0 ]; then status="; overall $((sent * 100 / total)) % done"; fi
+    if [ "$sent" -gt 0 ] && [ "$elapsed" -gt 0 ]; then
+      status="$status, elapsed $(clock "$elapsed"), about $(clock $(((total - sent) * elapsed / sent))) left"
+    fi
+    echo
+    echo "[$i/$count] Pushing $tag ($platforms): $layers layers, $new new$status"
+    docker push "$tag" < /dev/null   # the image index with every platform loaded here; docker shows each layer
+    sent=$((sent + bytes)) elapsed=$((SECONDS - start))
+    echo "[$i/$count] Pushed $tag; overall $([ "$total" -gt 0 ] && echo $((sent * 100 / total)) || echo 100) % done ($(human "$sent") of $(human "$total")), elapsed $(clock "$elapsed")"
   done <<< "$plan"
+  if [ "$dry_run" != true ]; then
+    elapsed=$((SECONDS - start))
+    echo
+    echo "Pushed $count tags in $(clock "$elapsed")$([ "$elapsed" -gt 0 ] && echo ", about $(human $((total / elapsed)))/s (uncompressed)")"
+  fi
   create_aliases
   only="$(IFS=,; echo "${targets[*]}")"
 else
