@@ -7,25 +7,25 @@
 #   ./build.sh all [repo] [version]            build every target
 #   ./build.sh --push-rebuild <name|all> [repo] [version]   (or --push)
 #                                              build all declared platforms, push with
-#                                              SBOM and provenance, then create the
-#                                              single-platform aliases (golden-cpu:<v>-arm64)
+#                                              SBOM and provenance (and create any
+#                                              single-platform names images.toml declares)
 #   ./build.sh --push-only [--dry-run] <name|all> [repo] [version]
 #                                              push the images already built and loaded
 #                                              here (PLATFORM=all), as tested, without a
 #                                              rebuild and without SBOM or provenance (a
-#                                              local load keeps none), then create the
-#                                              aliases; --dry-run only checks and prints.
+#                                              local load keeps none); --dry-run only
+#                                              checks and prints.
 #                                              Prints a push plan (layers per tag, new data),
 #                                              docker's per-layer progress, and the overall
 #                                              percentage, elapsed time and time left
 #
-# <name> is a target (cpu, llm, agentic, gpu, rapids) or a 5.2.x name such as
-# golden-cpu, golden-cpu-arm, escu-cpu, spark, golden-gpu-transformers or ubi-llm-rag.
+# <name> is a target (cpu, llm, agentic, gpu, rapids), a stanza (golden-cpu, llm-rag,
+# agentic-ai, golden-gpu, golden-gpu-rapids) or an image name such as ubi-llm-rag.
 #
-# Local builds load ONE platform: a 5.2.x name builds the platform it was published for
-# (golden-cpu-arm: linux/arm64, the others linux/amd64); a target name builds the host's
-# platform if the target supports it, else its first platform. PLATFORM=linux/arm64 picks
-# a platform, PLATFORM=all loads every declared platform (needs the containerd image store).
+# Local builds load ONE platform: a target name builds the host's platform if the target
+# supports it, else its first platform; a stanza or image name builds linux/amd64.
+# PLATFORM=linux/arm64 picks a platform, PLATFORM=all loads every declared platform (needs
+# the containerd image store).
 # Building for a foreign platform uses QEMU emulation and is slow.
 #
 # Every build writes images_conf_files/images.conf with the stanzas of what was built.
@@ -223,7 +223,7 @@ else
   for target in "${targets[@]}"; do
     declared="$(render --platforms "$target")"
     if [ -n "$alias_ref" ]; then
-      platform="$(render --platforms "$name")"           # e.g. golden-cpu-arm -> linux/arm64
+      platform="$(render --platforms "$name")"           # a single-platform name: its platform
     elif [ "${PLATFORM:-}" = "all" ]; then
       platform="$declared"
     elif [ -n "${PLATFORM:-}" ]; then

@@ -12,8 +12,8 @@
   tools/render.py --stanzas          print all published stanza ids
   tools/render.py --references       print every published image reference (uses --repo/--version)
   tools/render.py --title STANZA     print the images.conf title of a stanza (uses --version)
-  tools/render.py --alias-ref NAME   print the reference of a single-platform 5.2.x name
-                                     (e.g. golden-cpu-arm), nothing for other names
+  tools/render.py --alias-ref NAME   print the reference of a single-platform name
+                                     (a publish entry with platform = ...), nothing for others
   tools/render.py --aliases          print "<target> <platform> <alias> <source>" lines for the
                                      single-platform aliases created after a push
 

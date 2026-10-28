@@ -42,10 +42,7 @@
         "org.opencontainers.image.description": "Classic ML, deep learning (CPU), NLP and Spark 4.2 (local mode, Java 21); includes the ESCU pretrained models"
       },
       "tags": [
-        "${REPO}mltk-container-escu-cpu:${VERSION}",
-        "${REPO}mltk-container-golden-cpu-transformers:${VERSION}",
-        "${REPO}mltk-container-golden-cpu:${VERSION}",
-        "${REPO}mltk-container-spark:${VERSION}"
+        "${REPO}mltk-container-golden-cpu:${VERSION}"
       ]
     },
     "llm": {
@@ -104,7 +101,6 @@
         "org.opencontainers.image.description": "Deep learning and transformers on NVIDIA GPUs (CUDA 12.9 from wheels, as RAPIDS 26.10); also runs without a GPU"
       },
       "tags": [
-        "${REPO}mltk-container-golden-gpu-transformers:${VERSION}",
         "${REPO}mltk-container-golden-gpu:${VERSION}"
       ]
     },

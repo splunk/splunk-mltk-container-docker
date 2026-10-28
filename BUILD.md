@@ -9,16 +9,18 @@ DSDL app. The images of this build replace them under the same tags.
 
 What the 11 images of the original v5.2.5 branch contained (the 10 5.2.5 test images and the internal
 `agentic-ai-debian`) is now built from **one multi-stage Dockerfile**
-(`docker/Dockerfile`) as **5 build targets** (Spark is part of `cpu`). All 10 published image references and `images.conf`
-stanzas are kept:
-images that only differed in their library mix were merged and are published under every old
-name. The internal `agentic-ai-debian` test image is retired.
+(`docker/Dockerfile`) as **5 build targets**, published as five images, one name and one `images.conf`
+stanza each: Golden Image CPU (`golden-cpu`), LLM RAG (`llm-rag`), Agentic AI (`agentic-ai`), Golden
+Image GPU (`golden-gpu`) and Rapids 26.10 (`golden-gpu-rapids`). Images that only differed in their
+library mix were merged: `golden-cpu-arm`, `escu-cpu`, `golden-cpu-transformers` and `spark` into Golden
+Image CPU, `golden-gpu-transformers` into Golden Image GPU; those names are no longer published. The
+internal `agentic-ai-debian` test image is retired.
 
-| | 5.2.5 test images (10 published references) | 5.2.5 (same 10 references) | Change |
+| | 5.2.5 test images (10 published references) | 5.2.5 (5 published images) | Change |
 |---|---:|---:|---:|
-| Trivy findings | 32,357 | 2,357 | −92.7 % |
+| Trivy findings | 32,357 | 1,023 | −96.8 % |
 | CRITICAL | 157 | 0 | −100 % |
-| HIGH + CRITICAL | 3,383 | 212 | −93.7 % |
+| HIGH + CRITICAL | 3,383 | 75 | −97.8 % |
 | Distinct images and size | 10 images, 38.3 GB | 5 images (cpu amd64 + arm64, llm, gpu, rapids), 19.0 GB | −50 % |
 | Operating systems | 6 (UBI 9, Debian 11 and 13, DHI Debian 13, Ubuntu 20.04 and 22.04) | 1 (UBI 9.8) | |
 | Python versions | 4 (3.8, 3.9, 3.10, 3.11) | 1 (3.12) | |
@@ -36,21 +38,20 @@ one target at a time: `cpu` (which now includes Spark) from commit c184064, `llm
 2026-10-28 `cpu` was rebuilt with tabpfn 9.2.0 and huggingface-hub (1.33.0, already a dependency of
 transformers) as declared libraries, plus the new `tabpfn_model` notebook; the rows below show
 that build. `cpu`, `llm`
-and `agentic` are built for linux/amd64 and linux/arm64, `gpu` and `rapids` for linux/amd64; the
-single-platform `golden-cpu:<v>-arm64` tag comes from `./build.sh golden-cpu-arm splunk/ 5.2.5`. Every
+and `agentic` are built for linux/amd64 and linux/arm64, `gpu` and `rapids` for linux/amd64. Every
 image was smoke-tested on each platform with `tools/smoke-test.sh` (arm64 natively, amd64 under emulation
 on Apple silicon, where the Jupyter kernel check is skipped) and scanned per platform with Trivy 0.64.1
 (`tools/scan.sh --gate`, vulnerability DB of 2026-10-27). Sizes from `docker image inspect` (same method
 as the report of the 5.2.5 test images); arm64: `llm`/`agentic` 1.42 GB, with the same findings as amd64.
 
-| Target | Published as (5.2.x names) | Size | Modules importing (test images union) | Findings | CRIT | HIGH |
+| Target | Published as (title, stanza) | Size | Modules importing (test images union) | Findings | CRIT | HIGH |
 |---|---|---:|---:|---:|---:|---:|
-| `cpu` amd64 | `golden-cpu`, `escu-cpu`, `golden-cpu-transformers`, `spark` | 2.13 GB | 51 (44) | 288 | 0 | 32 |
-| `cpu` arm64 | `golden-cpu:<v>-arm64` | 1.78 GB | 51 (44) | 288 | 0 | 32 |
-| `llm` | `ubi-llm-rag` (stanza `llm-rag`) | 1.77 GB | 61 (46) | 182 | 0 | 13 |
-| `agentic` | `ubi-llm-rag:agentic-ai-<v>` | 1.77 GB | 61 (46) | 182 | 0 | 13 |
-| `gpu` | `golden-gpu`, `golden-gpu-transformers` | 5.75 GB | 51 (48) | 182 | 0 | 9 |
-| `rapids` | `golden-gpu-rapids` | 7.57 GB | 36 (22) | 189 | 0 | 8 |
+| `cpu` amd64 | Golden Image CPU (`golden-cpu`) | 2.13 GB | 51 (44) | 288 | 0 | 32 |
+| `cpu` arm64 | Golden Image CPU (`golden-cpu`), arm64 | 1.78 GB | 51 (44) | 288 | 0 | 32 |
+| `llm` | LLM RAG (`llm-rag`) | 1.77 GB | 61 (46) | 182 | 0 | 13 |
+| `agentic` | Agentic AI (`agentic-ai`) | 1.77 GB | 61 (46) | 182 | 0 | 13 |
+| `gpu` | Golden Image GPU (`golden-gpu`) | 5.75 GB | 51 (48) | 182 | 0 | 9 |
+| `rapids` | Rapids 26.10 (`golden-gpu-rapids`) | 7.57 GB | 36 (22) | 189 | 0 | 8 |
 
 "Modules importing" counts the `app/model` modules that import in the image; the number in
 brackets is the union of the modules that imported in the 5.2.5 test images the target replaces. The
@@ -58,20 +59,23 @@ smoke test's lists (`tests/expected/<target>.txt`) hold that union plus `transfo
 and, where they import, `transformers_summarization`, which failed in the 5.2.5 test images and import now.
 No module regressed in any image.
 
-### Per published reference
+### Per test image reference
 
-| Reference | test image base | test image findings / H+C | 5.2.5 findings / H+C |
-|---|---|---:|---:|
-| `golden-cpu:<v>` | UBI 9 | 881 / 127 | 288 / 32 |
-| `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | 288 / 32 |
-| `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | 288 / 32 |
-| `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | 288 / 32 |
-| `ubi-llm-rag:<v>` | UBI 9 | 1,105 / 224 | 182 / 13 |
-| `ubi-llm-rag:agentic-ai-<v>` | UBI 9 | 7,079 / 253 | 182 / 13 |
-| `golden-gpu:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 357 / 152 | 182 / 9 |
-| `golden-gpu-transformers:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 289 / 138 | 182 / 9 |
-| `golden-gpu-rapids:<v>` | Ubuntu 22.04 + conda | 4,664 / 508 | 189 / 8 |
-| `spark:<v>` | Ubuntu 22.04 + conda | 5,841 / 694 | 288 / 32 |
+| 5.2.5 test image | test image base | test image findings / H+C | replaced by (5.2.5) | findings / H+C |
+|---|---|---:|---|---:|
+| `golden-cpu:<v>` | UBI 9 | 881 / 127 | Golden Image CPU | 288 / 32 |
+| `golden-cpu:<v>-arm64` | UBI 9 | 990 / 188 | Golden Image CPU (arm64) | 288 / 32 |
+| `escu-cpu:<v>` | Debian 11 (end of life) | 6,912 / 720 | Golden Image CPU | 288 / 32 |
+| `golden-cpu-transformers:<v>` | Debian 13 | 4,239 / 379 | Golden Image CPU | 288 / 32 |
+| `ubi-llm-rag:<v>` | UBI 9 | 1,105 / 224 | LLM RAG | 182 / 13 |
+| `ubi-llm-rag:agentic-ai-<v>` | UBI 9 | 7,079 / 253 | Agentic AI | 182 / 13 |
+| `golden-gpu:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 357 / 152 | Golden Image GPU | 182 / 9 |
+| `golden-gpu-transformers:<v>` | Ubuntu 20.04 (end of life, OS not scanned) | 289 / 138 | Golden Image GPU | 182 / 9 |
+| `golden-gpu-rapids:<v>` | Ubuntu 22.04 + conda | 4,664 / 508 | Rapids 26.10 | 189 / 8 |
+| `spark:<v>` | Ubuntu 22.04 + conda | 5,841 / 694 | Golden Image CPU | 288 / 32 |
+
+The 5.2.5 totals above count each of the five published images once (Golden Image CPU on one
+platform, as the test images were counted).
 
 ## Where the reduction comes from
 
@@ -246,7 +250,6 @@ verifier per area; the confirmed findings are fixed in commit 8984d9a and later.
 
 ```
 PLATFORM=all ./build.sh all splunk/ 5.2.5          # the release images, every declared platform
-./build.sh golden-cpu-arm splunk/ 5.2.5             # the golden-cpu:5.2.5-arm64 alias, locally
 DSDL_TEST_PLATFORM=linux/amd64 tools/smoke-test.sh splunk/mltk-container-golden-cpu:5.2.5 cpu
 tools/scan.sh --gate --platform linux/amd64,linux/arm64 splunk/mltk-container-golden-cpu:5.2.5
 ./build.sh --push-only --dry-run all splunk/ 5.2.5  # check the tested local images for a push

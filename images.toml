@@ -4,9 +4,12 @@
 # and images_conf_files/images.conf (the stanzas for the DSDL app). Edit this
 # file, then run `tools/render.py` (build.sh checks that docker-bake.json is current).
 #
-# One build target can be published under several names. The extra names keep
-# the image references and images.conf stanzas of 5.2.x working:
-# the 10 image references of the 5.2.5 test images (Docker Hub, September 2026) are 5 build targets.
+# From 5.2.5 there are five images, one per build target, each published under one name and
+# one images.conf stanza. They replace the 10 image references of the 5.2.5 test images
+# (Docker Hub, September 2026): golden-cpu-arm, escu-cpu, golden-cpu-transformers and spark
+# are in Golden Image CPU, golden-gpu-transformers in Golden Image GPU; those names are no
+# longer published. A target can still list several publish entries (a single-platform one
+# with platform = "...").
 
 version = "5.2.5"
 repo = "splunk/"
@@ -17,11 +20,7 @@ description = "Classic ML, deep learning (CPU), NLP and Spark 4.2 (local mode, J
 profile = "cpu"
 platforms = ["linux/amd64", "linux/arm64"]
 publish = [
-  { stanza = "golden-cpu", image = "mltk-container-golden-cpu", tag = "{version}", title = "Red Hat UBI Golden CPU ({version})", runtime = "none" },
-  { stanza = "golden-cpu-arm", image = "mltk-container-golden-cpu", tag = "{version}-arm64", platform = "linux/arm64", title = "Red Hat UBI Golden CPU ARM64 ({version})", runtime = "none" },
-  { stanza = "escu-cpu", image = "mltk-container-escu-cpu", tag = "{version}", title = "ESCU ({version})", runtime = "none" },
-  { stanza = "golden-cpu-transformers", image = "mltk-container-golden-cpu-transformers", tag = "{version}", title = "Transformers CPU ({version})", runtime = "none" },
-  { stanza = "spark", image = "mltk-container-spark", tag = "{version}", title = "Spark 4.2 ({version})", runtime = "none" },
+  { stanza = "golden-cpu", image = "mltk-container-golden-cpu", tag = "{version}", title = "Golden Image CPU ({version})", runtime = "none" },
 ]
 
 [targets.llm]
@@ -29,7 +28,7 @@ description = "LLM / RAG stack (llama-index, vector stores, LLM provider SDKs) o
 profile = "llm"
 platforms = ["linux/amd64", "linux/arm64"]
 publish = [
-  { stanza = "llm-rag", image = "mltk-container-ubi-llm-rag", tag = "{version}", title = "Red Hat LLM RAG CPU ({version})", runtime = "none" },
+  { stanza = "llm-rag", image = "mltk-container-ubi-llm-rag", tag = "{version}", title = "LLM RAG ({version})", runtime = "none" },
 ]
 
 [targets.agentic]
@@ -46,7 +45,6 @@ profile = "gpu-cu12"
 platforms = ["linux/amd64"]
 publish = [
   { stanza = "golden-gpu", image = "mltk-container-golden-gpu", tag = "{version}", title = "Golden Image GPU ({version})", runtime = "none,nvidia" },
-  { stanza = "golden-gpu-transformers", image = "mltk-container-golden-gpu-transformers", tag = "{version}", title = "Transformers GPU ({version})", runtime = "none,nvidia" },
 ]
 
 [targets.rapids]

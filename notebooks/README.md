@@ -13,12 +13,12 @@ every notebook imports were checked for presence inside each built image, and th
 and single stages of some notebooks were run in the images to settle doubtful cases. The notebooks were **not** run end to
 end, except where a note says so. Status as of 2026-10-27.
 
-| Column | Images (`images.conf` stanzas) |
+| Column | Image (title in DSDL, `images.conf` stanza) |
 |---|---|
-| cpu | `golden-cpu`, `golden-cpu-arm`, `escu-cpu`, `golden-cpu-transformers`, `spark` (includes PySpark 4.2 with Java 21) |
-| llm / agentic | `llm-rag`, `agentic-ai` (the same libraries; the cpu content without Spark) |
-| gpu | `golden-gpu`, `golden-gpu-transformers` (they also run without a GPU) |
-| rapids | `golden-gpu-rapids` (no TensorFlow, no spaCy, pandas 3) |
+| cpu | Golden Image CPU (`golden-cpu`): includes PySpark 4.2 with Java 21; replaces `golden-cpu-arm`, `escu-cpu`, `golden-cpu-transformers` and `spark` |
+| llm / agentic | LLM RAG (`llm-rag`) and Agentic AI (`agentic-ai`): the same libraries, the cpu content without Spark |
+| gpu | Golden Image GPU (`golden-gpu`): also runs without a GPU; replaces `golden-gpu-transformers` |
+| rapids | Rapids 26.10 (`golden-gpu-rapids`): no TensorFlow, no spaCy, pandas 3 |
 
 ✓ works · ◐ partly (see notes) · – does not work · ? untested whether it works
 
