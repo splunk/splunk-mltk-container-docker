@@ -26,7 +26,9 @@
 # supports it, else its first platform; a stanza or image name builds linux/amd64.
 # PLATFORM=linux/arm64 picks a platform, PLATFORM=all loads every declared platform (needs
 # the containerd image store).
-# Building for a foreign platform uses QEMU emulation and is slow.
+# Building for a foreign platform uses QEMU emulation and is slow. NO_CACHE=1 builds without
+# the layer cache, e.g. to pick up new OS packages such as CA certificates (the hash-checked
+# download cache of uv is kept).
 #
 # Every build writes images_conf_files/images.conf with the stanzas of what was built.
 #
@@ -117,8 +119,11 @@ create_aliases() {
   done
 }
 
+nocache=""
+if [ "${NO_CACHE:-}" = 1 ]; then nocache="--no-cache"; fi
+
 if [ "$mode" = push-rebuild ]; then
-  docker buildx bake -f docker-bake.json --push \
+  docker buildx bake -f docker-bake.json --push $nocache \
     --set '*.attest=type=sbom' --set '*.attest=type=provenance,mode=max' "${targets[@]}"
   create_aliases
   only="$(IFS=,; echo "${targets[*]}")"
@@ -240,10 +245,10 @@ else
     esac
     if [ -n "$alias_ref" ]; then
       # a single-platform 5.2.x name: tag only that name, keep the multi-platform tags
-      docker buildx bake -f docker-bake.json --load --set "$target.platform=$platform" \
+      docker buildx bake -f docker-bake.json --load $nocache --set "$target.platform=$platform" \
         --set "$target.tags=$alias_ref" "$target"
     else
-      docker buildx bake -f docker-bake.json --load --set "$target.platform=$platform" "$target"
+      docker buildx bake -f docker-bake.json --load $nocache --set "$target.platform=$platform" "$target"
       # local equivalent of the single-platform alias when exactly that platform was built
       render --aliases --repo "$repo" --version "$version" | while read -r alias_target alias_platform alias index; do
         if [ "$alias_target" = "$target" ] && [ "$platform" = "$alias_platform" ]; then

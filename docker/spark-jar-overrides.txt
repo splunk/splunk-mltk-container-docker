@@ -1,10 +1,11 @@
 # Jars of the pyspark distribution replaced by patch releases in the Spark image.
-# Spark 4.2.0 bundles netty 4.2.13, Jackson 2.21.2 and lz4-java 1.11.0, which have
-# known vulnerabilities fixed in the same release lines. Patch releases within these
+# Spark 4.2.0 bundles netty 4.2.13, Jackson 2.21.2, lz4-java 1.11.0, Guava 33.6.0 and
+# snappy-java 1.1.10.8, which have known vulnerabilities fixed in the same release lines
+# (Guava 33.7.2 keeps failureaccess 1.0.3, which Spark bundles). Patch releases within these
 # lines are binary compatible; tests/smoke/functional.py runs Spark SQL, ml and mllib
 # against the result. Re-check (and usually empty) this list on every Spark release.
-# (jackson-module-scala has no .sha256 on Maven Central: its sha256 was computed after
-# verifying the published .sha1.)
+# (jackson-module-scala and snappy-java have no .sha256 on Maven Central: their sha256 was
+# computed after verifying the published .sha1.)
 #
 # <jar glob replaced>  <path on https://repo1.maven.org/maven2>  <sha256>
 netty-all-[0-9]*.jar io/netty/netty-all/4.2.19.Final/netty-all-4.2.19.Final.jar 4409956545582c735c42ba7cb4a0619a5db4f041d96fad99e31ad13671134fcd
@@ -32,3 +33,5 @@ lz4-java-[0-9]*.jar at/yawk/lz4/lz4-java/1.11.4/lz4-java-1.11.4.jar 58c8e0b81396
 jackson-dataformat-yaml-[0-9]*.jar com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.21.8/jackson-dataformat-yaml-2.21.8.jar b924025c47ea13da43ff2860b19ce5c18ecd14b8ec5cb7d03fc315f699935abe
 jackson-datatype-jsr310-[0-9]*.jar com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.21.8/jackson-datatype-jsr310-2.21.8.jar 63a0854504aa90ed8f34f891aaa5259f9bd622bac115323559a38abdc1e81632
 jackson-module-scala_2.13-[0-9]*.jar com/fasterxml/jackson/module/jackson-module-scala_2.13/2.21.8/jackson-module-scala_2.13-2.21.8.jar b697f5a396088c569d3eb7f5ea4ee1d7968ab8e13d46d348df94daf9a8ca66b1
+guava-[0-9]*-jre.jar com/google/guava/guava/33.7.2-jre/guava-33.7.2-jre.jar b530942257fb935f8b2cfaa5f8eb5bd59c555fd8e8d01b8ce98912e077ea606c
+snappy-java-[0-9]*.jar org/xerial/snappy/snappy-java/1.1.10.9/snappy-java-1.1.10.9.jar 35228628442e4b9797681c7cbd3b26594f6da3379159dbd0cb07094ed3aece0d

@@ -14,9 +14,9 @@
 # Base images are pinned by digest (tools/update-digests.sh). Rebuild monthly so
 # OS and Python fixes reach the published images.
 
-ARG UBI_IMAGE=registry.access.redhat.com/ubi9/ubi@sha256:48393e4261b2544f652c915b3e052256ddf66ee95cd04dc0362191f302c4e94a
+ARG UBI_IMAGE=registry.access.redhat.com/ubi9/ubi@sha256:5f08e80aa970ae77712e75e5e857ac0b396abc900823c4d041c1150a9538a13f
 ARG MICRO_IMAGE=registry.access.redhat.com/ubi9/ubi-micro@sha256:5be877a2a280ae36eb9ab80ca4efb28bbf77c57abbba38137cdc37a03b8465e6
-ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.13.3@sha256:bee0a2a458fd956c5df7b8b4c5fed2257b0af34866e3da7b51db0be3acb375d1
+ARG UV_IMAGE=ghcr.io/astral-sh/uv:0.13.4@sha256:9f130421e930bfbdc563c00740466603f8723158e90297d07957c2294640262b
 ARG PYTHON_VERSION=3.12
 
 FROM ${UV_IMAGE} AS uv

@@ -7,7 +7,8 @@
 #   tools/lock.sh --check         # fail if any uv.lock, or a cpu-constraint block, is out of date
 #   tools/lock.sh --upgrade cpu   # move every package to the newest allowed version
 #   tools/lock.sh --upgrade-package=pip cpu
-#                                 # move one package (e.g. for a CVE fix) and keep all other pins
+#                                 # move one package (e.g. for a CVE fix) and keep all other pins;
+#                                 # repeat the option to move several
 #
 # When cpu is (re)locked, the cpu-lock constraint blocks of the gpu-cu12, rapids-cu12 and
 # llm profiles are regenerated (tools/sync-cpu-constraints.py) and those profiles are
@@ -25,8 +26,8 @@ for arg in "$@"; do
   case "$arg" in
     --check) mode=(--check) ;;
     --upgrade) mode=(--upgrade) ;;
-    --upgrade-package=*) mode=(--upgrade-package "${arg#*=}") ;;
-    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
+    --upgrade-package=*) mode+=(--upgrade-package "${arg#*=}") ;;
+    -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
     *) profiles+=("$arg") ;;
   esac
 done

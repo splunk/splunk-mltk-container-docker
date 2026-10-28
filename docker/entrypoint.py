@@ -532,7 +532,9 @@ def main():
 
     services = [
         ["jupyter", "lab", "--no-browser", "--ip=0.0.0.0", "--port=8888"],
-        ["tensorboard", "--bind_all", "--logdir", os.path.join(SRV, "notebooks", "logs")],
+        # --load_fast=false: the Rust data server binary (tensorboard-data-server 0.7.2, no newer
+        # release) bundles its own TLS roots, including the distrusted emSign ECC Root CA - G3
+        ["tensorboard", "--bind_all", "--load_fast=false", "--logdir", os.path.join(SRV, "notebooks", "logs")],
         mlflow_command(env),
     ]
     sys.exit(supervise(services + [api], env))
