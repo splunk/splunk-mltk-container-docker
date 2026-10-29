@@ -1,0 +1,65 @@
+# CI for the GitLab pull mirror of this repository. GitHub is the source of
+# truth: make every change here, because the mirror is overwritten from GitHub.
+#
+# On a release tag (vX.Y.Z), sign the container images that were already built
+# and pushed to Docker Hub for that version (see bulk_push.sh). The job does not
+# build or push anything. Images missing from Docker Hub are skipped.
+#
+# Required CI/CD variables, set in the GitLab project (not in this file):
+#   SIGNING_CI_IMAGE      image that provides `artifact-ci` and the docker CLI
+#   SIGNING_SERVICE_ADDR  signing service URL, used as a second JWT audience
+#   DOCKERHUB_USER        Docker Hub user allowed to push to splunk/mltk-container-*
+#   DOCKERHUB_TOKEN       its token (masked); needed to upload the .sig tags
+# Release tags must be protected in the project so signing uses the protected key.
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$/'
+
+stages:
+  - sign
+
+sign-docker-images:
+  stage: sign
+  image: $SIGNING_CI_IMAGE
+  id_tokens:
+    CI_JOB_JWT:
+      aud:
+        - $CICD_VAULT_ADDR
+        - $SIGNING_SERVICE_ADDR
+  script:
+    - |
+      set -eu
+      VERSION="${CI_COMMIT_TAG#v}"
+      echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+
+      REFS="
+      splunk/mltk-container-golden-cpu:${VERSION}
+      splunk/mltk-container-golden-cpu:${VERSION}-arm64
+      splunk/mltk-container-golden-gpu:${VERSION}
+      splunk/mltk-container-golden-cpu-transformers:${VERSION}
+      splunk/mltk-container-golden-gpu-transformers:${VERSION}
+      splunk/mltk-container-golden-gpu-rapids:${VERSION}
+      splunk/mltk-container-spark:${VERSION}
+      splunk/mltk-container-escu-cpu:${VERSION}
+      splunk/mltk-container-ubi-llm-rag:${VERSION}
+      splunk/mltk-container-ubi-llm-rag:agentic-ai-${VERSION}
+      "
+
+      signed=0
+      for ref in $REFS; do
+        if ! docker manifest inspect "$ref" >/dev/null 2>&1; then
+          echo "Skipping $ref: not on Docker Hub"
+          continue
+        fi
+        echo "Signing $ref"
+        artifact-ci sign docker "$ref" -r docker.io --upload-to-tlog
+        artifact-ci verify docker "$ref"
+        signed=$((signed + 1))
+      done
+
+      if [ "$signed" -eq 0 ]; then
+        echo "No images found on Docker Hub for version ${VERSION}" >&2
+        exit 1
+      fi
+      echo "Signed and verified ${signed} image(s)"
