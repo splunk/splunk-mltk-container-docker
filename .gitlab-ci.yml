@@ -1,65 +1,107 @@
-# CI for the GitLab pull mirror of this repository. GitHub is the source of
-# truth: make every change here, because the mirror is overwritten from GitHub.
-#
-# On a release tag (vX.Y.Z), sign the container images that were already built
-# and pushed to Docker Hub for that version (see bulk_push.sh). The job does not
-# build or push anything. Images missing from Docker Hub are skipped.
-#
-# Required CI/CD variables, set in the GitLab project (not in this file):
-#   SIGNING_CI_IMAGE      image that provides `artifact-ci` and the docker CLI
-#   SIGNING_SERVICE_ADDR  signing service URL, used as a second JWT audience
-#   DOCKERHUB_USER        Docker Hub user allowed to push to splunk/mltk-container-*
-#   DOCKERHUB_TOKEN       its token (masked); needed to upload the .sig tags
-# Release tags must be protected in the project so signing uses the protected key.
-
 workflow:
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$/'
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$/ && $CI_COMMIT_REF_PROTECTED == "true"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $RELEASE_VERSION'
 
 stages:
+  - build-push
   - sign
+  - validate
 
-sign-docker-images:
+variables:
+  IMAGE_REPO: "splunk/"
+
+build-and-push:
+  stage: build-push
+  image: $BUILD_IMAGE
+  timeout: 3h
+  resource_group: mltk-release
+  before_script:
+    - docker run --privileged --rm tonistiigi/binfmt@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0 --install arm64
+    - docker buildx create --driver docker-container --name "multiarch-${CI_JOB_ID}" --use
+    - docker buildx inspect --bootstrap
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+  script:
+    - |
+      set -eu
+      VERSION="${RELEASE_VERSION:-${CI_COMMIT_TAG#v}}"
+      if [ "$IMAGE_REPO" = "splunk/" ] && [ "$CI_COMMIT_REF_PROTECTED" != "true" ]; then
+        echo "Publishing to splunk/ needs a protected ref" >&2
+        exit 1
+      fi
+
+      ./build.sh --push-rebuild all "$IMAGE_REPO" "$VERSION"
+
+      VERSION="$VERSION" python3 - > refs.txt <<'PY'
+      import os, tomllib
+
+      with open("images.toml", "rb") as f:
+          cfg = tomllib.load(f)
+      version = os.environ["VERSION"]
+      repo = os.environ["IMAGE_REPO"]
+      for target in cfg["targets"].values():
+          for pub in target["publish"]:
+              print(f'{repo}{pub["image"]}:{pub["tag"].format(version=version)}')
+      PY
+
+      : > digests.txt
+      while read -r ref; do
+        digest=$(docker buildx imagetools inspect "$ref" | sed -n 's/^Digest:[[:space:]]*//p' | head -1)
+        [ -n "$digest" ] || { echo "No digest found for $ref" >&2; exit 1; }
+        echo "$ref $digest" >> digests.txt
+      done < refs.txt
+      cat digests.txt
+  after_script:
+    - docker buildx rm "multiarch-${CI_JOB_ID}" || true
+  artifacts:
+    paths:
+      - digests.txt
+    expire_in: 14 days
+
+sign:
   stage: sign
-  image: $SIGNING_CI_IMAGE
+  image: $BUILD_IMAGE
+  needs:
+    - build-and-push
   id_tokens:
     CI_JOB_JWT:
       aud:
         - $CICD_VAULT_ADDR
         - $SIGNING_SERVICE_ADDR
+  before_script:
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
   script:
     - |
       set -eu
-      VERSION="${CI_COMMIT_TAG#v}"
-      echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
-
-      REFS="
-      splunk/mltk-container-golden-cpu:${VERSION}
-      splunk/mltk-container-golden-cpu:${VERSION}-arm64
-      splunk/mltk-container-golden-gpu:${VERSION}
-      splunk/mltk-container-golden-cpu-transformers:${VERSION}
-      splunk/mltk-container-golden-gpu-transformers:${VERSION}
-      splunk/mltk-container-golden-gpu-rapids:${VERSION}
-      splunk/mltk-container-spark:${VERSION}
-      splunk/mltk-container-escu-cpu:${VERSION}
-      splunk/mltk-container-ubi-llm-rag:${VERSION}
-      splunk/mltk-container-ubi-llm-rag:agentic-ai-${VERSION}
-      "
-
-      signed=0
-      for ref in $REFS; do
-        if ! docker manifest inspect "$ref" >/dev/null 2>&1; then
-          echo "Skipping $ref: not on Docker Hub"
-          continue
-        fi
-        echo "Signing $ref"
+      while read -r ref digest; do
+        echo "Signing $ref ($digest)"
         artifact-ci sign docker "$ref" -r docker.io --upload-to-tlog
-        artifact-ci verify docker "$ref"
-        signed=$((signed + 1))
-      done
+      done < digests.txt
 
-      if [ "$signed" -eq 0 ]; then
-        echo "No images found on Docker Hub for version ${VERSION}" >&2
-        exit 1
-      fi
-      echo "Signed and verified ${signed} image(s)"
+validate:
+  stage: validate
+  image: $BUILD_IMAGE
+  needs:
+    - build-and-push
+    - sign
+  id_tokens:
+    CI_JOB_JWT:
+      aud:
+        - $CICD_VAULT_ADDR
+        - $SIGNING_SERVICE_ADDR
+  before_script:
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+  script:
+    - |
+      set -eu
+      count=0
+      while read -r ref digest; do
+        current=$(docker buildx imagetools inspect "$ref" | sed -n 's/^Digest:[[:space:]]*//p' | head -1)
+        if [ "$current" != "$digest" ]; then
+          echo "$ref changed since the build: $current, expected $digest" >&2
+          exit 1
+        fi
+        artifact-ci verify docker "$ref"
+        count=$((count + 1))
+      done < digests.txt
+      echo "Verified $count image(s)"
