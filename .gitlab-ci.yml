@@ -8,15 +8,42 @@ stages:
   - sign
   - validate
 
-variables:
-  IMAGE_REPO: "splunk/"
-
 build-and-push:
   stage: build-push
   image: $BUILD_IMAGE
   timeout: 3h
   resource_group: mltk-release
   before_script:
+    - |
+      set -eu
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        if [ "$CI_COMMIT_REF_PROTECTED" != "true" ]; then
+          echo "Release tags must be protected" >&2
+          exit 1
+        fi
+        IMAGE_REPO="splunk/"
+        VERSION="${CI_COMMIT_TAG#v}"
+      else
+        VERSION="${RELEASE_VERSION:?RELEASE_VERSION is required}"
+        repo=$(printf '%s' "${IMAGE_REPO:?IMAGE_REPO is required for manual runs}" | tr 'A-Z' 'a-z')
+        repo="${repo#docker.io/}"
+        repo="${repo#index.docker.io/}"
+        repo="${repo#registry-1.docker.io/}"
+        case "$repo" in
+          splunk|splunk/|""|/*|*//*|*[!a-z0-9._/-]*)
+            echo "IMAGE_REPO '$IMAGE_REPO' is not allowed for manual runs" >&2
+            exit 1
+            ;;
+          */*) ;;
+          *)
+            echo "IMAGE_REPO '$IMAGE_REPO' must look like <namespace>/<prefix>" >&2
+            exit 1
+            ;;
+        esac
+        IMAGE_REPO="$repo"
+      fi
+      export IMAGE_REPO VERSION
+      echo "Publishing ${IMAGE_REPO}*:${VERSION}"
     - docker run --privileged --rm tonistiigi/binfmt@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0 --install arm64
     - docker buildx create --driver docker-container --name "multiarch-${CI_JOB_ID}" --use
     - docker buildx inspect --bootstrap
@@ -24,15 +51,9 @@ build-and-push:
   script:
     - |
       set -eu
-      VERSION="${RELEASE_VERSION:-${CI_COMMIT_TAG#v}}"
-      if [ "$IMAGE_REPO" = "splunk/" ] && [ "$CI_COMMIT_REF_PROTECTED" != "true" ]; then
-        echo "Publishing to splunk/ needs a protected ref" >&2
-        exit 1
-      fi
-
       ./build.sh --push-rebuild all "$IMAGE_REPO" "$VERSION"
 
-      VERSION="$VERSION" python3 - > refs.txt <<'PY'
+      python3 - > refs.txt <<'PY'
       import os, tomllib
 
       with open("images.toml", "rb") as f:
