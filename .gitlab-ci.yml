@@ -8,6 +8,9 @@ stages:
   - sign
   - validate
 
+variables:
+  GIT_LFS_SKIP_SMUDGE: "1"
+
 build-and-push:
   stage: build-push
   image: $BUILD_IMAGE
