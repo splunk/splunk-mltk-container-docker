@@ -1,0 +1,131 @@
+workflow:
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$/ && $CI_COMMIT_REF_PROTECTED == "true"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $RELEASE_VERSION'
+
+stages:
+  - build-push
+  - sign
+  - validate
+
+variables:
+  GIT_LFS_SKIP_SMUDGE: "1"
+
+build-and-push:
+  stage: build-push
+  image: $BUILD_IMAGE
+  timeout: 3h
+  resource_group: mltk-release
+  before_script:
+    - |
+      set -eu
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        if [ "$CI_COMMIT_REF_PROTECTED" != "true" ]; then
+          echo "Release tags must be protected" >&2
+          exit 1
+        fi
+        IMAGE_REPO="splunk/"
+        VERSION="${CI_COMMIT_TAG#v}"
+      else
+        VERSION="${RELEASE_VERSION:?RELEASE_VERSION is required}"
+        repo=$(printf '%s' "${IMAGE_REPO:?IMAGE_REPO is required for manual runs}" | tr 'A-Z' 'a-z')
+        repo="${repo#docker.io/}"
+        repo="${repo#index.docker.io/}"
+        repo="${repo#registry-1.docker.io/}"
+        case "$repo" in
+          splunk|splunk/|""|/*|*//*|*[!a-z0-9._/-]*)
+            echo "IMAGE_REPO '$IMAGE_REPO' is not allowed for manual runs" >&2
+            exit 1
+            ;;
+          */*) ;;
+          *)
+            echo "IMAGE_REPO '$IMAGE_REPO' must look like <namespace>/<prefix>" >&2
+            exit 1
+            ;;
+        esac
+        IMAGE_REPO="$repo"
+      fi
+      export IMAGE_REPO VERSION
+      echo "Publishing ${IMAGE_REPO}*:${VERSION}"
+    - docker run --privileged --rm tonistiigi/binfmt@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0 --install arm64
+    - docker buildx create --driver docker-container --name "multiarch-${CI_JOB_ID}" --use
+    - docker buildx inspect --bootstrap
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+  script:
+    - |
+      set -eu
+      ./build.sh --push-rebuild all "$IMAGE_REPO" "$VERSION"
+
+      python3 - > refs.txt <<'PY'
+      import os, tomllib
+
+      with open("images.toml", "rb") as f:
+          cfg = tomllib.load(f)
+      version = os.environ["VERSION"]
+      repo = os.environ["IMAGE_REPO"]
+      for target in cfg["targets"].values():
+          for pub in target["publish"]:
+              print(f'{repo}{pub["image"]}:{pub["tag"].format(version=version)}')
+      PY
+
+      : > digests.txt
+      while read -r ref; do
+        digest=$(docker buildx imagetools inspect "$ref" | sed -n 's/^Digest:[[:space:]]*//p' | head -1)
+        [ -n "$digest" ] || { echo "No digest found for $ref" >&2; exit 1; }
+        echo "$ref $digest" >> digests.txt
+      done < refs.txt
+      cat digests.txt
+  after_script:
+    - docker buildx rm "multiarch-${CI_JOB_ID}" || true
+  artifacts:
+    paths:
+      - digests.txt
+    expire_in: 14 days
+
+sign:
+  stage: sign
+  image: $BUILD_IMAGE
+  needs:
+    - build-and-push
+  id_tokens:
+    CI_JOB_JWT:
+      aud:
+        - $CICD_VAULT_ADDR
+        - $SIGNING_SERVICE_ADDR
+  before_script:
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+  script:
+    - |
+      set -eu
+      while read -r ref digest; do
+        echo "Signing $ref ($digest)"
+        artifact-ci sign docker "$ref" -r docker.io --upload-to-tlog
+      done < digests.txt
+
+validate:
+  stage: validate
+  image: $BUILD_IMAGE
+  needs:
+    - build-and-push
+    - sign
+  id_tokens:
+    CI_JOB_JWT:
+      aud:
+        - $CICD_VAULT_ADDR
+        - $SIGNING_SERVICE_ADDR
+  before_script:
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+  script:
+    - |
+      set -eu
+      count=0
+      while read -r ref digest; do
+        current=$(docker buildx imagetools inspect "$ref" | sed -n 's/^Digest:[[:space:]]*//p' | head -1)
+        if [ "$current" != "$digest" ]; then
+          echo "$ref changed since the build: $current, expected $digest" >&2
+          exit 1
+        fi
+        artifact-ci verify docker "$ref"
+        count=$((count + 1))
+      done < digests.txt
+      echo "Verified $count image(s)"
