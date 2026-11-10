@@ -22,7 +22,7 @@ sed -e 's/#.*//' -e '/^[[:space:]]*$/d' "$policy/spark-jar-overrides.txt" | whil
     exit 1
   fi
   new="$(basename "$path")"
-  curl -fsSL --retry 3 -o "$new.part" "https://repo1.maven.org/maven2/$path"
+  curl -fsSL --retry 8 --retry-delay 15 -o "$new.part" "https://repo1.maven.org/maven2/$path"
   echo "$sha256  $new.part" | sha256sum -c --quiet -
   rm -f "${old[@]}"
   mv "$new.part" "$new"
