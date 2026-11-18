@@ -1,4 +1,5 @@
-import logging, os
+import logging, os, re
+from collections import OrderedDict
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from datetime import datetime
@@ -46,6 +47,7 @@ def setup_logger(name: str = "app",
     return logger
 
 def setup_logger_dir(userName,userSession, curr_log_working_dir):
+    userName, userSession = safe_name(userName), safe_name(userSession)
     ## Path of log folder for current session: 
     log_folder = os.path.join(curr_log_working_dir, userName)
     os.makedirs(log_folder, exist_ok=True) # Check if the folder exists
@@ -56,10 +58,24 @@ def setup_logger_dir(userName,userSession, curr_log_working_dir):
     return os.path.join(log_folder, name_of_file)
 
 
+def safe_name(part) -> str:
+    """A user or session name as a single path component: request bodies supply these names,
+    so separators, '..' and other unsafe characters must never reach a path."""
+    return re.sub(r"[^A-Za-z0-9_.@-]", "_", str(part or "unknown")).lstrip(".")[:128] or "unknown"
+
+
+# Session loggers with an open log file, least recently used first. Every chat page load starts
+# a new session, so the oldest file is closed beyond MAX_OPEN_LOGGERS; the next request of that
+# session opens it again in append mode.
+MAX_OPEN_LOGGERS = 64
+_open_loggers: "OrderedDict[str, logging.Logger]" = OrderedDict()
+
+
 def get_logger(userName: str, userSession: str, base_dir: str) -> logging.Logger:
     """
     Creates (or reuses) a session logger that writes to a session log file.
     """
+    userName, userSession = safe_name(userName), safe_name(userSession)
 
     # Create folder: <cwd>/logs
     log_dir = os.path.join(base_dir, "logs")
@@ -73,12 +89,10 @@ def get_logger(userName: str, userSession: str, base_dir: str) -> logging.Logger
     today = datetime.now().strftime("%Y-%m-%d")
     log_path = os.path.join(user_log_dir, f"{userSession}_{today}.log")
 
-    logger_name = f"{userName}.{userSession}"
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.INFO)
-
-    # Prevent duplicated handlers
-    if not logger.handlers:
+    logger = _open_loggers.pop(log_path, None)
+    if logger is None:
+        # not registered with logging.getLogger, so a closed session's logger is freed
+        logger = logging.Logger(f"{userName}.{userSession}", logging.INFO)
         formatter = logging.Formatter(
             "%(asctime)s | %(levelname)s | %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S"
@@ -87,5 +101,9 @@ def get_logger(userName: str, userSession: str, base_dir: str) -> logging.Logger
         fh = logging.FileHandler(log_path)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
-
+        while len(_open_loggers) >= MAX_OPEN_LOGGERS:
+            _, oldest = _open_loggers.popitem(last=False)
+            for handler in oldest.handlers:
+                handler.close()  # a FileHandler reopens on its next record, if a holder still logs
+    _open_loggers[log_path] = logger
     return logger

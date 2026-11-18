@@ -1,0 +1,56 @@
+# Single source of truth for the DSDL container images.
+#
+# tools/render.py turns this file into docker-bake.json (build targets and tags)
+# and images_conf_files/images.conf (the stanzas for the DSDL app). Edit this
+# file, then run `tools/render.py` (build.sh checks that docker-bake.json is current).
+#
+# From 5.2.5 there are five images, one per build target, each published under one name and
+# one images.conf stanza. They replace the 10 image references of the 5.2.5 test images
+# (Docker Hub, September 2026): golden-cpu-arm, escu-cpu, golden-cpu-transformers and spark
+# are in Golden Image CPU, golden-gpu-transformers in Golden Image GPU; those names are no
+# longer published. A target can still list several publish entries (a single-platform one
+# with platform = "...").
+
+version = "5.2.5"
+repo = "splunk/"
+python = "3.12"
+
+[targets.cpu]
+description = "Classic ML, deep learning (CPU), NLP and Spark 4.2 (local mode, Java 21); includes the ESCU pretrained models"
+profile = "cpu"
+platforms = ["linux/amd64", "linux/arm64"]
+publish = [
+  { stanza = "golden-cpu", image = "mltk-container-golden-cpu", tag = "{version}", title = "Golden Image CPU ({version})", runtime = "none" },
+]
+
+[targets.llm]
+description = "LLM / RAG stack (llama-index, vector stores, LLM provider SDKs) on top of the CPU content"
+profile = "llm"
+platforms = ["linux/amd64", "linux/arm64"]
+publish = [
+  { stanza = "llm-rag", image = "mltk-container-ubi-llm-rag", tag = "{version}", title = "LLM RAG ({version})", runtime = "none" },
+]
+
+[targets.agentic]
+description = "The llm image serving the agentic API (app/main_agentic.py: chat, MCP, LangGraph)"
+profile = "llm"
+platforms = ["linux/amd64", "linux/arm64"]
+publish = [
+  { stanza = "agentic-ai", image = "mltk-container-ubi-llm-rag", tag = "agentic-ai-{version}", title = "Agentic AI ({version})", runtime = "none" },
+]
+
+[targets.gpu]
+description = "Deep learning and transformers on NVIDIA GPUs (CUDA 12.9 from wheels, as RAPIDS 26.10); also runs without a GPU"
+profile = "gpu-cu12"
+platforms = ["linux/amd64"]
+publish = [
+  { stanza = "golden-gpu", image = "mltk-container-golden-gpu", tag = "{version}", title = "Golden Image GPU ({version})", runtime = "none,nvidia" },
+]
+
+[targets.rapids]
+description = "NVIDIA RAPIDS 26.10 (cuDF, cuML, cuGraph) and PyTorch from pip wheels (CUDA 12.9)"
+profile = "rapids-cu12"
+platforms = ["linux/amd64"]
+publish = [
+  { stanza = "golden-gpu-rapids", image = "mltk-container-golden-gpu-rapids", tag = "{version}", title = "Rapids 26.10 ({version})", runtime = "none,nvidia" },
+]

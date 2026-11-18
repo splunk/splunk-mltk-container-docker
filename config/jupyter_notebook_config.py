@@ -6,6 +6,13 @@ def post_save(model, os_path, contents_manager):
     """post-save hook for converting notebooks to .py scripts"""
     if model['type'] != 'notebook':
         return  # only do this for notebooks
+    # backup copies (/srv/notebooks_backup_*, /srv/backup) must never overwrite the live module;
+    # notebooks anywhere else, also behind a symlink out of /srv, are exported as before
+    for path in (os.path.abspath(os_path), os.path.realpath(os_path)):
+        relative = os.path.relpath(path, "/srv")
+        top = relative.split(os.sep)[0]
+        if top != os.pardir and (top == "backup" or top.startswith("notebooks_backup_")):
+            return
     # split in directory and file name
     nb_path, nb_filename = os.path.split(os_path)
     # split out filename
@@ -35,7 +42,7 @@ if not jupyter_password:
     raise RuntimeError('JUPYTER_PASSWD must be set to start Jupyter Lab.')
 if hashlib.sha256(jupyter_password.encode('utf-8')).hexdigest() == DEFAULT_JUPYTER_PASSWORD_SHA256:
     raise RuntimeError('JUPYTER_PASSWD must not use the bundled default password hash.')
-c.ServerApp.password = jupyter_password
+c.PasswordIdentityProvider.hashed_password = jupyter_password
 
 c.ServerApp.ip = '0.0.0.0'
 c.ServerApp.port = int(os.getenv('JUPYTER_PORT', 8888))
@@ -44,7 +51,7 @@ if os.getenv('ENABLE_HTTPS', 'true').lower() == 'true':
     c.ServerApp.keyfile = os.getenv('API_SSL_KEY', '/dltk/.jupyter/dltk.key')
 
 # Fix for wigets limit default = 1000000
-c.ServerApp.iopub_data_rate_limit = 20000000
+c.ZMQChannelsWebsocketConnection.iopub_data_rate_limit = 20000000
 
 # try fix async errors / UI issues
 #c.ServerApp.kernel_manager_class = 'notebook.services.kernels.kernelmanager.AsyncMappingKernelManager'

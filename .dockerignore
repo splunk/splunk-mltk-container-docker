@@ -1,0 +1,19 @@
+# Build context for docker/Dockerfile: only what the images need.
+**/.DS_Store
+**/__pycache__
+**/*.pyc
+.git
+tmp
+scan_logs
+*.log
+images_conf_files
+testing
+# the repository's top-level deprecated/ only; notebooks/deprecated/ ships on purpose
+deprecated
+beta_content
+docker_compose
+soar_integration
+# Git LFS pointer stubs (the real models are not part of the build)
+basemodels
+certificates
+package-dsdlsupport/dist

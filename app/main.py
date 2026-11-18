@@ -1,4 +1,4 @@
-# Splunk App for Data Science and Deep Learning 5.2.4
+# Splunk App for Data Science and Deep Learning 5.2.5
 # Author: Philipp Drieger, Principal Machine Learning Architect, 2018-2026
 # -------------------------------------------------------------------------------
 
@@ -12,6 +12,7 @@ from importlib import import_module, reload
 import pandas as pd
 import json
 import csv
+import hmac
 import os
 import uvicorn
 
@@ -26,14 +27,21 @@ app.favicon_path = '/srv/app/static/favicon.ico'
 app.data_path = '/srv/app/data/'
 app.graphics_path = '/srv/app/graphics/'
 
-@app.on_event("startup")
 def setup_tracing():
+    # Splunk Observability (olly_enabled=true or 1). splunk-opentelemetry 2.x replaced
+    # splunk_otel.tracing.start_tracing with init_splunk_otel, and the FastAPI middleware
+    # must be added before the application starts, so this runs at import time.
     if 'olly_enabled' in os.environ:
         if 'true' in os.environ['olly_enabled'] or os.environ['olly_enabled'] == "1":
-            from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-            from splunk_otel.tracing import start_tracing
-            start_tracing()
-            FastAPIInstrumentor.instrument_app(app)
+            try:
+                from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+                from splunk_otel import init_splunk_otel
+                init_splunk_otel()
+                FastAPIInstrumentor.instrument_app(app)
+            except Exception as e:
+                print(f"Splunk Observability tracing could not be enabled: {e}")
+
+setup_tracing()
 
 # -------------------------------------------------------------------------------
 # STATIC mounts
@@ -71,8 +79,12 @@ def validate_token(header):
             detail="No token defined",
             headers={"WWW-Authenticate": "Bearer"},
         )    
-    # check if token is matching
-    if not token in header:
+    # check if token is matching: the whole header (DSDL sends the bare token; a "Bearer " prefix is
+    # accepted too), compared in constant time. 5.2.4 accepted any header that contained the token.
+    sent = header.strip()
+    if sent[:7].lower() == "bearer ":
+        sent = sent[7:].strip()
+    if not hmac.compare_digest(sent.encode(), token.encode()):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
@@ -104,7 +116,7 @@ def get_root(authorization: str = Header(None)):
 def get_summary(authorization: str = Header(None)):
     return_object = {
         'app': 'Splunk App for Data Science and Deep Learning',
-        'version': '5.2.4',
+        'version': '5.2.5',
         'model': 'no model exists'
     }
     if validate_token(authorization):

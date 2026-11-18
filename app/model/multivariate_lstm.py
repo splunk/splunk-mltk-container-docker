@@ -196,7 +196,7 @@ def apply(model,df,param):
     
     for k in range(y_hat.shape[0]):
         if k > previous_steps:
-            y_hat[k]=predictions[k-previous_steps-1]
+            y_hat[k]=predictions[k-previous_steps-1, 0]
     
     result = pd.DataFrame(y_hat, columns=['prediction'])
     return result

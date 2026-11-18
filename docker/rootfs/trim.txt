@@ -1,0 +1,33 @@
+# Packages removed from the runtime rootfs with `rpm -e --nodeps`.
+# git-core requires openssh-clients, which pulls util-linux, pam and shadow-utils:
+# the chain carries su, mount, umount, unix_chkpwd, chage, gpasswd and newgrp
+# (setuid) plus ~100 findings, and none of it is needed for git over HTTPS.
+# The ELF check in tools/smoke-test.sh verifies that nothing left links to them.
+openssh
+openssh-clients
+util-linux
+util-linux-core
+pam
+pam-libs
+shadow-utils
+libpwquality
+cracklib
+cracklib-dicts
+libsemanage
+audit-libs
+libcap-ng
+libutempter
+systemd-libs
+libfido2
+libcbor
+libedit
+libblkid
+libmount
+libfdisk
+libsmartcols
+libeconf
+libdb
+# the openssl CLI (the libraries in openssl-libs stay)
+openssl
+# the venvs are installed by uv; ensurepip's bundled pip wheel is never used
+python@PY@-pip-wheel

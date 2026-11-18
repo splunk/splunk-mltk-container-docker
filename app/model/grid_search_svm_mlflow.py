@@ -87,12 +87,12 @@ def log_run(gridsearch: GridSearchCV, experiment_name: str, model_name: str, run
             mlflow.log_metric(score_name.replace("mean","std"), cv_results[score_name.replace("mean","std")][run_index])
 
         #print("Logging model")        
-        mlflow.sklearn.log_model(gridsearch.best_estimator_, model_name) #, conda_env=conda_env)
+        mlflow.sklearn.log_model(gridsearch.best_estimator_, name=model_name) #, conda_env=conda_env)
 
         #print("Logging extra data related to the experiment")
         mlflow.set_tags(tags) 
 
-        run_id = run.info.run_uuid
+        run_id = run.info.run_id
         experiment_id = run.info.experiment_id
         mlflow.end_run()
         

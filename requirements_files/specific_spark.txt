@@ -1,3 +1,0 @@
-pyspark
-pyarrow>=14.0.1
-mlflow>=2.9.2

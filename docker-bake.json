@@ -1,0 +1,127 @@
+{
+  "variable": {
+    "REPO": {
+      "default": "splunk/"
+    },
+    "VERSION": {
+      "default": "5.2.5"
+    },
+    "DSDL_PYTHON_VERSION": {
+      "default": "3.12"
+    },
+    "VCS_REF": {
+      "default": "unknown"
+    }
+  },
+  "group": {
+    "default": {
+      "targets": [
+        "cpu",
+        "llm",
+        "agentic",
+        "gpu",
+        "rapids"
+      ]
+    }
+  },
+  "target": {
+    "cpu": {
+      "context": ".",
+      "dockerfile": "docker/Dockerfile",
+      "target": "cpu",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "args": {
+        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
+        "DSDL_VERSION": "${VERSION}",
+        "VCS_REF": "${VCS_REF}"
+      },
+      "labels": {
+        "org.opencontainers.image.description": "Classic ML, deep learning (CPU), NLP and Spark 4.2 (local mode, Java 21); includes the ESCU pretrained models"
+      },
+      "tags": [
+        "${REPO}mltk-container-golden-cpu:${VERSION}"
+      ]
+    },
+    "llm": {
+      "context": ".",
+      "dockerfile": "docker/Dockerfile",
+      "target": "llm",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "args": {
+        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
+        "DSDL_VERSION": "${VERSION}",
+        "VCS_REF": "${VCS_REF}"
+      },
+      "labels": {
+        "org.opencontainers.image.description": "LLM / RAG stack (llama-index, vector stores, LLM provider SDKs) on top of the CPU content"
+      },
+      "tags": [
+        "${REPO}mltk-container-ubi-llm-rag:${VERSION}"
+      ]
+    },
+    "agentic": {
+      "context": ".",
+      "dockerfile": "docker/Dockerfile",
+      "target": "agentic",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "args": {
+        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
+        "DSDL_VERSION": "${VERSION}",
+        "VCS_REF": "${VCS_REF}"
+      },
+      "labels": {
+        "org.opencontainers.image.description": "The llm image serving the agentic API (app/main_agentic.py: chat, MCP, LangGraph)"
+      },
+      "tags": [
+        "${REPO}mltk-container-ubi-llm-rag:agentic-ai-${VERSION}"
+      ]
+    },
+    "gpu": {
+      "context": ".",
+      "dockerfile": "docker/Dockerfile",
+      "target": "gpu",
+      "platforms": [
+        "linux/amd64"
+      ],
+      "args": {
+        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
+        "DSDL_VERSION": "${VERSION}",
+        "VCS_REF": "${VCS_REF}"
+      },
+      "labels": {
+        "org.opencontainers.image.description": "Deep learning and transformers on NVIDIA GPUs (CUDA 12.9 from wheels, as RAPIDS 26.10); also runs without a GPU"
+      },
+      "tags": [
+        "${REPO}mltk-container-golden-gpu:${VERSION}"
+      ]
+    },
+    "rapids": {
+      "context": ".",
+      "dockerfile": "docker/Dockerfile",
+      "target": "rapids",
+      "platforms": [
+        "linux/amd64"
+      ],
+      "args": {
+        "PYTHON_VERSION": "${DSDL_PYTHON_VERSION}",
+        "DSDL_VERSION": "${VERSION}",
+        "VCS_REF": "${VCS_REF}"
+      },
+      "labels": {
+        "org.opencontainers.image.description": "NVIDIA RAPIDS 26.10 (cuDF, cuML, cuGraph) and PyTorch from pip wheels (CUDA 12.9)"
+      },
+      "tags": [
+        "${REPO}mltk-container-golden-gpu-rapids:${VERSION}"
+      ]
+    }
+  }
+}
