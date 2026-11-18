@@ -61,6 +61,7 @@ RUN ROOTFS_ALLOWLIST_CHECK=${ROOTFS_ALLOWLIST_CHECK} bash /policy/build-rootfs.s
 # vendor/timesfm) and pure-Python sdists are built from source in this stage.
 # ---------------------------------------------------------------------------
 FROM builder AS venv-base
+ENV UV_LOCK_TIMEOUT=3600 UV_HTTP_TIMEOUT=600
 COPY docker/finalize-venv.sh /usr/local/bin/finalize-venv
 COPY package-dsdlsupport/ /src/package-dsdlsupport/
 COPY vendor/ /src/vendor/
