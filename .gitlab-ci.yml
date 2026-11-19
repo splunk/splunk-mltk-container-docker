@@ -14,8 +14,11 @@ variables:
 build-and-push:
   stage: build-push
   image: $BUILD_IMAGE
-  timeout: 3h
-  resource_group: mltk-release
+  timeout: 6h
+  resource_group: mltk-release-$GROUP
+  parallel:
+    matrix:
+      - GROUP: [cpu, llm, gpu, rapids]
   before_script:
     - |
       set -eu
@@ -54,39 +57,52 @@ build-and-push:
   script:
     - |
       set -eu
-      ./build.sh --push-rebuild all "$IMAGE_REPO" "$VERSION"
+      case "$GROUP" in
+        llm) TARGETS="llm agentic" ;;
+        *) TARGETS="$GROUP" ;;
+      esac
+      export TARGETS
+      for target in $TARGETS; do
+        ./build.sh --push-rebuild "$target" "$IMAGE_REPO" "$VERSION"
+      done
 
-      python3 - > refs.txt <<'PY'
+      python3 - > "refs-$GROUP.txt" <<'PY'
       import os, tomllib
 
       with open("images.toml", "rb") as f:
           cfg = tomllib.load(f)
       version = os.environ["VERSION"]
       repo = os.environ["IMAGE_REPO"]
-      for target in cfg["targets"].values():
-          for pub in target["publish"]:
+      for name in os.environ["TARGETS"].split():
+          for pub in cfg["targets"][name]["publish"]:
               print(f'{repo}{pub["image"]}:{pub["tag"].format(version=version)}')
       PY
 
-      : > digests.txt
+      : > "digests-$GROUP.txt"
       while read -r ref; do
         digest=$(docker buildx imagetools inspect "$ref" | sed -n 's/^Digest:[[:space:]]*//p' | head -1)
         [ -n "$digest" ] || { echo "No digest found for $ref" >&2; exit 1; }
-        echo "$ref $digest" >> digests.txt
-      done < refs.txt
-      cat digests.txt
+        echo "$ref $digest" >> "digests-$GROUP.txt"
+      done < "refs-$GROUP.txt"
+      cat "digests-$GROUP.txt"
   after_script:
     - docker buildx rm "multiarch-${CI_JOB_ID}" || true
   artifacts:
     paths:
-      - digests.txt
+      - digests-*.txt
     expire_in: 14 days
 
 sign:
   stage: sign
   image: $BUILD_IMAGE
+  parallel:
+    matrix:
+      - GROUP: [cpu, llm, gpu, rapids]
   needs:
-    - build-and-push
+    - job: build-and-push
+      parallel:
+        matrix:
+          - GROUP: $[[ matrix.GROUP ]]
   id_tokens:
     CI_JOB_JWT:
       aud:
@@ -100,14 +116,23 @@ sign:
       while read -r ref digest; do
         echo "Signing $ref ($digest)"
         artifact-ci sign docker "$ref" -r docker.io --upload-to-tlog
-      done < digests.txt
+      done < "digests-$GROUP.txt"
 
 validate:
   stage: validate
   image: $BUILD_IMAGE
+  parallel:
+    matrix:
+      - GROUP: [cpu, llm, gpu, rapids]
   needs:
-    - build-and-push
-    - sign
+    - job: build-and-push
+      parallel:
+        matrix:
+          - GROUP: $[[ matrix.GROUP ]]
+    - job: sign
+      parallel:
+        matrix:
+          - GROUP: $[[ matrix.GROUP ]]
   id_tokens:
     CI_JOB_JWT:
       aud:
@@ -127,5 +152,5 @@ validate:
         fi
         artifact-ci verify docker "$ref"
         count=$((count + 1))
-      done < digests.txt
+      done < "digests-$GROUP.txt"
       echo "Verified $count image(s)"
