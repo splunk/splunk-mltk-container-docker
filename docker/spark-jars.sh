@@ -15,6 +15,30 @@ sed -e 's/#.*//' -e '/^[[:space:]]*$/d' "$policy/spark-jars-trim.txt" | while re
   esac
 done
 
+mirrors=(https://repo1.maven.org/maven2 https://maven-central.storage-download.googleapis.com/maven2)
+
+# Maven Central answers 429 to shared CI runners for minutes at a time; the sha256 pin makes any mirror safe.
+fetch() {
+  local path="$1" sha256="$2" out="$3" attempt mirror delay=10 hdr
+  hdr="$(mktemp)"
+  for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+    for mirror in "${mirrors[@]}"; do
+      if curl -fsSL --retry 2 --retry-delay 5 -D "$hdr" -o "$out" "$mirror/$path" \
+        && echo "$sha256  $out" | sha256sum -c --quiet -; then
+        echo "fetched $path from $mirror (attempt $attempt)"
+        rm -f "$hdr"
+        return 0
+      fi
+      rm -f "$out"
+      echo "spark-jar-overrides: $mirror/$path failed (attempt $attempt, retry-after: $(tr -d '\r' < "$hdr" | awk -F': ' 'tolower($1)=="retry-after"{print $2}' | tail -n 1))" >&2
+    done
+    sleep "$delay"
+    delay=$(( delay * 2 > 120 ? 120 : delay * 2 ))
+  done
+  rm -f "$hdr"
+  return 1
+}
+
 sed -e 's/#.*//' -e '/^[[:space:]]*$/d' "$policy/spark-jar-overrides.txt" | while read -r glob path sha256; do
   old=( $glob )
   if [ ! -e "${old[0]}" ]; then
@@ -22,8 +46,7 @@ sed -e 's/#.*//' -e '/^[[:space:]]*$/d' "$policy/spark-jar-overrides.txt" | whil
     exit 1
   fi
   new="$(basename "$path")"
-  curl -fsSL --retry 8 --retry-delay 15 -o "$new.part" "https://repo1.maven.org/maven2/$path"
-  echo "$sha256  $new.part" | sha256sum -c --quiet -
+  fetch "$path" "$sha256" "$new.part"
   rm -f "${old[@]}"
   mv "$new.part" "$new"
   chmod 0644 "$new"
